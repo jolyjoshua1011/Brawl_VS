@@ -1,0 +1,3 @@
+10) Animations durant les combats
+11) Musique et son dans l'appli
+14) Faire en sorte que mon appli est utilisable sur téléphone et que mmes amis peuvent y jouer et qu on puisse jouer ensemble chacun de son coté en ligne. mais tout en etant une application privée ou seul moi peuit donner l'accès, ainsi qu'un systeme de sauvegarde du compte 
