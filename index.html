@@ -1,0 +1,2585 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#080d16">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRAWL VS</title>
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none;overflow:hidden">
+  <filter id="removeGreenScreen" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <!-- Alpha = rouge - 1.35×vert + bleu + 0.42 : le vert dominant devient transparent. -->
+    <feColorMatrix type="matrix" result="chroma" values="
+      1 0 0 0 0
+      0 1 0 0 0
+      0 0 1 0 0
+      1 -1.35 1 0 .42"/>
+    <feComponentTransfer in="chroma" result="keyed">
+      <feFuncA type="linear" slope="4" intercept="-.55"/>
+    </feComponentTransfer>
+    <feComposite in="keyed" in2="SourceGraphic" operator="in"/>
+  </filter>
+</svg>
+<div class="phone">
+<div
+    id="appLoadingScreen"
+    class="app-loading-screen"
+    aria-live="polite"
+>
+    <div class="app-loading-glow glow-blue"></div>
+    <div class="app-loading-glow glow-red"></div>
+    <div class="app-loading-content">
+        <img class="app-loading-brand-image" src="BG/BRAWL_VS.png" alt="BRAWL VS" fetchpriority="high">
+        <div class="app-loading-bottom-panel">
+            <div class="app-loading-subtitle">
+                CHARGEMENT DE L'ARÈNE
+            </div>
+            <div class="app-loading-version">
+                VERSION 1.0
+            </div>
+            <div class="app-loading-bar-shell">
+            <div
+                id="appLoadingBar"
+                class="app-loading-bar"
+            ></div>
+        </div>
+            <div class="app-loading-bottom">
+                <span>CHARGEMENT</span>
+                <strong id="appLoadingPercent">
+                    0%
+                </strong>
+            </div>
+        </div>
+    </div>
+</div>
+<div
+    id="battleLaunchScreen"
+    class="battle-launch-screen"
+    aria-hidden="true"
+>
+    <div class="battle-launch-content">
+        <div class="battle-launch-title">
+            LANCEMENT DE LA PARTIE
+        </div>
+    </div>
+</div>
+<header class="arena-header">
+    <div
+        class="profile"
+        onclick="openProfile()"
+    >
+        <div
+            id="avatar"
+            class="avatar"
+        >
+            👤
+        </div>
+        <div class="profile-info">
+            <div
+                id="playerName"
+                class="player-name"
+            >
+                JOUEUR
+            </div>
+            <button
+                class="trophy-road-entry-button"
+                type="button"
+                aria-label="Ouvrir la voie des trophées"
+                onclick="event.stopPropagation(); showTrophyRoad();"
+            >
+                <span class="trophy-road-entry-icon-wrap">
+                    <img
+                        src="Icon/trophy.png"
+                        alt="Trophées"
+                        class="trophy-road-entry-icon"
+                    >
+                </span>
+                <span class="trophy-road-entry-text">
+                    <span
+                        id="trophyCount"
+                        class="trophy-road-entry-value"
+                    >
+                        0
+                    </span>
+                    <span
+                        class="trophy-road-entry-label"
+                    >
+                        VOIE DES TROPHÉES
+                    </span>
+                </span>
+                <span
+                    class="trophy-road-entry-arrow"
+                    aria-hidden="true"
+                >
+                    ›
+                </span>
+                <span
+                    id="trophyRoadNotificationDot"
+                    class="claim-notification-dot"
+                    aria-hidden="true"
+                ></span>
+            </button>
+        </div>
+    </div>
+    <div class="resources">
+        <div class="resource coins">
+            <img
+                src="Icon/coin.png"
+                alt="Pièces"
+            >
+            <span id="coinCount">0</span>
+        </div>
+        <div class="resource gems">
+            <img
+                src="Icon/gemme.png"
+                alt="Gemmes"
+            >
+            <span id="gemCount">0</span>
+        </div>
+        <div class="resource power">
+            <img
+                src="Icon/power.png"
+                alt="Pouvoir"
+            >
+            <span id="powerCount">0</span>
+        </div>
+    </div>
+</header>
+<main
+    id="homePage"
+    class="page home-page active"
+>
+    <div class="ultra-atmosphere" aria-hidden="true"><i class="ultra-beam blue"></i><i class="ultra-beam pink"></i><div class="ultra-floor"></div><span class="ultra-spark s1"></span><span class="ultra-spark s2"></span><span class="ultra-spark s3"></span></div>
+    <div class="home-content">
+        <div class="ultra-lobby-heading">
+            <div class="ultra-season-emblem" aria-hidden="true">01</div>
+            <div class="ultra-season-copy"><span>SAISON 01</span><strong>STARS DE L’ARÈNE</strong></div>
+            <span class="ultra-edition">BRAWL<br><b>VS</b></span>
+        </div>
+        <div class="logo">
+            BRAWL <span>VS</span>
+        </div>
+        <div class="home-season">Stars de l’arène</div>
+        <div class="home-version">Version 1.0</div>
+        <section
+            class="selected-panel selected-panel-clickable"
+            role="button"
+            tabindex="0"
+            title="Voir les Brawlers"
+            onclick="showBrawlers()"
+            onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); showBrawlers(); }"
+        >
+            <div class="selected-brawler-trophies selected-brawler-trophies-top">
+                <img
+                    src="Icon/trophy.png"
+                    alt="Trophées"
+                >
+                <span id="selectedBrawlerTrophies">
+                    0
+                </span>
+                <span class="selected-brawler-trophies-label">
+                    TROPHÉES
+                </span>
+            </div>
+            <img
+                id="selectedImage"
+                class="selected-image"
+                src="Brawlers_skin/Shelly_skin_def.webp"
+                alt="Shelly"
+            >
+            <span class="ultra-fighter-caption">TON COMBATTANT</span>
+            <div
+                id="selectedName"
+                class="selected-name"
+            >
+                Shelly
+            </div>
+            <div
+                id="selectedRarity"
+                class="selected-rarity rarity-starter"
+            >
+                STARTER
+            </div>
+            <div class="selected-power">
+                POWER LEVEL
+                <span id="selectedPowerLevel">
+                    1
+                </span>
+            </div>
+        </section>
+        <div class="home-actions">
+            <div class="home-menu-buttons">
+                <button type="button" class="home-mode-button" onclick="openHomeMenu('modes')">
+                    <span>MODE DE JEU</span>
+                    <strong>🎯 <span id="homeSelectedModeName">Arène principale</span> <span class="home-mode-chevron">▾</span></strong>
+                </button>
+            </div>
+            <button
+                class="duel-button"
+                onclick="play()"
+            >
+                <span class="ultra-play-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 5L26 16L8 27V5Z" fill="currentColor"/></svg></span>
+                <span class="ultra-play-copy"><strong>JOUER</strong><small id="playSelectedModeText">ARÈNE PRINCIPALE · SOLO</small></span>
+                <span class="ultra-play-arrow" aria-hidden="true">↗</span>
+            </button>
+        </div>
+    </div>
+    <button
+        class="home-guide-side-button"
+        type="button"
+        onclick="showGameGuide()"
+        aria-label="Ouvrir le guide du jeu"
+    >
+        <span class="home-guide-side-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4H10L12 6L14 4H20V19H14L12 21L10 19H4V4Z M12 6V21 M7 8H9 M15 8H17 M7 12H9 M15 12H17" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span>
+        <span>GUIDE</span>
+    </button>
+    <button
+        class="home-options-side-button"
+        type="button"
+        onclick="openHomeMenu('options')"
+        aria-label="Ouvrir les options"
+    >
+        <span class="home-options-side-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 3V21M12 3V21M19 3V21" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="7" width="6" height="4" rx="1" fill="currentColor"/><rect x="9" y="14" width="6" height="4" rx="1" fill="currentColor"/><rect x="16" y="5" width="6" height="4" rx="1" fill="currentColor"/></svg></span>
+        <span>OPTIONS</span>
+    </button>
+    <button
+        class="home-quests-side-button"
+        type="button"
+        onclick="showQuests()"
+        aria-label="Ouvrir les quêtes"
+    >
+        <span class="home-quests-side-icon">
+            <img
+                src="Icon/Quest.webp"
+                alt=""
+                aria-hidden="true"
+            >
+        </span>
+        <span>QUÊTES</span>
+        <span
+            id="questsNotificationDot"
+            class="claim-notification-dot"
+            aria-hidden="true"
+        ></span>
+    </button>
+    <button
+        class="home-box-side-button"
+        type="button"
+        onclick="showBoxes()"
+        aria-label="Ouvrir les boîtes"
+    >
+        <span class="home-box-side-icon">
+            <img src="Icon/Brawl_Box.webp" alt="" aria-hidden="true">
+        </span>
+        <span>BOÎTE</span>
+    </button>
+    <div
+        id="gameGuideOverlay"
+        class="game-guide-overlay"
+        aria-hidden="true"
+        onclick="if(event.target === this){ closeGameGuide(); }"
+    >
+        <section
+            class="game-guide-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="gameGuideTitle"
+        >
+            <div class="game-guide-header">
+                <div>
+                    <div class="game-guide-kicker">
+                        COMMENT JOUER
+                    </div>
+                    <div
+                        id="gameGuideTitle"
+                        class="game-guide-title"
+                    >
+                        GUIDE
+                    </div>
+                </div>
+                <button
+                    class="game-guide-close"
+                    type="button"
+                    onclick="closeGameGuide()"
+                    aria-label="Fermer le guide"
+                >
+                    ×
+                </button>
+            </div>
+            <div class="game-guide-intro">
+                Choisis ton Brawler, combats le BOT,
+                gagne des ressources et développe ton compte.
+            </div>
+            <div class="game-guide-list">
+                <article class="game-guide-card">
+                    <div class="game-guide-number">1</div>
+                    <div>
+                        <strong>CHOISIS TON BRAWLER</strong>
+                        <p>
+                            Chaque Brawler possède ses propres PV,
+                            dégâts, portée, vitesse, champ de tir,
+                            Super et capacités. Son Power Level
+                            améliore ses statistiques jusqu'au niveau 10.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">2</div>
+                    <div>
+                        <strong>DÉBUT DU DUEL</strong>
+                        <p>
+                            Un tirage au sort décide qui commence.
+                            Le premier combattant choisit la distance
+                            du combat puis effectue sa première action.
+                            Son adversaire joue ensuite à la même distance.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">3</div>
+                    <div>
+                        <strong>DISTANCE ET TOURS</strong>
+                        <p>
+                            La distance va de 1 à 7. Après les deux
+                            actions, l'autre combattant choisit la
+                            distance suivante et agit en premier.
+                            Les deux joueurs alternent ainsi le choix
+                            de la distance pendant tout le duel.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">4</div>
+                    <div>
+                        <strong>PORTÉE ET ACTIONS</strong>
+                        <p>
+                            Une attaque ne peut toucher que si la cible
+                            se trouve dans sa portée. Tu peux utiliser
+                            ton attaque, ton Super lorsqu'il est chargé,
+                            une capacité équipée ou passer ton tour.
+                            Une action consomme ton tour.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">5</div>
+                    <div>
+                        <strong>ESQUIVE</strong>
+                        <p>
+                            Si l'attaque est à portée, le jeu calcule :
+                            (3 + champ de tir) ÷
+                            [(3 + champ de tir) + vitesse de la cible].
+                            Le chiffre 3 est toujours le même :
+                            la vitesse de l'attaquant n'est jamais utilisée.
+                            À distance 1, l'esquive est impossible.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">6</div>
+                    <div>
+                        <strong>SI UNE ATTAQUE EST ESQUIVÉE</strong>
+                        <p>
+                            Un tirage aléatoire est comparé à la chance
+                            de toucher. Si la cible esquive, elle ne subit
+                            aucun dégât et récupère 5 PV sans dépasser
+                            ses PV maximum. Si une attaque est hors de portée,
+                            l'attaquant ne récupère rien et la cible récupère
+                            5 PV. Si un Brawler passe son tour, les deux
+                            Brawlers récupèrent 5 PV.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">7</div>
+                    <div>
+                        <strong>CAS PARTICULIER : COLT</strong>
+                        <p>
+                            Colt utilise maintenant le même test d'esquive
+                            que les autres Brawlers. Si son attaque touche,
+                            1 à 6 balles touchent pour son attaque normale,
+                            et 1 à 12 pour son Super. À distance 1,
+                            toutes ses balles touchent automatiquement.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">8</div>
+                    <div>
+                        <strong>SUPER ET CAPACITÉS</strong>
+                        <p>
+                            Les attaques réussies remplissent la jauge de
+                            Super. Bull et El Primo gagnent aussi de la
+                            charge en recevant des dégâts. Les capacités
+                            équipées peuvent être utilisées une fois par
+                            duel et comptent comme une action.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">9</div>
+                    <div>
+                        <strong>GAGNE ET PROGRESSE</strong>
+                        <p>
+                            Mets les PV adverses à zéro pour gagner.
+                            Une victoire rapporte des trophées et des
+                            ressources, et les combats font progresser
+                            les quêtes. Une partie abandonnée annule
+                            la progression de quête gagnée dans ce duel.
+                        </p>
+                    </div>
+                </article>
+                <article class="game-guide-card">
+                    <div class="game-guide-number">10</div>
+                    <div>
+                        <strong>BOXES ET BOUTIQUE</strong>
+                        <p>
+                            Utilise tes ressources pour ouvrir des boxes
+                            et acheter du contenu. La boutique permet
+                            notamment d'obtenir des Brawlers, des icônes
+                            de profil et des capacités propres aux Brawlers.
+                        </p>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+    <div
+        id="trophyRoadOverlay"
+        class="trophy-road-overlay"
+        aria-hidden="true"
+        onclick="if(event.target === this){ closeTrophyRoad(); }"
+    >
+        <section
+            class="trophy-road-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="trophyRoadTitle"
+        >
+            <div class="trophy-road-header">
+                <div>
+                    <div class="trophy-road-kicker">
+                        PROGRESSION GLOBALE
+                    </div>
+                    <div
+                        id="trophyRoadTitle"
+                        class="trophy-road-title"
+                    >
+                        ROUTE DES TROPHÉES
+                    </div>
+                </div>
+                <button
+                    class="trophy-road-close"
+                    type="button"
+                    onclick="closeTrophyRoad()"
+                    aria-label="Fermer la route des trophées"
+                >
+                    ×
+                </button>
+            </div>
+            <div class="trophy-road-summary">
+                <div class="trophy-road-summary-left">
+                    <strong>
+                        TA PROGRESSION GLOBALE
+                    </strong>
+                </div>
+                <div class="trophy-road-summary-value">
+                    <img
+                        src="Icon/trophy.png"
+                        alt="Trophées"
+                    >
+                    <strong id="trophyRoadCurrentTotal">
+                        0
+                    </strong>
+                </div>
+            </div>
+            <div
+                id="trophyRoadTrackWrap"
+                class="trophy-road-track-wrap"
+            >
+                <div
+                    id="trophyRoadTrack"
+                    class="trophy-road-track"
+                >
+                    <div class="trophy-road-progress-line">
+                        <div
+                            id="trophyRoadProgressFill"
+                            class="trophy-road-progress-fill"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div
+        id="brawlerTrophyRoadOverlay"
+        class="brawler-trophy-road-overlay"
+        aria-hidden="true"
+        onclick="if(event.target === this){ closeBrawlerTrophyRoad(); }"
+    >
+        <section
+            class="brawler-trophy-road-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="brawlerTrophyRoadTitle"
+        >
+            <div class="brawler-trophy-road-header">
+                <div>
+                    <div class="brawler-trophy-road-kicker">PROGRESSION DU BRAWLER</div>
+                    <div id="brawlerTrophyRoadTitle" class="brawler-trophy-road-title">ROUTE DES TROPHÉES</div>
+                </div>
+                <button
+                    type="button"
+                    class="brawler-trophy-road-close"
+                    onclick="closeBrawlerTrophyRoad()"
+                    aria-label="Fermer la route des trophées du Brawler"
+                >×</button>
+            </div>
+            <div id="brawlerTrophyRoadHero" class="brawler-trophy-road-hero"></div>
+            <div class="brawler-trophy-road-progress">
+                <div id="brawlerTrophyRoadProgressFill" class="brawler-trophy-road-progress-fill"></div>
+            </div>
+            <div class="brawler-trophy-road-progress-labels">
+                <span>0</span>
+                <span>1000 TROPHÉES</span>
+            </div>
+            <div id="brawlerTrophyRoadList" class="brawler-trophy-road-list"></div>
+        </section>
+    </div>
+    <div
+        id="questsOverlay"
+        class="quests-overlay"
+        aria-hidden="true"
+        onclick="if(event.target === this){ closeQuests(); }"
+    >
+        <section
+            class="quests-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="questsTitle"
+        >
+            <div class="quests-header">
+                <div>
+                    <div class="quests-kicker">
+                        OBJECTIFS
+                    </div>
+                    <div
+                        id="questsTitle"
+                        class="quests-title"
+                    >
+                        QUÊTES
+                    </div>
+                </div>
+                <button
+                    class="quests-close-button"
+                    type="button"
+                    onclick="closeQuests()"
+                    aria-label="Fermer les quêtes"
+                >
+                    ×
+                </button>
+            </div>
+            <div class="quests-subtitle">
+                QUÊTES DU JOUR
+            </div>
+            <p class="daily-reset-note quests-reset-note">
+                Nouvelles quêtes dans <strong data-daily-countdown>--:--:--</strong><br>
+                Chaque jour à 10 h (Belgique)
+            </p>
+            <div class="quests-summary">
+                <div class="quests-summary-card">
+                    <div class="quests-summary-label">
+                        PROGRESSION
+                    </div>
+                    <div
+                        id="questsSummaryDone"
+                        class="quests-summary-value"
+                    >
+                        0 / 3
+                    </div>
+                </div>
+                <div class="quests-summary-card gold">
+                    <div class="quests-summary-label">
+                        BONUS FINAL
+                    </div>
+                    <div
+                        id="questsSummaryBonus"
+                        class="quests-summary-value"
+                    >
+                        3 STAR TOKENS
+                    </div>
+                </div>
+            </div>
+            <div
+                id="questsList"
+                class="quests-list"
+            ></div>
+            <div
+                id="questsBonusBox"
+                class="quests-bonus-box"
+            >
+                <div class="quests-bonus-title">
+                    BONUS DE FIN
+                </div>
+                <div class="quests-bonus-text">
+                    Termine les 3 quêtes pour remporter
+                    <strong>3 STAR TOKENS</strong>.
+                </div>
+                <div
+                    id="questsBonusStatus"
+                    class="quests-bonus-status"
+                ></div>
+                <div class="quests-bonus-visual">
+                    <img
+                        src="Icon/Fly_token.png"
+                        alt="Star Token"
+                        class="quests-bonus-token token-a"
+                    >
+                    <img
+                        src="Icon/Fly_token.png"
+                        alt="Star Token"
+                        class="quests-bonus-token token-b"
+                    >
+                    <img
+                        src="Icon/Fly_token.png"
+                        alt="Star Token"
+                        class="quests-bonus-token token-c"
+                    >
+                </div>
+            </div>
+            <div
+                id="questsFooterNote"
+                class="quests-footer-note"
+            >
+                Les quêtes se mettent à jour selon tes combats.
+            </div>
+        </section>
+    </div>
+</main>
+<!-- =====================================================
+     DUEL / COMBAT
+===================================================== -->
+<main
+    id="battlePage"
+    class="page battle-page"
+>
+    <div
+        id="battleStartTransition"
+        class="battle-start-transition"
+        aria-hidden="true"
+    >
+        <div class="battle-start-lines"></div>
+        <div class="battle-start-content">
+            <div class="battle-start-small">
+                DUEL
+            </div>
+            <div class="battle-start-title">
+                COMBAT !
+            </div>
+            <div
+                id="battleStartVersus"
+                class="battle-start-versus"
+            >
+                BRAWLER VS BRAWLER
+            </div>
+            <div
+                id="battleTransitionCoinFlip"
+                class="battle-transition-coin-flip"
+            >
+                <div
+                    id="battleTransitionCoin"
+                    class="battle-transition-coin"
+                >
+                    ?
+                </div>
+                <div
+                    id="battleTransitionCoinText"
+                    class="battle-transition-coin-text"
+                >
+                    PILE OU FACE...
+                </div>
+            </div>
+            <div
+                id="battleStarterAnnouncement"
+                class="battle-starter-announcement"
+            >
+                JOUEUR COMMENCE !
+            </div>
+        </div>
+    </div>
+    <div class="battle-topbar">
+        <button
+            class="battle-back-button"
+            type="button"
+            onclick="quitBattleMatch()"
+        >
+            ← QUITTER
+        </button>
+        <div class="battle-mode">
+            DUEL
+        </div>
+        <div class="battle-reward-mini">
+            VICTOIRE : +10 🏆 · +25 TOKENS · DÉFAITE : +10 TOKENS
+        </div>
+    </div>
+    <div class="battle-title">
+        COMBAT
+    </div>
+    <div class="battle-subtitle">
+        FACE À FACE
+    </div>
+    <div class="battle-distance-status">
+        <span>
+            DISTANCE ACTUELLE
+        </span>
+        <strong id="battleCurrentDistance">
+            —
+        </strong>
+    </div>
+    <section class="battle-arena battle-arena-clean">
+        <div
+            id="battleDodgeMessage"
+            class="battle-dodge-message"
+            aria-live="polite"
+        >
+            <span
+                id="battleCenterMessageLabel"
+                class="battle-dodge-small"
+            >
+                ESQUIVE
+            </span>
+            <strong id="battleDodgeText">
+                BOT ESQUIVE !
+            </strong>
+        </div>
+        <div class="battle-horizon"></div>
+        <div
+            class="battle-hud battle-enemy-hud battle-hud-clickable"
+            role="button"
+            tabindex="0"
+            title="Voir les statistiques du BOT"
+            onclick="showBattleStats('enemy')"
+            onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); showBattleStats('enemy'); }"
+        >
+            <div class="battle-hud-top">
+                <div>
+                    <div
+                        id="battleEnemyPseudo"
+                        class="battle-hud-pseudo enemy"
+                    >
+                        Rival
+                    </div>
+                    <div class="battle-hud-name-row">
+                        <strong id="battleEnemyName">
+                            Nita
+                        </strong>
+                        <span id="battleEnemyPower">
+                            POWER 1
+                        </span>
+                    </div>
+                </div>
+                <span class="battle-hud-tag enemy">
+                    ENNEMI
+                </span>
+            </div>
+            <div class="battle-hud-health-row">
+                <span>PV</span>
+                <strong id="battleEnemyHealthText">
+                    84 / 84
+                </strong>
+            </div>
+            <div class="battle-health-bar">
+                <div
+                    id="battleEnemyHealthFill"
+                    class="battle-health-fill enemy"
+                ></div>
+            </div>
+            <div
+                class="battle-super-mini-bar"
+                title="Charge du Super du BOT"
+            >
+                <div
+                    id="battleEnemySuperHudFill"
+                    class="battle-super-mini-fill enemy"
+                ></div>
+            </div>
+        </div>
+        <div id="battleEnemyStage" class="battle-stage battle-stage-enemy">
+            <img
+                id="battleEnemyImage"
+                class="battle-fighter-image enemy"
+                src="Brawlers_skin/Nita_skin_def.webp"
+                alt="Brawler ennemi"
+            >
+        </div>
+        <div
+            id="battleEnemyBearUnit"
+            class="battle-bear-unit enemy hidden"
+            role="button"
+            tabindex="0"
+            title="Voir les statistiques de l'ours"
+            onclick="showBattleBearStats('enemy')"
+            onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); showBattleBearStats('enemy'); }"
+        >
+            <img
+                id="battleEnemyBearImage"
+                class="battle-bear-image"
+                src="Brawlers_skin/Bear_skin_def.webp"
+                alt="Ours ennemi"
+            >
+            <div class="battle-bear-info">
+                <div class="battle-bear-name">
+                    BRUCE
+                </div>
+                <div
+                    id="battleEnemyBearHealthText"
+                    class="battle-bear-health-text"
+                >
+                    0 / 0
+                </div>
+                <div class="battle-bear-health-bar">
+                    <div
+                        id="battleEnemyBearHealthFill"
+                        class="battle-bear-health-fill enemy"
+                    ></div>
+                </div>
+            </div>
+        </div>
+        <div id="battlePlayerStage" class="battle-stage battle-stage-player">
+            <img
+                id="battlePlayerImage"
+                class="battle-fighter-image"
+                src="Brawlers_skin/Shelly_skin_def.webp"
+                alt="Brawler joueur"
+            >
+        </div>
+        <div
+            id="battlePlayerBearUnit"
+            class="battle-bear-unit player hidden"
+            role="button"
+            tabindex="0"
+            title="Voir les statistiques de l'ours"
+            onclick="showBattleBearStats('player')"
+            onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); showBattleBearStats('player'); }"
+        >
+            <img
+                id="battlePlayerBearImage"
+                class="battle-bear-image"
+                src="Brawlers_skin/Bear_skin_def.webp"
+                alt="Mon ours"
+            >
+            <div class="battle-bear-info">
+                <div class="battle-bear-name">
+                    BRUCE
+                </div>
+                <div
+                    id="battlePlayerBearHealthText"
+                    class="battle-bear-health-text"
+                >
+                    0 / 0
+                </div>
+                <div class="battle-bear-health-bar">
+                    <div
+                        id="battlePlayerBearHealthFill"
+                        class="battle-bear-health-fill player"
+                    ></div>
+                </div>
+            </div>
+        </div>
+        <div
+            class="battle-hud battle-player-hud battle-hud-clickable"
+            role="button"
+            tabindex="0"
+            title="Voir mes statistiques"
+            onclick="showBattleStats('player')"
+            onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); showBattleStats('player'); }"
+        >
+            <div class="battle-hud-top">
+                <span class="battle-hud-tag">
+                    TOI
+                </span>
+                <div class="battle-hud-player-text">
+                    <div
+                        id="battlePlayerPseudo"
+                        class="battle-hud-pseudo"
+                    >
+                        Joueur
+                    </div>
+                    <div class="battle-hud-name-row player">
+                        <strong id="battlePlayerName">
+                            Shelly
+                        </strong>
+                        <span id="battlePlayerPower">
+                            POWER 1
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="battle-hud-health-row">
+                <span>PV</span>
+                <strong id="battlePlayerHealthText">
+                    78 / 78
+                </strong>
+            </div>
+            <div class="battle-health-bar">
+                <div
+                    id="battlePlayerHealthFill"
+                    class="battle-health-fill player"
+                ></div>
+            </div>
+            <div
+                class="battle-super-mini-bar"
+                title="Charge du Super"
+            >
+                <div
+                    id="battlePlayerSuperHudFill"
+                    class="battle-super-mini-fill player"
+                ></div>
+            </div>
+        </div>
+    </section>
+    <div
+        id="battleStatsOverlay"
+        class="battle-stats-overlay battle-stats-lobby-overlay"
+        aria-hidden="true"
+        onclick="if(event.target === this) closeBattleStats()"
+    >
+        <div class="battle-stats-lobby-card">
+            <button
+                class="battle-stats-close"
+                type="button"
+                aria-label="Fermer"
+                onclick="closeBattleStats()"
+            >
+                ×
+            </button>
+            <div class="brawler-detail-top battle-stats-detail-top">
+                <div
+                    id="battleStatsOwner"
+                    class="brawler-detail-label"
+                >
+                    MES STATS
+                </div>
+            </div>
+            <section class="brawler-detail-banner battle-stats-detail-banner">
+                <div
+                    id="battleStatsName"
+                    class="brawler-detail-name"
+                >
+                    Shelly
+                </div>
+                <div
+                    id="battleStatsRarity"
+                    class="brawler-detail-rarity starter"
+                >
+                    STARTER
+                </div>
+            </section>
+            <div class="detail-compact-layout battle-stats-compact-layout">
+                <div class="detail-skin-column battle-stats-skin-column">
+                    <div class="brawler-detail-skin-wrap">
+                        <img
+                            id="battleStatsSkin"
+                            class="brawler-detail-skin"
+                            src="Brawlers_skin/Shelly_skin_def.webp"
+                            alt="Shelly"
+                        >
+                    </div>
+                </div>
+                <section class="detail-stats-shortcuts battle-stats-shortcuts">
+                    <div class="detail-stats-shortcuts-kicker">
+                        STATISTIQUES
+                    </div>
+                    <button
+                        class="detail-stats-open-button base"
+                        type="button"
+                        onclick="openBattleStatsDetailOverlay('base')"
+                    >
+                        <span>BASE</span>
+                        <small>Vie, attaque, portée et champ de tir</small>
+                    </button>
+                    <button
+                        class="detail-stats-open-button super"
+                        type="button"
+                        onclick="openBattleStatsDetailOverlay('super')"
+                    >
+                        <span>SUPER</span>
+                        <small>Consulte le Super et ses statistiques</small>
+                    </button>
+                    <button
+                        class="detail-stats-open-button abilities"
+                        type="button"
+                        onclick="openBattleStatsDetailOverlay('abilities')"
+                    >
+                        <span>CAPACITÉS</span>
+                        <small>Voir les capacités équipées du Brawler</small>
+                    </button>
+            <button class="detail-stats-open-button star-power" type="button" onclick="openBattleStatsDetailOverlay('starPower')">
+                <span>POUVOIR STAR</span>
+                <small>Voir le pouvoir star du Brawler</small>
+            </button>
+                </section>
+            </div>
+            <div
+                id="battleStatsDetailOverlay"
+                class="detail-stats-overlay battle-detail-stats-overlay"
+                onclick="if(event.target === this) closeBattleStatsDetailOverlay()"
+            >
+                <div class="detail-stats-modal battle-detail-stats-modal">
+                    <button
+                        class="detail-stats-modal-close"
+                        type="button"
+                        onclick="closeBattleStatsDetailOverlay()"
+                    >
+                        ×
+                    </button>
+                    <div class="detail-stats-modal-head">
+                        <div class="detail-stats-modal-kicker">
+                            STATISTIQUES DE COMBAT
+                        </div>
+                        <div
+                            id="battleStatsModalBrawler"
+                            class="detail-stats-modal-brawler"
+                        >
+                            SHELLY
+                        </div>
+                    </div>
+                    <section class="brawler-stats detail-stats-panel battle-lobby-stats-panel battle-modal-stats-panel">
+                        <div class="stats-mode-header">
+                            <div class="brawler-stats-title">
+                                STATISTIQUES
+                            </div>
+                            <div class="stats-mode-buttons">
+                                <button
+                                    id="battleStatsBaseButton"
+                                    class="stats-mode-switch stats-mode-base active"
+                                    type="button"
+                                    onclick="setBattleStatsMode('base')"
+                                >
+                                    BASE
+                                </button>
+                                <button
+                                    id="battleStatsSuperButton"
+                                    class="stats-mode-switch stats-mode-super"
+                                    type="button"
+                                    onclick="setBattleStatsMode('super')"
+                                >
+                                    SUPER
+                                </button>
+                                <button
+                                    id="battleStatsAbilitiesButton"
+                                    class="stats-mode-switch stats-mode-capabilities"
+                                    type="button"
+                                    onclick="setBattleStatsMode('abilities')"
+                                >
+                                    CAPACITÉS
+                                </button>
+                    <button id="battleStatsStarPowerButton" class="stats-mode-switch stats-mode-star-power" type="button" onclick="setBattleStatsMode('starPower')">POUVOIR STAR</button>
+                            </div>
+                        </div>
+                        <div
+                            id="battleStatsBasePanel"
+                            class="stats-mode-panel active"
+                        ></div>
+                        <div
+                            id="battleStatsSuperPanel"
+                            class="stats-mode-panel super-stats-panel"
+                        >
+                            <div
+                                id="battleStatsSuperContent"
+                                class="super-stats-content"
+                            ></div>
+                        </div>
+                        <div id="battleStatsStarPowerPanel" class="stats-mode-panel star-power-panel"><div class="star-power-symbol" aria-hidden="true">★</div><strong>POUVOIR STAR</strong><p>Aucun pouvoir star disponible pour ce brawler.</p></div>
+<div
+                            id="battleStatsAbilitiesPanel"
+                            class="stats-mode-panel capabilities-stats-panel"
+                        >
+                            <div
+                                id="battleStatsAbilitiesContent"
+                                class="capabilities-stats-content"
+                            ></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div class="battle-stats-power-row">
+                <div class="power-level-box">
+                    <div class="power-level-label">
+                        Power Level
+                    </div>
+                    <div
+                        id="battleStatsPower"
+                        class="power-level-number"
+                    >
+                        1
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div
+        id="battleCoinFlip"
+        class="battle-coin-flip"
+        aria-live="polite"
+    >
+        <div
+            id="battleCoin"
+            class="battle-coin"
+        >
+            ?
+        </div>
+        <div
+            id="battleCoinText"
+            class="battle-coin-text"
+        >
+            PILE OU FACE...
+        </div>
+    </div>
+    <div
+        id="battleActionMessage"
+        class="battle-action-message"
+    >
+        Pile ou face pour décider qui commence...
+    </div>
+    <div
+        id="battleDistancePanel"
+        class="battle-distance-panel waiting"
+    >
+        <div class="battle-distance-top">
+            <span id="battleDistanceTitle">
+                DISTANCE
+            </span>
+            <strong id="battleDistancePopupCurrent">
+                —
+            </strong>
+        </div>
+        <div class="battle-distance-cards">
+            <button
+                id="battleDistanceCard1"
+                class="battle-distance-card"
+                type="button"
+                onclick="chooseBattleDistance(Number(this.dataset.distance))"
+                disabled
+            >
+                <span class="battle-distance-card-label">
+                    DISTANCE
+                </span>
+                <strong>1</strong>
+            </button>
+            <div class="battle-distance-or">
+                OU
+            </div>
+            <button
+                id="battleDistanceCard2"
+                class="battle-distance-card"
+                type="button"
+                onclick="chooseBattleDistance(Number(this.dataset.distance))"
+                disabled
+            >
+                <span class="battle-distance-card-label">
+                    DISTANCE
+                </span>
+                <strong>7</strong>
+            </button>
+        </div>
+    </div>
+    <div class="battle-action-grid">
+        <button
+            id="battleAttackButton"
+            class="battle-action-slot battle-basic-slot"
+            type="button"
+            onclick="attackEnemy()"
+        >
+            <span
+                id="battleAttackButtonTitle"
+                class="battle-action-slot-title"
+            >
+                ATTAQUE
+            </span>
+            <span
+                id="battleAttackButtonState"
+                class="battle-action-slot-detail"
+            >
+                CHOISIS DISTANCE
+            </span>
+        </button>
+        <div
+            id="battleAbilitySlot1"
+            class="battle-action-slot battle-locked-slot"
+            aria-label="Capacité 1 verrouillée jusqu'au Power 7"
+        >
+            <img
+                src="Icon/lock.png"
+                alt="Verrouillé"
+            >
+            <span class="battle-ability-lock-level">
+                POWER 7
+            </span>
+        </div>
+        <div
+            id="battleAbilitySlot2"
+            class="battle-action-slot battle-locked-slot"
+            aria-label="Capacité 2 verrouillée jusqu'au Power 9"
+        >
+            <img
+                src="Icon/lock.png"
+                alt="Verrouillé"
+            >
+            <span class="battle-ability-lock-level">
+                POWER 9
+            </span>
+        </div>
+        <button
+            id="battleSuperButton"
+            class="battle-action-slot battle-super-slot"
+            type="button"
+            onclick="useBattleSuper()"
+            disabled
+        >
+            <span
+                id="battleSuperButtonFill"
+                class="battle-super-button-fill"
+            ></span>
+            <span
+                id="battleSuperButtonTitle"
+                class="battle-action-slot-title"
+            >
+                SUPER
+            </span>
+            <span
+                id="battleSuperButtonState"
+                class="battle-action-slot-detail"
+            >
+                CHARGE 0%
+            </span>
+        </button>
+    </div>
+    <button
+        id="battlePassTurnButton"
+        class="battle-pass-turn-button"
+        type="button"
+        onclick="passBattleTurn()"
+        disabled
+    >
+        <span>PASSER LE TOUR</span>
+        <small>LES 2 +5 PV</small>
+    </button>
+</main>
+<main
+    id="brawlersPage"
+    class="page brawlers-page"
+>
+    <div class="page-heading">
+        <div class="ultra-heading-copy"><span class="ultra-kicker">TA COLLECTION</span><h2 class="page-title">BRAWLERS<span class="ultra-title-dot">.</span></h2></div>
+        <div class="brawler-count">
+            <span
+                id="ownedBrawlers"
+                class="count-current"
+            >
+                1
+            </span>
+            <span class="count-separator">/</span>
+            <span class="count-total">6</span>
+        </div>
+    </div>
+    <div class="brawler-sort-panel">
+        <div class="brawler-sort-label">
+            TRIER PAR
+        </div>
+        <div class="brawler-sort-buttons">
+            <button
+                id="sortBrawlersRarity"
+                class="brawler-sort-button active"
+                type="button"
+                onclick="setBrawlerSort('rarity')"
+            >
+                RARETÉ
+            </button>
+            <button
+                id="sortBrawlersPower"
+                class="brawler-sort-button"
+                type="button"
+                onclick="setBrawlerSort('power')"
+            >
+                POUVOIR
+            </button>
+            <button
+                id="sortBrawlersTrophies"
+                class="brawler-sort-button"
+                type="button"
+                onclick="setBrawlerSort('trophies')"
+            >
+                TROPHÉES
+            </button>
+        </div>
+    </div>
+    <section class="brawler-section">
+        <div class="brawler-section-title">
+            <span class="section-number">●</span>
+            Brawlers débloqués
+        </div>
+        <div
+            id="unlockedGrid"
+            class="brawlers-grid"
+        ></div>
+    </section>
+    <section class="brawler-section">
+        <div class="brawler-section-title locked-title">
+            <span class="section-number">🔒</span>
+            Brawlers à débloquer
+        </div>
+        <div
+            id="lockedGrid"
+            class="brawlers-grid"
+        ></div>
+    </section>
+</main>
+<main
+    id="brawlerDetailPage"
+    class="page brawler-detail-page"
+>
+    <div class="brawler-detail-top">
+        <div class="brawler-detail-label">
+            FICHE BRAWLER
+        </div>
+        <button
+            class="brawler-back-button"
+            onclick="closeBrawlerDetail()"
+        >
+            ← RETOUR
+        </button>
+    </div>
+    <section class="brawler-detail-banner">
+        <div
+            id="detailBrawlerName"
+            class="brawler-detail-name"
+        >
+            Shelly
+        </div>
+        <div
+            id="detailBrawlerRarity"
+            class="brawler-detail-rarity starter"
+        >
+            STARTER
+        </div>
+        <button
+            type="button"
+            id="brawlerTrophyRoadEntry"
+            class="brawler-detail-trophies brawler-trophy-road-entry"
+            onclick="showBrawlerTrophyRoad()"
+            aria-label="Ouvrir la route des trophées de ce Brawler"
+        >
+            <img
+                src="Icon/trophy.png"
+                alt="Trophées"
+            >
+            <strong id="detailBrawlerTrophies">
+                0
+            </strong>
+            <span>
+                TROPHÉES
+            </span>
+        </button>
+    </section>
+    <section class="brawler-introduction" aria-label="Présentation du Brawler">
+        <div id="detailBrawlerCategory" class="brawler-category-badge"></div>
+        <p id="detailBrawlerDescription" class="brawler-biography"></p>
+    </section>
+    <div class="detail-compact-layout">
+        <div class="detail-skin-column">
+            <div class="brawler-detail-skin-wrap">
+                <img
+                    id="detailBrawlerSkin"
+                    class="brawler-detail-skin"
+                    src="Brawlers_skin/Shelly_skin_def.webp"
+                    alt="Shelly"
+                >
+            </div>
+        <button type="button" class="skin-catalog-trigger" onclick="openSkinCatalog(state.detailBrawler)" aria-label="Ouvrir le catalogue des skins">
+            <img src="Icon/Catalog.webp" alt=""> CATALOGUE
+        </button>
+        </div>
+        <section class="detail-stats-shortcuts">
+            <div class="detail-stats-shortcuts-kicker">
+                STATISTIQUES
+            </div>
+            <button
+                class="detail-stats-open-button base"
+                type="button"
+                onclick="openDetailStatsOverlay('base')"
+            >
+                <span>BASE</span>
+                <small>Vie, attaque, portée et champ de tir</small>
+            </button>
+            <button
+                class="detail-stats-open-button super"
+                type="button"
+                onclick="openDetailStatsOverlay('super')"
+            >
+                <span>SUPER</span>
+                <small>Consulte le Super et ses statistiques</small>
+            </button>
+            <button
+                class="detail-stats-open-button abilities"
+                type="button"
+                onclick="openDetailStatsOverlay('abilities')"
+            >
+                <span>CAPACITÉS</span>
+                <small>Voir les capacités équipables du Brawler</small>
+            </button>
+            <button class="detail-stats-open-button star-power" type="button" onclick="openDetailStatsOverlay('starPower')">
+                <span>POUVOIR STAR</span>
+                <small>Voir le pouvoir star du Brawler</small>
+            </button>
+        </section>
+    </div>
+    <button
+        class="choose-brawler-button detail-choose-under-description"
+        onclick="confirmBrawlerChoice()"
+    >
+        ✓ CHOISIR CE BRAWLER
+    </button>
+    <div class="detail-actions">
+        <div class="brawler-upgrade-row">
+            <div class="power-level-box">
+                <div class="power-level-label">
+                    Power Level
+                </div>
+                <div
+                    id="detailPowerLevel"
+                    class="power-level-number"
+                >
+                    1
+                </div>
+            </div>
+            <button
+                id="upgradeButton"
+                class="upgrade-button"
+                onclick="upgradeBrawler()"
+            >
+                AMÉLIORER
+            </button>
+        </div>
+    </div>
+    <div
+        id="detailStatsOverlay"
+        class="detail-stats-overlay"
+        onclick="if(event.target === this) closeDetailStatsOverlay()"
+    >
+        <div class="detail-stats-modal">
+            <button
+                class="detail-stats-modal-close"
+                type="button"
+                onclick="closeDetailStatsOverlay()"
+            >
+                ×
+            </button>
+            <div class="detail-stats-modal-head">
+                <div class="detail-stats-modal-kicker">
+                    FICHE BRAWLER
+                </div>
+                <div
+                    id="detailStatsModalBrawler"
+                    class="detail-stats-modal-brawler"
+                >
+                    SHELLY
+                </div>
+            </div>
+<section class="brawler-stats detail-stats-panel">
+            <div class="stats-mode-header">
+                <div
+                    id="statsModeTitle"
+                    class="brawler-stats-title"
+                >
+                    STATISTIQUES
+                </div>
+                <div class="stats-mode-buttons">
+                    <button
+                        id="statsModeBaseButton"
+                        class="stats-mode-switch stats-mode-base"
+                        type="button"
+                        onclick="setBrawlerStatsMode('base')"
+                    >
+                        BASE
+                    </button>
+                    <button
+                        id="statsModeSuperButton"
+                        class="stats-mode-switch stats-mode-super"
+                        type="button"
+                        onclick="setBrawlerStatsMode('super')"
+                    >
+                        SUPER
+                    </button>
+                    <button
+                        id="statsModeAbilitiesButton"
+                        class="stats-mode-switch stats-mode-capabilities"
+                        type="button"
+                        onclick="setBrawlerStatsMode('abilities')"
+                    >
+                        CAPACITÉS
+                    </button>
+                    <button id="statsModeStarPowerButton" class="stats-mode-switch stats-mode-star-power" type="button" onclick="setBrawlerStatsMode('starPower')">POUVOIR STAR</button>
+                </div>
+            </div>
+    <section
+        id="detailAttackDescription"
+        class="detail-attack-description"
+    >
+        <div
+            id="detailDescriptionMode"
+            class="detail-description-mode"
+        >
+            ATTAQUE DE BASE
+        </div>
+        <div
+            id="detailDescriptionTitle"
+            class="detail-description-title"
+        >
+            ATTAQUE
+        </div>
+        <div
+            id="detailDescriptionText"
+            class="detail-description-text"
+        ></div>
+        <div
+            id="detailTankPassive"
+            class="detail-tank-passive"
+            hidden
+        >
+            <strong>PASSIF TANK</strong>
+            <span>
+                Quand ce Brawler subit des dégâts, il gagne
+                50 % de la charge de Super générée par l'attaque adverse.
+            </span>
+        </div>
+    </section>
+            <div
+                id="baseStatsPanel"
+                class="stats-mode-panel active"
+            >
+            <div class="brawler-stat">
+                <div class="brawler-stat-label">
+                    Vie
+                </div>
+                <div class="brawler-stat-bar">
+                    <div
+                        id="statHealth"
+                        class="brawler-stat-fill"
+                        style="width:23%"
+                    ></div>
+                </div>
+                <div
+                    id="statHealthValue"
+                    class="brawler-stat-value"
+                >
+                    78
+                </div>
+            </div>
+            <div
+                id="simpleAttackStat"
+                class="brawler-stat"
+            >
+                <div class="brawler-stat-label">
+                    Attaque
+                </div>
+                <div class="brawler-stat-bar">
+                    <div
+                        id="statAttack"
+                        class="brawler-stat-fill"
+                        style="width:70%"
+                    ></div>
+                </div>
+                <div
+                    id="statAttackValue"
+                    class="brawler-stat-value"
+                >
+                    70
+                </div>
+                <div
+                    id="baseAttackExtra"
+                    class="base-attack-extra"
+                ></div>
+            </div>
+            <div
+                id="distanceAttackStat"
+                class="attack-distance-stat"
+                style="display:none"
+            >
+                <div class="attack-distance-header">
+                    <div class="brawler-stat-label">
+                        Attaque
+                    </div>
+                    <div class="attack-distance-subtitle">
+                        DÉGÂTS / DISTANCE
+                    </div>
+                </div>
+                <div
+                    id="attackDistanceGrid"
+                    class="attack-distance-grid"
+                ></div>
+            </div>
+            <div class="brawler-stat">
+                <div class="brawler-stat-label">
+                    Vitesse
+                </div>
+                <div
+                    id="statSpeed"
+                    class="speed-gauge"
+                >
+                    <span class="speed-segment active"></span>
+                    <span class="speed-segment active"></span>
+                    <span class="speed-segment active"></span>
+                    <span class="speed-segment active"></span>
+                    <span class="speed-segment"></span>
+                </div>
+                <div
+                    id="statSpeedValue"
+                    class="brawler-stat-value"
+                >
+                    4
+                </div>
+            </div>
+            <div class="brawler-stat">
+                <div class="brawler-stat-label">
+                    Portée
+                </div>
+                <div
+                    id="statRange"
+                    class="range-gauge"
+                >
+                    <span class="range-segment active"></span>
+                    <span class="range-segment active"></span>
+                    <span class="range-segment active"></span>
+                    <span class="range-segment active"></span>
+                    <span class="range-segment active"></span>
+                    <span class="range-segment"></span>
+                    <span class="range-segment"></span>
+                </div>
+                <div
+                    id="statRangeValue"
+                    class="brawler-stat-value"
+                >
+                    5
+                </div>
+            </div>
+            <div class="brawler-stat">
+                <div class="brawler-stat-label">
+                    Champ tir
+                </div>
+                <div
+                    id="statShotField"
+                    class="shot-field-gauge"
+                >
+                    <span class="shot-field-segment active"></span>
+                    <span class="shot-field-segment active"></span>
+                    <span class="shot-field-segment active"></span>
+                    <span class="shot-field-segment active"></span>
+                    <span class="shot-field-segment"></span>
+                </div>
+                <div
+                    id="statShotFieldValue"
+                    class="brawler-stat-value"
+                >
+                    1–4
+                </div>
+            </div>
+            </div>
+            <div
+                id="superStatsPanel"
+                class="stats-mode-panel super-stats-panel"
+            >
+                <div
+                    id="superStatsContent"
+                    class="super-stats-content"
+                ></div>
+            </div>
+            <div id="starPowerStatsPanel" class="stats-mode-panel star-power-panel"><div class="star-power-symbol" aria-hidden="true">★</div><strong>POUVOIR STAR</strong><p>Aucun pouvoir star disponible pour ce brawler.</p></div>
+<div
+                id="capabilitiesStatsPanel"
+                class="stats-mode-panel capabilities-stats-panel"
+            >
+                <div
+                    id="capabilitiesStatsContent"
+                    class="capabilities-stats-content"
+                ></div>
+            </div>
+        </section>
+        </div>
+    </div>
+</main>
+<!-- =====================================================
+     BOXES
+===================================================== -->
+<main
+    id="boxesPage"
+    class="page boxes-page"
+>
+    <div class="boxes-title">
+        BOÎTES
+    </div>
+    <div class="boxes-subtitle">
+        Choisis ta boîte et tente d'obtenir une récompense
+    </div>
+    <div class="box-status">
+        <div class="box-balance-chip">
+            <img
+                src="Icon/Jeton.png"
+                alt="Tokens"
+            >
+            <div class="box-balance-text">
+                <span id="boxTokenCount">
+                    0
+                </span>
+                <small>
+                    TOKENS
+                </small>
+            </div>
+        </div>
+        <div class="box-balance-chip star-token-balance">
+            <img
+                src="Icon/Fly_token.png"
+                alt="Star Tokens"
+            >
+            <div class="box-balance-text">
+                <span id="boxStarTokenCount">
+                    0
+                </span>
+                <small>
+                    STAR TOKENS
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="boxes-grid">
+        <!-- BRAWL BOX -->
+        <div
+            class="box-option"
+            onclick="openBox('brawl')"
+        >
+            <img
+                class="box-option-image"
+                src="Icon/Brawl_Box.webp"
+                alt="Brawl Box"
+            >
+            <div class="box-option-name">
+                Brawl Box
+            </div>
+            <div class="box-option-draws">
+                1 tirage
+            </div>
+            <div class="box-option-price">
+                <img
+                    src="Icon/Jeton.png"
+                    alt="Tokens"
+                >
+                10
+            </div>
+        </div>
+        <!-- BIG BOX -->
+        <div
+            class="box-option"
+            onclick="openBox('big')"
+        >
+            <img
+                class="box-option-image"
+                src="Icon/Big_Box.webp"
+                alt="Big Box"
+            >
+            <div class="box-option-name">
+                Big Box
+            </div>
+            <div class="box-option-draws">
+                3 tirages
+            </div>
+            <div class="box-option-price star-token-price">
+                <img
+                    src="Icon/Fly_token.png"
+                    alt="Star Tokens"
+                >
+                3
+            </div>
+        </div>
+        <!-- MEGA BOX -->
+        <div
+            class="box-option"
+            onclick="openBox('mega')"
+        >
+            <img
+                class="box-option-image"
+                src="Icon/Mega_Box.webp"
+                alt="Mega Box"
+            >
+            <div class="box-option-name">
+                Mega Box
+            </div>
+            <div class="box-option-draws">
+                10 tirages
+            </div>
+            <div class="box-option-price mega-gem-price">
+                <img
+                    src="Icon/gemme.png"
+                    alt="Gemmes"
+                >
+                60
+            </div>
+        </div>
+    </div>
+    <section class="box-chances">
+        <div class="box-chances-title">
+            CHANCES PAR TIRAGE
+        </div>
+        <div class="box-chances-grid">
+            <div class="box-chance-item">
+                <img
+                    src="Icon/coin.png"
+                    alt="Pièces"
+                >
+                <div class="box-chance-info">
+                    <span>100 pièces</span>
+                    <strong>39,5%</strong>
+                </div>
+            </div>
+            <div class="box-chance-item">
+                <img
+                    src="Icon/coin.png"
+                    alt="Pièces"
+                >
+                <div class="box-chance-info">
+                    <span>250 pièces</span>
+                    <strong>15%</strong>
+                </div>
+            </div>
+            <div class="box-chance-item">
+                <img
+                    src="Icon/gemme.png"
+                    alt="Gemmes"
+                >
+                <div class="box-chance-info">
+                    <span>3 gemmes</span>
+                    <strong>15%</strong>
+                </div>
+            </div>
+            <div class="box-chance-item">
+                <img
+                    src="Icon/power.png"
+                    alt="Points de pouvoir"
+                >
+                <div class="box-chance-info">
+                    <span>100 pouvoir</span>
+                    <strong>25%</strong>
+                </div>
+            </div>
+            <div class="box-chance-item brawler-chance-item">
+                <div class="box-chance-brawler-icon">
+                    ★
+                </div>
+                <div class="box-chance-info">
+                    <span>Brawler rare</span>
+                    <strong>2,5%</strong>
+                </div>
+            </div>
+            <div class="box-chance-item ability-chance-item">
+                <div class="box-chance-ability-icon">✦</div>
+                <div class="box-chance-info">
+                    <span>Capacité <small>(brawler possédé pouvoir 7+)</small></span>
+                    <strong>2%</strong>
+                </div>
+            </div>
+            <div class="box-chance-item star-power-chance-item">
+                <div class="box-chance-star-icon">★</div>
+                <div class="box-chance-info">
+                    <span>Pouvoir star <small>(pouvoir 10+ · non possédé)</small></span>
+                    <strong>1%</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="box-arena">
+        <div class="box-platform"></div>
+        <div class="box-info">
+            Les récompenses identiques sont regroupées automatiquement
+        </div>
+    </div>
+</main>
+<main
+    id="shopPage"
+    class="page shop-page"
+>
+    <div class="shop-header">
+        <div class="ultra-heading-copy"><span class="ultra-kicker">FAIS LE PLEIN</span><div class="shop-title">BOUTIQUE<span class="ultra-title-dot">.</span></div></div>
+        <div class="shop-season-badge" aria-label="Saison 1 en cours">
+            <span>★</span> SAISON 1
+        </div>
+    </div>
+    <div class="shop-subtitle">
+        Des recrues. Des pouvoirs. Ton prochain avantage.
+    </div>
+    <button
+        class="home-box-button shop-box-button"
+        type="button"
+        onclick="showBoxes()"
+    >
+        <div class="home-box-icon">
+            <img
+                src="Icon/Brawl_Box.webp"
+                alt="Boîtes"
+            >
+        </div>
+        <div class="home-box-text">
+            <div class="home-box-title">
+                BOÎTES
+            </div>
+            <div class="home-box-description">
+                Brawl • Big • Mega
+            </div>
+        </div>
+        <div class="home-box-token">
+            <img
+                src="Icon/Jeton.png"
+                alt="Tokens"
+            >
+            <span id="shopBoxTokenCount">
+                0
+            </span>
+        </div>
+    </button>
+    <div class="shop-section-title profile-shop-title">
+        <span class="shop-section-dot"></span>
+        Icônes de profil
+    </div>
+    <div
+        id="profileIconShopGrid"
+        class="profile-icon-shop-grid"
+    ></div>
+    <div class="shop-section-title">
+        <span class="shop-section-dot"></span>
+        Brawlers rares
+    </div>
+    <div class="shop-carousel">
+        <button
+            class="shop-arrow"
+            type="button"
+            aria-label="Brawler précédent"
+            onclick="changeShopBrawler(-1)"
+        >
+            ‹
+        </button>
+        <div class="shop-slider-window">
+            <div
+                id="shopBrawlerGrid"
+                class="shop-grid"
+            ></div>
+            <div
+                id="shopSliderCounter"
+                class="shop-slider-dots"
+                aria-label="Position dans le carrousel"
+            ></div>
+        </div>
+        <button
+            class="shop-arrow"
+            type="button"
+            aria-label="Brawler suivant"
+            onclick="changeShopBrawler(1)"
+        >
+            ›
+        </button>
+    </div>
+    <div class="shop-section-title ability-shop-title">
+        <span class="shop-section-dot"></span>
+        Capacités
+    </div>
+    <div class="ability-shop-subtitle">
+        Capacités propres à chaque Brawler · 2500 pièces
+    </div>
+    <div
+        id="abilityShopGrid"
+        class="ability-shop-grid"
+    ></div>
+    <div class="shop-section-title star-power-shop-title">
+        <span class="shop-section-dot"></span>
+        Pouvoirs star
+    </div>
+    <div class="star-power-shop-subtitle">
+        Passifs de niveau 10 · Filtre les pouvoirs prêts à acheter ou déjà possédés
+    </div>
+    <div
+        id="starPowerShopGrid"
+        class="ability-shop-grid"
+    ></div>
+</main>
+<main
+    id="friendsPage"
+    class="page friends-page"
+>
+    <div class="friends-header">
+        <div>
+            <div class="friends-kicker">
+                SOCIAL
+            </div>
+            <div class="friends-title">
+                AMIS
+            </div>
+        </div>
+        <div class="friends-total">
+            <span id="friendsCount">
+                0
+            </span>
+            <span class="friends-total-label">
+                AMIS
+            </span>
+        </div>
+    </div>
+    <div class="friends-tabs">
+        <button
+            id="friendsTabButton"
+            class="friends-tab active"
+            type="button"
+            onclick="switchFriendsTab('friends')"
+        >
+            MES AMIS
+            <span
+                id="friendsTabCount"
+                class="friends-tab-count"
+            >
+                0
+            </span>
+        </button>
+        <button
+            id="requestsTabButton"
+            class="friends-tab"
+            type="button"
+            onclick="switchFriendsTab('requests')"
+        >
+            DEMANDES
+            <span
+                id="requestsTabCount"
+                class="friends-tab-count"
+            >
+                0
+            </span>
+        </button>
+    </div>
+    <section class="add-friend-panel">
+        <div class="add-friend-label">
+            AJOUTER UN AMI
+        </div>
+        <div class="add-friend-row">
+            <input
+                id="friendSearchInput"
+                class="friend-search-input"
+                type="text"
+                maxlength="16"
+                placeholder="Pseudo du joueur..."
+                autocomplete="off"
+            >
+            <button
+                class="friend-send-button"
+                type="button"
+                onclick="sendFriendRequest()"
+            >
+                AJOUTER
+            </button>
+        </div>
+        <div
+            id="friendFeedback"
+            class="friend-feedback"
+        ></div>
+    </section>
+    <section
+        id="friendsTabPanel"
+        class="friend-tab-panel active"
+    >
+        <div class="friend-section-heading">
+            <span>LISTE D'AMIS</span>
+            <span
+                id="onlineFriendsCount"
+                class="friend-section-meta"
+            >
+                0 EN LIGNE
+            </span>
+        </div>
+        <div
+            id="friendsList"
+            class="friends-list"
+        ></div>
+    </section>
+    <section
+        id="requestsTabPanel"
+        class="friend-tab-panel"
+    >
+        <div class="friend-section-heading">
+            <span>DEMANDES REÇUES</span>
+            <span
+                id="incomingRequestCount"
+                class="friend-section-meta"
+            >
+                0
+            </span>
+        </div>
+        <div
+            id="incomingRequestsList"
+            class="friends-list"
+        ></div>
+        <div class="friend-section-heading outgoing-heading">
+            <span>ENVOYÉES</span>
+            <span
+                id="outgoingRequestCount"
+                class="friend-section-meta"
+            >
+                0
+            </span>
+        </div>
+        <div
+            id="outgoingRequestsList"
+            class="friends-list"
+        ></div>
+    </section>
+</main>
+<div
+    id="battleVictoryRecap"
+    class="battle-result-overlay"
+    aria-hidden="true"
+>
+    <div class="battle-result-card victory">
+        <div class="battle-result-kicker">
+            DUEL TERMINÉ
+        </div>
+        <div class="battle-result-title">
+            VICTOIRE !
+        </div>
+        <div
+            id="battleVictoryBrawler"
+            class="battle-result-subtitle"
+        >
+            Shelly
+        </div>
+        <button
+            class="battle-result-button"
+            type="button"
+            onclick="closeBattleVictoryRecap()"
+        >
+            RETOURNER AU LOBBY
+        </button>
+    </div>
+</div>
+<div
+    id="battleLossToast"
+    class="battle-result-overlay"
+    aria-hidden="true"
+>
+    <div class="battle-result-card defeat">
+        <div class="battle-result-kicker">
+            DUEL TERMINÉ
+        </div>
+        <div class="battle-result-title">
+            DÉFAITE
+        </div>
+        <div class="battle-result-subtitle">
+            TON BRAWLER EST K.O.
+        </div>
+        <div class="battle-defeat-message">
+            +10 TOKENS
+        </div>
+        <button
+            class="battle-result-button defeat"
+            type="button"
+            onclick="closeBattleLossRecap()"
+        >
+            RETOURNER AU LOBBY
+        </button>
+    </div>
+</div>
+<div
+    id="postBattleRewardsOverlay"
+    class="battle-result-overlay"
+    aria-hidden="true"
+>
+    <div class="battle-result-card post-battle-rewards-card">
+        <div class="battle-result-kicker">
+            RETOUR AU LOBBY
+        </div>
+        <div
+            id="postBattleRewardsTitle"
+            class="battle-result-title"
+        >
+            RÉCOMPENSES
+        </div>
+        <div
+            id="postBattleRewardsSubtitle"
+            class="battle-result-subtitle"
+        >
+            DUEL TERMINÉ
+        </div>
+        <div
+            id="postBattleRewardsContent"
+            class="post-battle-rewards-list"
+        ></div>
+        <button
+            class="battle-result-button"
+            type="button"
+            onclick="closePostBattleRewards()"
+        >
+            CONTINUER
+        </button>
+    </div>
+</div>
+<div
+    id="appConfirmOverlay"
+    class="app-confirm-overlay"
+    aria-hidden="true"
+>
+    <div
+        id="appConfirmCard"
+        class="app-confirm-card"
+    >
+        <div
+            id="appConfirmIcon"
+            class="app-confirm-icon"
+        >
+            ?
+        </div>
+        <div
+            id="appConfirmKicker"
+            class="app-confirm-kicker"
+        >
+            CONFIRMATION
+        </div>
+        <div
+            id="appConfirmTitle"
+            class="app-confirm-title"
+        >
+            Confirmer ?
+        </div>
+        <div
+            id="appConfirmMessage"
+            class="app-confirm-message"
+        ></div>
+        <div class="app-confirm-actions">
+            <button
+                class="app-confirm-cancel"
+                type="button"
+                onclick="closeAppConfirm()"
+            >
+                ANNULER
+            </button>
+            <button
+                id="appConfirmAccept"
+                class="app-confirm-accept"
+                type="button"
+            >
+                CONFIRMER
+            </button>
+        </div>
+    </div>
+</div>
+<div
+    id="abilityDetailOverlay"
+    class="ability-detail-overlay"
+    aria-hidden="true"
+>
+    <div class="ability-equip-modal ability-detail-modal">
+        <div class="ability-detail-head">
+            <div>
+                <div class="ability-detail-kicker">
+                    CAPACITÉ
+                </div>
+                <div
+                    id="abilityDetailTitle"
+                    class="ability-detail-title"
+                >
+                    CAPACITÉ
+                </div>
+            </div>
+            <button
+                class="ability-detail-close"
+                type="button"
+                onclick="closeAbilityDetailModal()"
+                aria-label="Fermer"
+            >
+                ×
+            </button>
+        </div>
+        <div
+            id="abilityDetailSlot"
+            class="ability-detail-slot"
+        ></div>
+        <div
+            id="abilityDetailDescription"
+            class="ability-detail-description"
+        ></div>
+        <div
+            id="abilityDetailStats"
+            class="ability-detail-stats"
+        ></div>
+        <div class="ability-detail-actions">
+            <button
+                id="abilityDetailManageButton"
+                class="ability-detail-manage"
+                type="button"
+                onclick="openAbilityEquipFromDetail()"
+            >
+                MODIFIER
+            </button>
+            <button
+                class="ability-detail-close-bottom"
+                type="button"
+                onclick="closeAbilityDetailModal()"
+            >
+                FERMER
+            </button>
+        </div>
+    </div>
+</div>
+<div
+    id="abilityEquipOverlay"
+    class="ability-equip-overlay"
+    aria-hidden="true"
+>
+    <div class="ability-equip-modal">
+        <div class="ability-equip-head">
+            <div>
+                <div class="ability-equip-kicker">
+                    ÉQUIPEMENT
+                </div>
+                <div
+                    id="abilityEquipTitle"
+                    class="ability-equip-title"
+                >
+                    EMPLACEMENT 1
+                </div>
+            </div>
+            <button
+                class="ability-equip-close"
+                type="button"
+                onclick="closeAbilityEquipPicker()"
+                aria-label="Fermer"
+            >
+                ×
+            </button>
+        </div>
+        <div
+            id="abilityEquipBrawler"
+            class="ability-equip-brawler"
+        ></div>
+        <div
+            id="abilityEquipList"
+            class="ability-equip-list"
+        ></div>
+        <button
+            id="abilityUnequipButton"
+            class="ability-unequip-button"
+            type="button"
+            onclick="unequipBrawlerAbility()"
+        >
+            RETIRER LA CAPACITÉ
+        </button>
+    </div>
+</div>
+<nav class="bottom-nav">
+    <button
+        id="navHome"
+        class="nav active"
+        onclick="showHome()"
+    >
+        <div class="nav-icon"><img src="Icon/Home.webp" alt=""></div>
+        Accueil
+    </button>
+    <button
+        id="navBrawlers"
+        class="nav"
+        onclick="showBrawlers()"
+    >
+        <div class="nav-icon"><img src="Icon/Brawlers.png" alt=""></div>
+        Brawlers
+    </button>
+    <button
+        id="navShop"
+        class="nav"
+        onclick="showShop()"
+    >
+        <div class="nav-icon"><img src="Icon/Shop.webp" alt=""></div>
+        Boutique
+    </button>
+    <button
+        id="navFriends"
+        class="nav"
+        onclick="showFriends()"
+    >
+        <div class="nav-icon friend-nav-icon">
+            <img src="Icon/Friends.png" alt="">
+            <span
+                id="friendNavBadge"
+                class="friend-nav-badge"
+            >
+                0
+            </span>
+        </div>
+        Amis
+    </button>
+</nav>
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+<div
+    id="loginPopup"
+    class="popup"
+>
+    <div class="popup-box">
+        <div class="popup-title">
+            Bienvenue !
+        </div>
+        <div class="popup-text">
+            Choisis ton nom de joueur pour commencer.
+        </div>
+        <input
+            id="usernameInput"
+            class="popup-input"
+            type="text"
+            maxlength="16"
+            placeholder="Ton pseudo..."
+        >
+        <button
+            class="login-button"
+            onclick="confirmUsername()"
+        >
+            COMMENCER
+        </button>
+    </div>
+</div>
+<!-- =====================================================
+     PROFIL
+===================================================== -->
+<div
+    id="profilePopup"
+    class="popup"
+>
+    <div class="popup-box">
+        <div class="popup-title">
+            Profil
+        </div>
+        <div class="popup-text">
+            Modifie ton pseudo et choisis ton icône de profil.
+        </div>
+        <input
+            id="profileNameInput"
+            class="popup-input"
+            type="text"
+            maxlength="16"
+            placeholder="Ton pseudo..."
+        >
+        <div class="profile-icon-picker-title">
+            ICÔNES DE JOUEUR <span id="profileIconOwnedCount" class="profile-icon-owned-count"></span>
+        </div>
+        <div
+            id="profileIconChoices"
+            class="profile-icon-choices"
+        ></div>
+        <button
+            class="login-button"
+            onclick="saveProfile()"
+        >
+            ENREGISTRER
+        </button>
+        <button
+            class="cancel-button"
+            onclick="closePopup('profilePopup')"
+        >
+            ANNULER
+        </button>
+        <button
+            class="reset-account-button"
+            onclick="resetAccount()"
+        >
+            🗑 RÉINITIALISER LE COMPTE
+        </button>
+    </div>
+</div>
+<!-- =====================================================
+     BOX OPENING
+===================================================== -->
+<div
+    id="boxOpeningOverlay"
+    class="box-opening-overlay"
+    aria-hidden="true"
+>
+    <div class="box-opening-glow"></div>
+    <div
+        id="boxOpeningFlash"
+        class="box-opening-flash"
+    ></div>
+    <div class="box-opening-content">
+        <div
+            id="boxOpeningLabel"
+            class="box-opening-label"
+        >
+            OUVERTURE...
+        </div>
+        <img
+            id="boxOpeningImage"
+            class="box-opening-image"
+            src="Icon/Brawl_Box.webp"
+            alt="Box"
+            role="button"
+            tabindex="0"
+            onclick="openDisplayedBox()"
+            onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); openDisplayedBox(); }"
+        >
+        <div
+            id="boxOpeningName"
+            class="box-opening-name"
+        >
+            BRAWL BOX
+        </div>
+    </div>
+</div>
+<!-- =====================================================
+     REWARD
+===================================================== -->
+<div
+    id="rewardPopup"
+    class="popup"
+>
+    <div class="popup-box">
+        <div
+            id="rewardIcon"
+            class="reward-icon"
+        >
+            🎁
+        </div>
+        <div
+            id="rewardName"
+            class="reward-name"
+        >
+            Récompense
+        </div>
+        <div
+            id="rewardDescription"
+            class="reward-description"
+        >
+            Tu as gagné une récompense !
+        </div>
+        <div
+            id="rewardRarity"
+            class="reward-rarity rarity-rare"
+        >
+            RARE
+        </div>
+        <button
+            class="login-button"
+            onclick="closePopup('rewardPopup')"
+        >
+            SUPER !
+        </button>
+    </div>
+</div>
+</div>
+<div id="musicNotice" role="status" hidden></div>
+<audio id="backgroundMusic" src="Son/Home_ss1.mp3" autoplay loop preload="auto" playsinline></audio>
+
+<script src="js/app.js"></script>
+</body>
+</html>
