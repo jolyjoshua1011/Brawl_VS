@@ -1113,6 +1113,93 @@ body{
 }
 </style>
 
+<style id="brawl-v6-ui-fixes">
+/* =====================================================
+   BRAWL VS ONLINE V6
+   - Pas de header global sur Brawlers / Boutique / Amis
+   - Picker Duel parfaitement centré
+===================================================== */
+
+/* Retire entièrement le header principal sur les 3 pages demandées. */
+.phone.brawl-v6-no-header > header.arena-header,
+.phone.brawl-v6-no-header > header {
+    display: none !important;
+}
+
+/* Les pages remontent alors tout en haut du téléphone. */
+.phone.brawl-v6-no-header > #brawlersPage.page,
+.phone.brawl-v6-no-header > #shopPage.page,
+.phone.brawl-v6-no-header > #friendsPage.page {
+    top: 0 !important;
+}
+
+/* Le footer reste visible. */
+.phone.brawl-v6-no-header > .bottom-nav {
+    display: grid !important;
+}
+
+/* Fenêtre DUEL : centrage strict dans le téléphone. */
+.phone .phone-skin-overlay:has(#onlineDuelPickerDialog[open]) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 14px !important;
+}
+
+.phone .phone-skin-overlay #onlineDuelPickerDialog[open] {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    width: min(356px, 100%) !important;
+    max-width: 356px !important;
+    max-height: min(690px, calc(100% - 4px)) !important;
+    overflow: hidden !important;
+    flex: 0 1 auto !important;
+    align-self: center !important;
+    justify-self: center !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+.phone #onlineDuelPickerDialog .online-duel-v3-shell {
+    width: 100% !important;
+    max-height: min(690px, calc(100dvh - 34px)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.phone #onlineDuelPickerDialog .online-duel-friends-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: 430px !important;
+    overflow-y: auto !important;
+}
+
+/* Verrou visuel absolu pendant qu'une action est en cours. */
+#battlePage.online-network-battle.v6-action-pending #battleAttackButton,
+#battlePage.online-network-battle.v6-action-pending #battleSuperButton,
+#battlePage.online-network-battle.v6-action-pending #battlePassTurnButton,
+#battlePage.online-network-battle.v6-action-pending #battleAbilitySlot1,
+#battlePage.online-network-battle.v6-action-pending #battleAbilitySlot2 {
+    pointer-events: none !important;
+    opacity: .42 !important;
+    filter: saturate(.45) !important;
+}
+
+@media (max-width: 430px) {
+    .phone .phone-skin-overlay #onlineDuelPickerDialog[open] {
+        width: min(356px, calc(100vw - 28px)) !important;
+        max-height: calc(100% - 16px) !important;
+    }
+}
+</style>
+
 </head>
 <body>
 <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none;overflow:hidden">
@@ -43541,6 +43628,874 @@ if ("serviceWorker" in navigator) {
     window.addEventListener(
         "pageshow",
         refreshHeaderSurfaceV5,
+        { passive: true }
+    );
+})();
+</script>
+
+<script id="brawl-online-v6-hard-sync">
+/* =====================================================
+   BRAWL VS ONLINE V6 · SYNCHRO STRICTE
+
+   OBJECTIFS :
+   1) Le choix de distance alterne TOUJOURS A / B / A / B.
+   2) Les actions alternent TOUJOURS A / B / A / B.
+      Le joueur qui choisit la distance n'est donc pas forcément
+      celui qui joue juste après.
+   3) Une action déjà lancée est verrouillée jusqu'à la mise à
+      jour Supabase : impossible d'attaquer deux fois d'affilée.
+   4) Le picker Duel recharge la vraie liste d'amis Supabase.
+===================================================== */
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V6_HARD_SYNC__) return;
+    window.__BRAWL_V6_HARD_SYNC__ = true;
+
+    const V6 = {
+        actionInFlight: false,
+        actionStartSeq: -1,
+        transitionSeq: -1,
+        transitionBusy: false,
+        choiceInFlight: false
+    };
+
+    function cloneV6(value) {
+        try {
+            return structuredClone(value);
+        } catch (_) {
+            return JSON.parse(JSON.stringify(value || {}));
+        }
+    }
+
+    function onlineMetaV6(match = currentOnlineMatch) {
+        const me = brawlCloudSession?.user?.id;
+        if (!match || !me) return null;
+        const amP1 = match.player1_id === me;
+        return {
+            me,
+            opponent: amP1 ? match.player2_id : match.player1_id,
+            myKey: amP1 ? "p1" : "p2",
+            opponentKey: amP1 ? "p2" : "p1"
+        };
+    }
+
+    function liveDuelV6() {
+        return Boolean(
+            currentOnlineMatch?.status === "playing" &&
+            currentOnlineMatch?.game_state?.battle &&
+            document
+                .getElementById("battlePage")
+                ?.classList.contains("online-network-battle")
+        );
+    }
+
+    function ownAbilityIdsV6(name) {
+        try {
+            return Object.values(
+                getBrawlerAbilityLoadout(name) || {}
+            ).filter(Boolean);
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function captureLocalSideV6(side, serverBattle, meta) {
+        const isPlayer = side === "player";
+        const prefix = isPlayer ? "player" : "enemy";
+        const name = battleState[prefix + "Name"];
+        const serverSide = serverBattle?.[
+            isPlayer ? meta.myKey : meta.opponentKey
+        ] || {};
+
+        return {
+            ...cloneV6(serverSide),
+            name,
+            username: isPlayer
+                ? (state.profile.name || "JOUEUR")
+                : (battleState.enemyPseudo || serverSide.username || "ADVERSAIRE"),
+            image: isPlayer
+                ? (brawlers[name]?.image || getDefaultSkinImage(name))
+                : (serverSide.image || brawlers[name]?.image || getDefaultSkinImage(name)),
+            power: isPlayer
+                ? Number(brawlers[name]?.power || serverSide.power || 1)
+                : Number(battleState.enemyPower || serverSide.power || 1),
+            abilityIds: isPlayer
+                ? ownAbilityIdsV6(name)
+                : [...(
+                    battleState.enemyAbilityIds ||
+                    serverSide.abilityIds ||
+                    []
+                )],
+            hasStarPower: isPlayer
+                ? Boolean(isBrawlerStarPowerOwned(name))
+                : Boolean(
+                    battleState.enemyHasStarPower ??
+                    serverSide.hasStarPower
+                ),
+            health: Number(battleState[prefix + "Health"] || 0),
+            maxHealth: Number(battleState[prefix + "MaxHealth"] || 0),
+            bearHealth: Number(battleState[prefix + "BearHealth"] || 0),
+            bearMaxHealth: Number(battleState[prefix + "BearMaxHealth"] || 0),
+            shieldTurns: Number(battleState[prefix + "ShieldTurns"] || 0),
+            paralyzedTurns: Number(battleState[prefix + "ParalyzedTurns"] || 0),
+            cowboyRollDodges: Number(battleState[prefix + "CowboyRollDodges"] || 0),
+            burnTurns: Number(battleState[prefix + "BurnTurns"] || 0),
+            poisonTurns: Number(battleState[prefix + "PoisonTurns"] || 0),
+            slowTurns: Number(battleState[prefix + "SlowTurns"] || 0),
+            slowAmount: Number(battleState[prefix + "SlowAmount"] || 0),
+            pocoHealingTurns: Number(battleState[prefix + "PocoHealingTurns"] || 0),
+            effectImmunityTurns: Number(battleState[prefix + "EffectImmunityTurns"] || 0),
+            meteorPending: battleState[prefix + "MeteorPending"] || null,
+            superCharge: Number(
+                isPlayer
+                    ? battleState.superCharge
+                    : (battleState.enemySuperCharge || 0)
+            ),
+            usedAbilities: cloneV6(
+                isPlayer
+                    ? battleState.usedAbilities
+                    : (battleState.enemyUsedAbilities || {})
+            )
+        };
+    }
+
+    function buildBattleSnapshotV6(serverBattle, meta, overrides = {}) {
+        const message =
+            document.getElementById("battleActionMessage")?.textContent ||
+            serverBattle?.last_action ||
+            "";
+
+        return {
+            ...cloneV6(serverBattle),
+            seq: Number(serverBattle?.seq || 0) + 1,
+            [meta.myKey]: captureLocalSideV6("player", serverBattle, meta),
+            [meta.opponentKey]: captureLocalSideV6("enemy", serverBattle, meta),
+            current_distance:
+                battleState.currentDistance ??
+                serverBattle?.current_distance ??
+                null,
+            last_action: message,
+            ...overrides
+        };
+    }
+
+    function setV6ActionLock(locked) {
+        V6.actionInFlight = Boolean(locked);
+        document
+            .getElementById("battlePage")
+            ?.classList.toggle(
+                "v6-action-pending",
+                V6.actionInFlight && liveDuelV6()
+            );
+
+        try {
+            syncBattleActionAvailability();
+        } catch (_) {}
+    }
+
+    function serverAllowsLocalActionV6() {
+        if (!liveDuelV6()) return true;
+        const meta = onlineMetaV6();
+        const battle = currentOnlineMatch?.game_state?.battle;
+
+        return Boolean(
+            meta &&
+            battle &&
+            battle.phase === "action" &&
+            battle.turn_user_id === meta.me &&
+            !V6.actionInFlight &&
+            !V6.choiceInFlight &&
+            battleState.playerHealth > 0 &&
+            battleState.enemyHealth > 0 &&
+            battleState.distanceChosen
+        );
+    }
+
+    /* -----------------------------------------------------
+       BOUTONS D'ACTION : le serveur décide qui peut jouer.
+    ----------------------------------------------------- */
+    const previousSyncAvailabilityV6 = syncBattleActionAvailability;
+    syncBattleActionAvailability = function(...args) {
+        const result = previousSyncAvailabilityV6(...args);
+
+        if (!liveDuelV6()) return result;
+
+        const meta = onlineMetaV6();
+        const battle = currentOnlineMatch?.game_state?.battle;
+        const serverActionTurn = Boolean(
+            meta &&
+            battle &&
+            battle.phase === "action" &&
+            battle.turn_user_id === meta.me &&
+            !V6.actionInFlight
+        );
+
+        if (!serverActionTurn) {
+            [
+                "battleAttackButton",
+                "battleSuperButton",
+                "battlePassTurnButton",
+                "battleAbilitySlot1",
+                "battleAbilitySlot2"
+            ].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = true;
+            });
+        }
+
+        return result;
+    };
+
+    /* -----------------------------------------------------
+       Une seule action locale tant que Supabase n'a pas avancé.
+    ----------------------------------------------------- */
+    function wrapOnlineActionV6(previousFn, kind) {
+        return function(...args) {
+            if (!liveDuelV6()) {
+                return previousFn(...args);
+            }
+
+            if (!serverAllowsLocalActionV6()) {
+                return false;
+            }
+
+            if (
+                kind === "super" &&
+                Number(battleState.superCharge || 0) < 100
+            ) {
+                return false;
+            }
+
+            /*
+               Les anciens wrappers V4 ont leur propre verrou interne.
+               On leur repasse le snapshot courant pour qu'ils sachent
+               immédiatement que c'est bien notre tour.
+            */
+            try {
+                onOnlineMatchUpdated(currentOnlineMatch);
+            } catch (_) {}
+
+            V6.actionStartSeq = Number(
+                currentOnlineMatch?.game_state?.battle?.seq || 0
+            );
+            V6.transitionSeq = -1;
+            setV6ActionLock(true);
+
+            let result;
+            try {
+                result = previousFn(...args);
+            } catch (error) {
+                setV6ActionLock(false);
+                throw error;
+            }
+
+            /* Action refusée par le moteur local : on ne reste pas bloqué. */
+            setTimeout(() => {
+                if (
+                    V6.actionInFlight &&
+                    Number(
+                        currentOnlineMatch?.game_state?.battle?.seq || 0
+                    ) === V6.actionStartSeq &&
+                    battleState.enemyTurn === false &&
+                    !battleEnemyAttackTimer
+                ) {
+                    setV6ActionLock(false);
+                }
+            }, 180);
+
+            return result;
+        };
+    }
+
+    const previousAttackV6 = attackEnemy;
+    const previousSuperV6 = useBattleSuper;
+    const previousAbilityV6 = useBattleAbility;
+    const previousPassV6 = passBattleTurn;
+
+    attackEnemy = wrapOnlineActionV6(previousAttackV6, "attack");
+    useBattleSuper = wrapOnlineActionV6(previousSuperV6, "super");
+    useBattleAbility = wrapOnlineActionV6(previousAbilityV6, "ability");
+    passBattleTurn = wrapOnlineActionV6(previousPassV6, "pass");
+
+    /* -----------------------------------------------------
+       MACHINE D'ÉTAT ONLINE
+
+       Exemple :
+       A choisit
+       A joue
+       B joue
+       B choisit
+       A joue
+       B joue
+       A choisit
+       A joue
+       B joue
+
+       -> choix A/B/A/B
+       -> actions A/B/A/B/A/B
+    ----------------------------------------------------- */
+    async function completeOnlineActionV6() {
+        if (V6.transitionBusy) return;
+        V6.transitionBusy = true;
+
+        const client = getBrawlCloudClient();
+        const matchId = currentOnlineMatch?.id;
+        const meta = onlineMetaV6();
+
+        if (!client || !matchId || !meta) {
+            setV6ActionLock(false);
+            return;
+        }
+
+        try {
+            const { data: fresh, error: freshError } = await client
+                .from("matches")
+                .select("*")
+                .eq("id", matchId)
+                .single();
+
+            if (freshError) throw freshError;
+            if (!fresh || fresh.status !== "playing") {
+                setV6ActionLock(false);
+                return;
+            }
+
+            const serverBattle = fresh.game_state?.battle;
+            if (!serverBattle) {
+                setV6ActionLock(false);
+                return;
+            }
+
+            /*
+               Le serveur refuse un deuxième traitement du même tour.
+               C'est la sécurité principale contre les doubles attaques.
+            */
+            if (
+                fresh.turn_user_id !== meta.me ||
+                serverBattle.turn_user_id !== meta.me ||
+                serverBattle.phase !== "action"
+            ) {
+                currentOnlineMatch = fresh;
+                onOnlineMatchUpdated(fresh);
+                setV6ActionLock(false);
+                return;
+            }
+
+            const sourceSeq = Number(serverBattle.seq || 0);
+            V6.transitionSeq = sourceSeq;
+
+            const actionIndex = Number(
+                serverBattle.distance_round_attack_index || 0
+            );
+
+            let nextBattle;
+
+            if (actionIndex === 0) {
+                /*
+                   Première action avec cette distance.
+                   L'autre joueur obtient STRICTEMENT l'action suivante.
+                */
+                nextBattle = buildBattleSnapshotV6(
+                    serverBattle,
+                    meta,
+                    {
+                        phase: "action",
+                        turn_user_id: meta.opponent,
+                        chooser_id: serverBattle.chooser_id,
+                        next_actor_id: meta.opponent,
+                        current_distance: serverBattle.current_distance,
+                        distance_choices: [],
+                        distance_round_attack_index: 1,
+                        last_action:
+                            document.getElementById("battleActionMessage")?.textContent ||
+                            "Action terminée."
+                    }
+                );
+            } else {
+                /*
+                   Deuxième action de la distance.
+                   - Le CHOIX passe à l'autre chooser.
+                   - La prochaine ACTION reste strictement alternée :
+                     elle revient donc à l'autre joueur que celui qui
+                     vient juste d'agir.
+                */
+                const previousChooser =
+                    serverBattle.chooser_id || meta.me;
+
+                const nextChooser =
+                    previousChooser === meta.me
+                        ? meta.opponent
+                        : meta.me;
+
+                const nextActor = meta.opponent;
+
+                nextBattle = buildBattleSnapshotV6(
+                    serverBattle,
+                    meta,
+                    {
+                        phase: "choose_distance",
+                        turn_user_id: nextChooser,
+                        chooser_id: nextChooser,
+                        next_actor_id: nextActor,
+                        current_distance: null,
+                        distance_choices: getBattleDistanceChoices(),
+                        distance_round_attack_index: 0,
+                        last_action: "Nouvelle distance à choisir."
+                    }
+                );
+            }
+
+            const nextGameState = cloneV6(fresh.game_state || {});
+            nextGameState.battle = nextBattle;
+
+            const { data: updated, error: updateError } = await client
+                .from("matches")
+                .update({
+                    game_state: nextGameState,
+                    turn_user_id: nextBattle.turn_user_id,
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", matchId)
+                .eq("status", "playing")
+                /* Compare-and-swap : seulement le joueur dont c'est le tour. */
+                .eq("turn_user_id", meta.me)
+                .select()
+                .maybeSingle();
+
+            if (updateError) throw updateError;
+
+            if (updated) {
+                currentOnlineMatch = updated;
+                onOnlineMatchUpdated(updated);
+            } else {
+                /* Un autre snapshot a déjà avancé : on recharge l'état réel. */
+                const { data: latest } = await client
+                    .from("matches")
+                    .select("*")
+                    .eq("id", matchId)
+                    .single();
+
+                if (latest) {
+                    currentOnlineMatch = latest;
+                    onOnlineMatchUpdated(latest);
+                }
+            }
+        } catch (error) {
+            console.error("Synchronisation stricte du tour impossible :", error);
+            setFriendFeedback(
+                "Problème de synchronisation du Duel. Réessaie.",
+                "error"
+            );
+        } finally {
+            V6.transitionBusy = false;
+            setV6ActionLock(false);
+        }
+    }
+
+    const previousAdvanceV6 = advanceDistanceRoundAfterAttack;
+    advanceDistanceRoundAfterAttack = function(actor) {
+        if (!liveDuelV6()) {
+            return previousAdvanceV6(actor);
+        }
+
+        /* Il n'y a aucun BOT en Duel amical online. */
+        if (actor !== "player") return;
+
+        if (
+            battleState.playerHealth <= 0 ||
+            battleState.enemyHealth <= 0
+        ) {
+            return;
+        }
+
+        /* Même fin d'action que le moteur solo, mais sans lancer le BOT. */
+        finalizeBattleActionRegen("player");
+        consumeBattleShieldTurn("enemy");
+        consumeBattleEffectImmunityTurn("enemy");
+
+        void completeOnlineActionV6();
+    };
+
+    /* -----------------------------------------------------
+       CHOIX DE DISTANCE
+       Le chooser choisit, mais `next_actor_id` décide qui agit.
+       C'est ce qui empêche B de jouer deux fois autour du changement
+       de distance tout en gardant A/B/A/B pour le choix.
+    ----------------------------------------------------- */
+    const previousChooseDistanceV6 = chooseBattleDistance;
+
+    chooseBattleDistance = async function(distance) {
+        if (!liveDuelV6()) {
+            return previousChooseDistanceV6(distance);
+        }
+
+        if (V6.choiceInFlight || V6.actionInFlight) return false;
+
+        const client = getBrawlCloudClient();
+        const matchId = currentOnlineMatch?.id;
+        const meta = onlineMetaV6();
+        if (!client || !matchId || !meta) return false;
+
+        V6.choiceInFlight = true;
+
+        try {
+            const { data: fresh, error: freshError } = await client
+                .from("matches")
+                .select("*")
+                .eq("id", matchId)
+                .single();
+
+            if (freshError) throw freshError;
+
+            const serverBattle = fresh?.game_state?.battle;
+            const allowedChoices = Array.isArray(serverBattle?.distance_choices)
+                ? serverBattle.distance_choices.map(Number)
+                : [];
+
+            if (
+                !fresh ||
+                fresh.status !== "playing" ||
+                fresh.turn_user_id !== meta.me ||
+                serverBattle?.turn_user_id !== meta.me ||
+                serverBattle?.phase !== "choose_distance" ||
+                !allowedChoices.includes(Number(distance))
+            ) {
+                if (fresh) {
+                    currentOnlineMatch = fresh;
+                    onOnlineMatchUpdated(fresh);
+                }
+                return false;
+            }
+
+            /*
+               On exécute uniquement la logique VISUELLE / gameplay locale
+               de l'ancien choix de distance, sans laisser l'ancien wrapper
+               envoyer son snapshot (qui supposait que le chooser jouait
+               forcément juste après).
+            */
+            const savedStatus = currentOnlineMatch.status;
+            currentOnlineMatch.status = "v6-local-distance-choice";
+
+            try {
+                previousChooseDistanceV6(Number(distance));
+            } finally {
+                currentOnlineMatch.status = savedStatus;
+            }
+
+            /*
+               L'ancien moteur crée un timer pour rendre la main au chooser.
+               En online c'est le serveur qui décide : on supprime ce timer,
+               sauf si une météorite vient de mettre quelqu'un K.O.
+            */
+            const koAfterChoice =
+                battleState.playerHealth <= 0 ||
+                battleState.enemyHealth <= 0;
+
+            if (!koAfterChoice && battleEnemyAttackTimer) {
+                clearTimeout(battleEnemyAttackTimer);
+                battleEnemyAttackTimer = null;
+            }
+
+            battleState.currentDistance = Number(distance);
+            battleState.distanceChosen = true;
+            battleState.distanceChoices = [];
+
+            /*
+               Première manche : next_actor_id n'existe pas encore,
+               donc le premier chooser commence aussi la partie.
+               Ensuite, next_actor_id garantit l'alternance stricte.
+            */
+            const nextActor =
+                serverBattle.next_actor_id ||
+                serverBattle.chooser_id ||
+                meta.me;
+
+            const nextBattle = buildBattleSnapshotV6(
+                serverBattle,
+                meta,
+                {
+                    phase: "action",
+                    turn_user_id: nextActor,
+                    chooser_id: meta.me,
+                    next_actor_id: nextActor,
+                    current_distance: Number(distance),
+                    distance_choices: [],
+                    distance_round_attack_index: 0,
+                    last_action: "Distance " + Number(distance) + " choisie."
+                }
+            );
+
+            const nextGameState = cloneV6(fresh.game_state || {});
+            nextGameState.battle = nextBattle;
+
+            const { data: updated, error: updateError } = await client
+                .from("matches")
+                .update({
+                    game_state: nextGameState,
+                    turn_user_id: nextActor,
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", matchId)
+                .eq("status", "playing")
+                .eq("turn_user_id", meta.me)
+                .select()
+                .maybeSingle();
+
+            if (updateError) throw updateError;
+
+            if (updated) {
+                currentOnlineMatch = updated;
+                onOnlineMatchUpdated(updated);
+            } else {
+                const { data: latest } = await client
+                    .from("matches")
+                    .select("*")
+                    .eq("id", matchId)
+                    .single();
+
+                if (latest) {
+                    currentOnlineMatch = latest;
+                    onOnlineMatchUpdated(latest);
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error("Choix de distance online impossible :", error);
+            setFriendFeedback(
+                "Impossible de synchroniser la distance.",
+                "error"
+            );
+            return false;
+        } finally {
+            V6.choiceInFlight = false;
+            try { syncBattleActionAvailability(); } catch (_) {}
+        }
+    };
+
+    /* -----------------------------------------------------
+       Chaque snapshot serveur réinitialise proprement le verrou.
+    ----------------------------------------------------- */
+    const previousOnlineMatchUpdatedV6 = onOnlineMatchUpdated;
+    onOnlineMatchUpdated = function(match) {
+        const result = previousOnlineMatchUpdatedV6(match);
+
+        if (match?.status === "playing") {
+            const seq = Number(match.game_state?.battle?.seq || 0);
+            if (seq > V6.actionStartSeq) {
+                V6.actionInFlight = false;
+                document
+                    .getElementById("battlePage")
+                    ?.classList.remove("v6-action-pending");
+            }
+            setTimeout(() => {
+                try { syncBattleActionAvailability(); } catch (_) {}
+            }, 0);
+        }
+
+        return result;
+    };
+
+    /* -----------------------------------------------------
+       PICKER DUEL : recharge d'abord les vrais amis Supabase.
+    ----------------------------------------------------- */
+    function onlinePresenceForFriendV6(friend) {
+        const byId = friend?.user_id
+            ? onlineLobbyPlayers.get(String(friend.user_id))
+            : null;
+
+        if (byId) return byId;
+
+        const wanted = normalizeFriendName(friend?.name || "");
+        return [...onlineLobbyPlayers.values()].find(player =>
+            normalizeFriendName(player?.username || "") === wanted
+        ) || null;
+    }
+
+    function duelFriendListHtmlV6() {
+        const friends = Array.isArray(state.friends)
+            ? [...state.friends]
+            : [];
+
+        if (!friends.length) {
+            return `
+                <div class="online-player-empty">
+                    <span class="online-player-empty-icon">👥</span>
+                    <strong>AUCUN AMI</strong>
+                    <small>Ajoute un ami depuis la page AMIS avant de lancer un Duel.</small>
+                </div>
+            `;
+        }
+
+        friends.sort((a, b) => {
+            const ao = Boolean(onlinePresenceForFriendV6(a));
+            const bo = Boolean(onlinePresenceForFriendV6(b));
+            if (ao !== bo) return ao ? -1 : 1;
+            return String(a.name || "").localeCompare(
+                String(b.name || ""),
+                "fr",
+                { sensitivity: "base" }
+            );
+        });
+
+        return friends.map(friend => {
+            const presence = onlinePresenceForFriendV6(friend);
+            const online = Boolean(presence);
+            const playerId = String(
+                presence?.user_id || friend.user_id || ""
+            ).replace(/[^a-fA-F0-9-]/g, "");
+            const name = escapeOnlineHtml(friend.name || presence?.username || "AMI");
+            const icon = escapeOnlineHtml(
+                presence?.profile?.profile_icon ||
+                presence?.profile_icon ||
+                DEFAULT_PROFILE_ICON
+            );
+
+            return `
+                <article class="online-duel-friend ${online ? "" : "offline"}">
+                    <button
+                        class="online-duel-friend-avatar"
+                        type="button"
+                        ${online && playerId
+                            ? `onclick="openOnlinePlayerProfile('${playerId}')"`
+                            : "disabled"}
+                    >
+                        <img src="${icon}" alt="">
+                    </button>
+
+                    <div class="online-duel-friend-main">
+                        <strong>${name}</strong>
+                        <small class="${online ? "online" : ""}">
+                            ${online ? "EN LIGNE · DISPONIBLE" : "HORS LIGNE"}
+                        </small>
+                    </div>
+
+                    <button
+                        class="online-duel-invite-btn"
+                        type="button"
+                        ${online && playerId
+                            ? `onclick="inviteFriendFromDuelLobby('${playerId}')"`
+                            : "disabled"}
+                    >
+                        ${online ? "INVITER" : "OFFLINE"}
+                    </button>
+                </article>
+            `;
+        }).join("");
+    }
+
+    openOnlineDuelPicker = async function() {
+        if (!brawlCloudSession?.user?.id) {
+            setFriendFeedback(
+                "Connecte-toi d'abord pour jouer en Duel.",
+                "error"
+            );
+            openAccountPopup("login");
+            return;
+        }
+
+        if (currentOnlineMatch?.status === "waiting") {
+            showHome();
+            renderOnlineHomeLobby();
+            return;
+        }
+
+        /* Recharge les relations Supabase AVANT de construire la liste. */
+        try {
+            if (typeof window.loadCloudFriends === "function") {
+                await window.loadCloudFriends();
+            }
+            await syncOnlinePresence();
+        } catch (error) {
+            console.warn("Actualisation de la liste d'amis impossible :", error);
+        }
+
+        let dialog = document.getElementById("onlineDuelPickerDialog");
+
+        if (!dialog) {
+            dialog = document.createElement("dialog");
+            dialog.id = "onlineDuelPickerDialog";
+            dialog.setAttribute("aria-labelledby", "onlineDuelPickerTitle");
+            mountPhoneSkinDialog(dialog);
+        }
+
+        dialog.innerHTML = `
+            <section class="online-duel-v3-shell">
+                <div class="online-duel-v3-head">
+                    <div>
+                        <small>MODE PRIVÉ // 1 VS 1</small>
+                        <h2 id="onlineDuelPickerTitle">INVITER UN AMI</h2>
+                    </div>
+                    <button
+                        class="online-duel-v3-close"
+                        type="button"
+                        onclick="document.getElementById('onlineDuelPickerDialog')?.close()"
+                    >×</button>
+                </div>
+
+                <div class="online-duel-v3-intro">
+                    <strong>TA LISTE D'AMIS</strong>
+                    Les amis en ligne sont placés en premier. Clique sur INVITER pour créer un salon privé.
+                </div>
+
+                <div class="online-duel-friends-list">
+                    ${duelFriendListHtmlV6()}
+                </div>
+            </section>
+        `;
+
+        const overlay = dialog.parentElement;
+        if (overlay?.classList.contains("phone-skin-overlay")) {
+            overlay.style.alignItems = "center";
+            overlay.style.justifyContent = "center";
+            overlay.style.padding = "14px";
+        }
+
+        dialog.style.position = "relative";
+        dialog.style.inset = "auto";
+        dialog.style.margin = "0";
+        dialog.style.transform = "none";
+
+        if (typeof dialog.openInPhone === "function") {
+            dialog.openInPhone();
+        } else if (!dialog.open) {
+            dialog.show();
+        }
+    };
+
+    /* -----------------------------------------------------
+       HEADER : retiré sur Brawlers / Boutique / Amis.
+    ----------------------------------------------------- */
+    function refreshHeaderVisibilityV6() {
+        const phone = document.querySelector(".phone");
+        if (!phone) return;
+
+        const active = phone.querySelector(".page.active");
+        const hideHeader = [
+            "brawlersPage",
+            "shopPage",
+            "friendsPage"
+        ].includes(active?.id || "");
+
+        phone.classList.toggle("brawl-v6-no-header", hideHeader);
+    }
+
+    refreshHeaderVisibilityV6();
+
+    const phoneV6 = document.querySelector(".phone");
+    if (phoneV6) {
+        const observer = new MutationObserver(refreshHeaderVisibilityV6);
+        observer.observe(phoneV6, {
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+    }
+
+    window.addEventListener(
+        "pageshow",
+        refreshHeaderVisibilityV6,
         { passive: true }
     );
 })();
