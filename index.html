@@ -3081,7 +3081,7 @@ body{
                     src="Icon/Jeton.png"
                     alt="Tokens"
                 >
-                10
+                20
             </div>
         </div>
         <!-- BIG BOX -->
@@ -3144,7 +3144,7 @@ body{
                     alt="Pièces"
                 >
                 <div class="box-chance-info">
-                    <span>100 pièces</span>
+                    <span>50 pièces</span>
                     <strong>39,5%</strong>
                 </div>
             </div>
@@ -25531,8 +25531,9 @@ function updateUpgradeButton() {
     if (brawler.power >= 10) {
         button.disabled = true;
         button.innerHTML = `
-            <span class="upgrade-button-title">
-                NIVEAU MAX
+            <span class="upgrade-button-main upgrade-button-main-max">
+                <span class="upgrade-button-bolt">★</span>
+                <span class="upgrade-button-title">NIVEAU MAX</span>
             </span>
         `;
         return;
@@ -25545,8 +25546,10 @@ function updateUpgradeButton() {
         state.resources.power >= cost.power;
     button.disabled = false;
     button.innerHTML = `
-        <span class="upgrade-button-title">
-            AMÉLIORER → ${brawler.power + 1}
+        <span class="upgrade-button-main">
+            <span class="upgrade-button-bolt">⚡</span>
+            <span class="upgrade-button-title">AMÉLIORER</span>
+            <span class="upgrade-button-next">NV. ${brawler.power + 1}</span>
         </span>
 
         <span class="upgrade-button-costs">
@@ -26448,7 +26451,7 @@ function closePopup(id) {
 const BOXES = {
     brawl: {
         name: "Brawl Box",
-        cost: 10,
+        cost: 20,
         currency: "tokens",
         currencyLabel: "tokens",
         currencyIcon: "Icon/Jeton.png",
@@ -26619,8 +26622,8 @@ const boxRewards = [
         type: "coins",
         icon: "Icon/coin.png",
         name: "Pièces",
-        description: "+100 pièces",
-        amount: 100,
+        description: "+50 pièces",
+        amount: 50,
         rarity: "COMMUN",
         rarityClass: "starter",
         chance: 39.5
@@ -26684,11 +26687,11 @@ const boxRewards = [
 function getRandomReward() {
     const roll =
         Math.random() * 100;
-    const coins100 =
+    const coins50 =
         boxRewards.find(
             reward =>
                 reward.type === "coins" &&
-                reward.amount === 100
+                reward.amount === 50
         );
     const coins250 =
         boxRewards.find(
@@ -26718,10 +26721,10 @@ function getRandomReward() {
        20,5 -> 35,5  : 250 pièces         15 %
        35,5 -> 57,5  : 50 pouvoir         22 %
        57,5 -> 60,5  : 150 pouvoir         3 %
-       60,5 -> 100   : 100 pièces         39,5 %
+       60,5 -> 100   : 50 pièces         39,5 %
        Si le tirage tombe sur un Pouvoir Star ou une capacité
        mais qu'aucun n'est actuellement éligible, la récompense
-       devient 100 pièces. Cela évite de modifier les autres taux.
+       devient 50 pièces. Cela évite de modifier les autres taux.
     */
     if (roll < 1) {
         const eligibleStarPower =
@@ -26733,7 +26736,7 @@ function getRandomReward() {
                 starPowerDrop: eligibleStarPower
             };
         }
-        return coins100;
+        return coins50;
     }
     if (roll < 3) {
         const eligibleAbility =
@@ -26745,7 +26748,7 @@ function getRandomReward() {
                 abilityDrop: eligibleAbility
             };
         }
-        return coins100;
+        return coins50;
     }
     if (roll < 5.5) {
         return brawlerReward;
@@ -26762,7 +26765,7 @@ function getRandomReward() {
     if (roll < 60.5) {
         return power150;
     }
-    return coins100;
+    return coins50;
 }
 /* =====================================================
    TIRAGE D'UNE RÉCOMPENSE
@@ -41035,6 +41038,137 @@ function updateBattleActionHitChanceUI() {
         filter:brightness(1.06) !important;
     }
 }
+
+/* =====================================================
+   UPGRADE BUTTON · REFINEMENT
+===================================================== */
+#brawlerDetailPage .upgrade-button{
+    position:relative !important;
+    isolation:isolate !important;
+    overflow:hidden !important;
+    min-height:62px !important;
+    height:62px !important;
+    padding:7px 10px 8px !important;
+    border:1px solid rgba(140,232,255,.55) !important;
+    border-bottom:4px solid #3156b6 !important;
+    border-radius:14px !important;
+    color:#fff !important;
+    background:
+        radial-gradient(circle at 18% 0%,rgba(255,255,255,.28),transparent 31%),
+        linear-gradient(120deg,#20bff4 0%,#486dff 51%,#d23bce 100%) !important;
+    box-shadow:
+        0 9px 20px rgba(21,92,205,.30),
+        0 0 16px rgba(53,191,255,.17),
+        inset 0 1px 0 rgba(255,255,255,.30) !important;
+    text-shadow:0 2px 3px rgba(0,0,0,.28) !important;
+}
+#brawlerDetailPage .upgrade-button::before{
+    content:"";
+    position:absolute;
+    z-index:-1;
+    top:-75%;
+    left:-26%;
+    width:42%;
+    height:245%;
+    transform:rotate(20deg);
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);
+    transition:left .38s ease !important;
+}
+#brawlerDetailPage .upgrade-button:not(:disabled):hover::before{left:110%}
+#brawlerDetailPage .upgrade-button-main{
+    width:100% !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:5px !important;
+    line-height:1 !important;
+}
+#brawlerDetailPage .upgrade-button-bolt{
+    width:17px !important;
+    height:17px !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex:0 0 17px !important;
+    border-radius:6px !important;
+    color:#fff4a5 !important;
+    background:rgba(5,13,37,.30) !important;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.13) !important;
+    font-size:9px !important;
+    text-shadow:0 0 8px rgba(255,232,97,.65) !important;
+}
+#brawlerDetailPage .upgrade-button-title{
+    color:#fff !important;
+    font-size:9px !important;
+    line-height:1 !important;
+    font-weight:1000 !important;
+    letter-spacing:.55px !important;
+    text-shadow:0 2px 3px rgba(0,0,0,.30) !important;
+}
+#brawlerDetailPage .upgrade-button-next{
+    padding:3px 5px !important;
+    border-radius:6px !important;
+    color:#0a2140 !important;
+    background:#baf2ff !important;
+    font-size:7px !important;
+    line-height:1 !important;
+    font-weight:1000 !important;
+    letter-spacing:.25px !important;
+    text-shadow:none !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.65) !important;
+}
+#brawlerDetailPage .upgrade-button-costs{
+    width:100% !important;
+    margin-top:6px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:5px !important;
+}
+#brawlerDetailPage .upgrade-cost{
+    min-width:48px !important;
+    min-height:19px !important;
+    padding:2px 6px !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:3px !important;
+    border:1px solid rgba(255,255,255,.15) !important;
+    border-radius:7px !important;
+    color:#fff !important;
+    background:rgba(4,11,28,.38) !important;
+    font-size:7.5px !important;
+    line-height:1 !important;
+    font-weight:1000 !important;
+    text-shadow:0 1px 2px rgba(0,0,0,.35) !important;
+}
+#brawlerDetailPage .upgrade-cost img{
+    width:14px !important;
+    height:14px !important;
+    object-fit:contain !important;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.24)) !important;
+}
+#brawlerDetailPage .upgrade-cost.missing{
+    color:#ffdce2 !important;
+    border-color:rgba(255,113,137,.46) !important;
+    background:rgba(102,10,32,.45) !important;
+}
+#brawlerDetailPage .upgrade-button:not(:disabled):active{
+    transform:translateY(2px) scale(.99) !important;
+    border-bottom-width:2px !important;
+}
+#brawlerDetailPage .upgrade-button:disabled{
+    opacity:1 !important;
+    border:1px solid rgba(255,215,102,.28) !important;
+    border-bottom:3px solid #6f5215 !important;
+    color:#fff4cb !important;
+    background:
+        radial-gradient(circle at 18% 0%,rgba(255,255,255,.16),transparent 32%),
+        linear-gradient(120deg,#80621d,#c7982d 55%,#76541b) !important;
+    box-shadow:0 6px 15px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.18) !important;
+}
+#brawlerDetailPage .upgrade-button:disabled .upgrade-button-title{color:#fff4cb !important}
+#brawlerDetailPage .upgrade-button-main-max{gap:6px !important}
 
 @media(max-width:360px){
     #brawlerDetailPage{padding-left:9px !important;padding-right:9px !important}
