@@ -47415,5 +47415,434 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+<style id="brawl-online-v9-style">
+/* V9 · compteur de tours + icônes Brawlers dans les profils amis */
+#battlePage .battle-distance-status{position:relative;}
+#battleTurnCounter.battle-turn-counter-v9{
+    position:absolute;
+    right:8px;
+    top:50%;
+    transform:translateY(-50%);
+    min-width:52px;
+    padding:4px 7px;
+    border-radius:999px;
+    color:#fff;
+    background:linear-gradient(135deg,rgba(53,191,255,.24),rgba(255,61,220,.18));
+    border:1px solid rgba(121,222,255,.34);
+    box-shadow:0 0 12px rgba(53,191,255,.10);
+    font-size:7.5px;
+    font-weight:1000;
+    letter-spacing:.8px;
+    text-align:center;
+    white-space:nowrap;
+}
+#onlineFriendProfileDialog .online-profile-brawler img{
+    object-fit:cover !important;
+    object-position:center !important;
+    transform:none !important;
+}
+#onlineFriendProfileDialog .online-profile-brawler{
+    background:radial-gradient(circle at 50% 35%,rgba(53,191,255,.18),transparent 55%),linear-gradient(145deg,#152942,#0a1220) !important;
+}
+</style>
+
+<script id="brawl-online-v9-duel-stability">
+/* =====================================================
+   BRAWL VS ONLINE V9 · STABILITÉ DUEL + PROFILS
+   - demandes d'amis bloquées pendant un combat
+   - fin de Duel => accueil + interface Duel
+   - choix de distance réparé si l'UI reste bloquée
+   - compteur de tours en combat
+   - profils amis : icônes de Brawlers, pas skins complets
+===================================================== */
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V9_DUEL_STABILITY__) return;
+    window.__BRAWL_V9_DUEL_STABILITY__ = true;
+
+    const V9 = {
+        localTurn: 1,
+        lastMatchId: null,
+        finishTimers: new Map()
+    };
+
+    function isOnlineBattleV9() {
+        return Boolean(
+            currentOnlineMatch?.status === "playing" &&
+            currentOnlineMatch?.game_state?.battle &&
+            document.getElementById("battlePage")?.classList.contains("online-network-battle")
+        );
+    }
+
+    function onlineMetaV9(match = currentOnlineMatch) {
+        const me = brawlCloudSession?.user?.id;
+        if (!match || !me) return null;
+        const amP1 = match.player1_id === me;
+        return {
+            me,
+            opponent: amP1 ? match.player2_id : match.player1_id
+        };
+    }
+
+    /* -----------------------------------------------------
+       1) PRÉSENCE : signaler qu'un joueur est EN COMBAT
+    ----------------------------------------------------- */
+    const getPresenceBeforeV9 = getOnlinePresencePayload;
+    getOnlinePresencePayload = function(session) {
+        const base = getPresenceBeforeV9(session);
+        return {
+            ...base,
+            in_battle: Boolean(
+                currentOnlineMatch?.status === "playing" &&
+                document.getElementById("battlePage")?.classList.contains("online-network-battle")
+            )
+        };
+    };
+
+    function applyBusyFlagsFromPresenceV9() {
+        if (!onlinePresenceChannel) return;
+
+        const rawState = onlinePresenceChannel.presenceState?.() || {};
+        Object.values(rawState).flat().forEach(presence => {
+            const userId = String(presence?.user_id || "");
+            if (!userId) return;
+
+            const player = onlineLobbyPlayers.get(userId);
+            if (!player) return;
+
+            player.in_battle = Boolean(presence?.in_battle);
+        });
+    }
+
+    const refreshPresenceBeforeV9 = refreshOnlinePresenceFromChannel;
+    refreshOnlinePresenceFromChannel = function(...args) {
+        const result = refreshPresenceBeforeV9(...args);
+        applyBusyFlagsFromPresenceV9();
+        return result;
+    };
+
+    function findPresenceFromFriendQueryV9(rawQuery) {
+        const query = String(rawQuery || "").trim();
+        if (!query) return null;
+
+        const normalizedName = normalizeFriendName(query);
+        const upperCode = query.toUpperCase();
+
+        return [...onlineLobbyPlayers.values()].find(player => {
+            const sameName =
+                normalizeFriendName(player?.username || "") === normalizedName;
+            const sameCode =
+                String(player?.friend_code || "").toUpperCase() === upperCode;
+            return sameName || sameCode;
+        }) || null;
+    }
+
+    const sendFriendRequestBeforeV9 = sendFriendRequest;
+    sendFriendRequest = async function(...args) {
+        if (isOnlineBattleV9()) {
+            setFriendFeedback(
+                "Impossible d'envoyer une demande d'ami pendant un combat.",
+                "error"
+            );
+            return false;
+        }
+
+        try {
+            applyBusyFlagsFromPresenceV9();
+        } catch (_) {}
+
+        const input = document.getElementById("friendSearchInput");
+        const targetPresence = findPresenceFromFriendQueryV9(input?.value);
+
+        if (targetPresence?.in_battle) {
+            setFriendFeedback(
+                (targetPresence.username || "Ce joueur") +
+                " est en combat. Réessaie quand son Duel sera terminé.",
+                "error"
+            );
+            return false;
+        }
+
+        return sendFriendRequestBeforeV9(...args);
+    };
+
+    /* -----------------------------------------------------
+       2) COMPTEUR DE TOURS
+    ----------------------------------------------------- */
+    function ensureTurnCounterV9() {
+        const status = document.querySelector("#battlePage .battle-distance-status");
+        if (!status) return null;
+
+        let counter = document.getElementById("battleTurnCounter");
+        if (!counter) {
+            counter = document.createElement("span");
+            counter.id = "battleTurnCounter";
+            counter.className = "battle-turn-counter-v9";
+            counter.textContent = "TOUR 1";
+            status.appendChild(counter);
+        }
+        return counter;
+    }
+
+    function onlineTurnNumberV9(battle) {
+        const seq = Math.max(1, Number(battle?.seq || 1));
+        const completedActions = Math.floor(((seq - 1) * 2) / 3);
+        return Math.max(1, completedActions + 1);
+    }
+
+    function updateTurnCounterV9(match = currentOnlineMatch) {
+        const counter = ensureTurnCounterV9();
+        if (!counter) return;
+
+        if (match?.status === "playing" && match?.game_state?.battle) {
+            const turn = onlineTurnNumberV9(match.game_state.battle);
+            V9.localTurn = turn;
+            counter.textContent = "TOUR " + turn;
+            return;
+        }
+
+        counter.textContent = "TOUR " + Math.max(1, Number(V9.localTurn || 1));
+    }
+
+    const renderBattleBeforeV9 = renderBattle;
+    renderBattle = function(...args) {
+        V9.localTurn = 1;
+        const result = renderBattleBeforeV9(...args);
+        setTimeout(() => updateTurnCounterV9(), 0);
+        return result;
+    };
+
+    const advanceDistanceBeforeV9 = advanceDistanceRoundAfterAttack;
+    advanceDistanceRoundAfterAttack = function(actor) {
+        const online = isOnlineBattleV9();
+        const result = advanceDistanceBeforeV9(actor);
+
+        if (!online) {
+            V9.localTurn = Math.max(1, Number(V9.localTurn || 1)) + 1;
+            updateTurnCounterV9(null);
+        }
+
+        return result;
+    };
+
+    /* -----------------------------------------------------
+       3) CHOIX DE DISTANCE : réparer un état local bloqué
+    ----------------------------------------------------- */
+    const updateDistanceBeforeV9 = updateBattleDistanceUI;
+
+    function repairOnlineDistanceUiV9() {
+        if (!isOnlineBattleV9()) return;
+
+        const meta = onlineMetaV9();
+        const serverBattle = currentOnlineMatch?.game_state?.battle;
+        if (!meta || !serverBattle) return;
+
+        const myChoice =
+            serverBattle.phase === "choose_distance" &&
+            serverBattle.turn_user_id === meta.me;
+
+        if (!myChoice) return;
+
+        let choices = Array.isArray(serverBattle.distance_choices)
+            ? serverBattle.distance_choices
+                .map(Number)
+                .filter(value => Number.isInteger(value) && value >= 1 && value <= 7)
+            : [];
+
+        if (choices.length < 2) {
+            try {
+                choices = getBattleDistanceChoices()
+                    .map(Number)
+                    .filter(value => Number.isInteger(value) && value >= 1 && value <= 7);
+            } catch (_) {
+                choices = [];
+            }
+        }
+
+        if (!choices.length) return;
+
+        battleState.enemyTurn = false;
+        battleState.distanceChosen = false;
+        battleState.distanceRoundChooser = "player";
+        battleState.currentDistance = null;
+        battleState.distanceChoices = choices.slice(0, 2);
+
+        const panel = document.getElementById("battleDistancePanel");
+        panel?.classList.add("active");
+        panel?.classList.remove("waiting");
+
+        [
+            document.getElementById("battleDistanceCard1"),
+            document.getElementById("battleDistanceCard2")
+        ].forEach((card, index) => {
+            if (!card) return;
+            const value = battleState.distanceChoices[index];
+            if (!Number.isInteger(value)) return;
+            card.dataset.distance = String(value);
+            card.disabled = false;
+            card.style.pointerEvents = "auto";
+            const strong = card.querySelector("strong");
+            if (strong) strong.textContent = String(value);
+        });
+
+        const title = document.getElementById("battleDistanceTitle");
+        if (title) title.textContent = "CHOISIS LA DISTANCE";
+    }
+
+    updateBattleDistanceUI = function(...args) {
+        const result = updateDistanceBeforeV9(...args);
+        repairOnlineDistanceUiV9();
+        return result;
+    };
+
+    /* -----------------------------------------------------
+       4) PROFIL AMI : afficher les ICÔNES de Brawlers
+    ----------------------------------------------------- */
+    const openProfileBeforeV9 = window.openOnlinePlayerProfile;
+    window.openOnlinePlayerProfile = function(playerId) {
+        const result = openProfileBeforeV9(playerId);
+
+        const player = onlineLobbyPlayers.get(String(playerId || ""));
+        const list = Array.isArray(player?.profile?.brawlers)
+            ? player.profile.brawlers
+            : [];
+
+        const dialog = document.getElementById("onlineFriendProfileDialog");
+        if (!dialog) return result;
+
+        dialog
+            .querySelectorAll(".online-profile-brawler")
+            .forEach((card, index) => {
+                const item = list[index];
+                const img = card.querySelector("img");
+                if (!item || !img) return;
+
+                const icon =
+                    item.icon ||
+                    brawlers[item.name]?.icon ||
+                    item.image ||
+                    brawlers[item.name]?.image ||
+                    "";
+
+                if (icon) img.src = icon;
+            });
+
+        return result;
+    };
+
+    /* -----------------------------------------------------
+       5) FIN DU DUEL : accueil puis rester dans DUEL
+    ----------------------------------------------------- */
+    function hideBattleOverlaysV9() {
+        [
+            "battleVictoryRecap",
+            "battleLossToast",
+            "postBattleRewardsOverlay",
+            "battleStartTransition"
+        ].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove("active", "starter-mode");
+            el.setAttribute("aria-hidden", "true");
+        });
+    }
+
+    function scheduleReturnToDuelV9(match) {
+        const matchId = String(match?.id || "");
+        if (!matchId || V9.finishTimers.has(matchId)) return;
+
+        const timer = setTimeout(() => {
+            V9.finishTimers.delete(matchId);
+
+            try {
+                if (battleEnemyAttackTimer) {
+                    clearTimeout(battleEnemyAttackTimer);
+                    battleEnemyAttackTimer = null;
+                }
+            } catch (_) {}
+
+            hideBattleOverlaysV9();
+
+            document.getElementById("battlePage")?.classList.remove(
+                "online-network-battle",
+                "online-action-locked",
+                "v6-action-pending"
+            );
+
+            if (window.BRAWLVS_ONLINE_V3) {
+                window.BRAWLVS_ONLINE_V3.launchedMatchId = null;
+                window.BRAWLVS_ONLINE_V3.finishing = false;
+            }
+
+            if (String(currentOnlineMatch?.id || "") === matchId) {
+                currentOnlineMatch = null;
+            }
+
+            V9.localTurn = 1;
+            updateTurnCounterV9(null);
+
+            try { showHome(); } catch (_) {}
+            try { renderOnlineHomeLobby(); } catch (_) {}
+
+            setTimeout(() => {
+                try { syncOnlinePresence(); } catch (_) {}
+                try {
+                    const pickerResult = openOnlineDuelPicker();
+                    if (pickerResult?.catch) pickerResult.catch(console.error);
+                } catch (error) {
+                    console.error("Retour vers l'interface Duel impossible :", error);
+                }
+            }, 120);
+        }, 2300);
+
+        V9.finishTimers.set(matchId, timer);
+    }
+
+    const onlineMatchUpdatedBeforeV9 = onOnlineMatchUpdated;
+    onOnlineMatchUpdated = function(match) {
+        const result = onlineMatchUpdatedBeforeV9(match);
+
+        if (match?.status === "playing") {
+            V9.lastMatchId = String(match.id || "");
+            updateTurnCounterV9(match);
+            setTimeout(repairOnlineDistanceUiV9, 0);
+            setTimeout(() => {
+                try { syncOnlinePresence(); } catch (_) {}
+            }, 40);
+        }
+        else if (match?.status === "finished") {
+            updateTurnCounterV9(match);
+            scheduleReturnToDuelV9(match);
+        }
+        else if (match?.status === "cancelled") {
+            setTimeout(() => {
+                try { syncOnlinePresence(); } catch (_) {}
+            }, 40);
+        }
+
+        return result;
+    };
+
+    /* Republier immédiatement la présence à l'entrée du combat. */
+    if (typeof window.launchOnlineBattleFromMatch === "function") {
+        const launchBeforeV9 = window.launchOnlineBattleFromMatch;
+        window.launchOnlineBattleFromMatch = function(...args) {
+            const result = launchBeforeV9(...args);
+            setTimeout(() => {
+                updateTurnCounterV9(currentOnlineMatch);
+                repairOnlineDistanceUiV9();
+                try { syncOnlinePresence(); } catch (_) {}
+            }, 80);
+            return result;
+        };
+    }
+
+    /* Au chargement, créer le compteur sans attendre le premier combat. */
+    ensureTurnCounterV9();
+})();
+
+</script>
 </body>
 </html>
