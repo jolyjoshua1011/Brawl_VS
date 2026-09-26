@@ -48094,5 +48094,231 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+
+<style id="brawl-online-v11-friend-profile-access">
+/* =====================================================
+   BRAWL VS ONLINE V11 · accès profil depuis MES AMIS
+===================================================== */
+#friendsList .friend-card.friend-profile-available .friend-avatar,
+#friendsList .friend-card.friend-profile-available .friend-main{
+    cursor:pointer !important;
+}
+#friendsList .friend-card.friend-profile-available .friend-main:hover .friend-name{
+    color:var(--blue-light) !important;
+}
+#friendsList .friend-action.profile{
+    color:#dff8ff !important;
+    background:rgba(53,191,255,.13) !important;
+    border-color:rgba(83,207,255,.34) !important;
+}
+#friendsList .friend-action.profile:hover{
+    background:rgba(53,191,255,.23) !important;
+    border-color:rgba(139,230,255,.62) !important;
+}
+</style>
+<script id="brawl-online-v11-friend-profile-access-script">
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V11_FRIEND_PROFILE_ACCESS__) return;
+    window.__BRAWL_V11_FRIEND_PROFILE_ACCESS__ = true;
+
+    function normV11(value) {
+        try {
+            if (typeof normalizeFriendName === "function") {
+                return normalizeFriendName(value || "");
+            }
+        } catch (_) {}
+        return String(value || "").trim().toLowerCase();
+    }
+
+    function resolveFriendV11(key) {
+        const wanted = String(key || "");
+        const wantedNorm = normV11(wanted);
+        return (state.friends || []).find(friend =>
+            String(friend.id || "") === wanted ||
+            String(friend.user_id || "") === wanted ||
+            normV11(friend.name) === wantedNorm
+        ) || null;
+    }
+
+    function resolvePresenceV11(friend) {
+        if (!friend || !(onlineLobbyPlayers instanceof Map)) return null;
+
+        const uid = String(friend.user_id || "");
+        if (uid && onlineLobbyPlayers.has(uid)) {
+            return onlineLobbyPlayers.get(uid);
+        }
+
+        const wantedName = normV11(friend.name);
+        return [...onlineLobbyPlayers.values()].find(player =>
+            normV11(player?.username) === wantedName
+        ) || null;
+    }
+
+    window.openFriendProfileFromList = async function(friendKey) {
+        const friend = resolveFriendV11(friendKey);
+        if (!friend) return false;
+
+        let presence = resolvePresenceV11(friend);
+
+        /* Presence parfois en retard de quelques ms : on resynchronise une fois. */
+        if (!presence && friend.online) {
+            try {
+                if (typeof syncOnlinePresence === "function") {
+                    await Promise.resolve(syncOnlinePresence());
+                }
+            } catch (_) {}
+
+            await new Promise(resolve => setTimeout(resolve, 120));
+            presence = resolvePresenceV11(friend);
+        }
+
+        if (!presence) {
+            try {
+                setFriendFeedback(friend.name + " n'est plus en ligne.", "error");
+            } catch (_) {}
+            return false;
+        }
+
+        const playerId = String(presence.user_id || friend.user_id || "");
+        if (!playerId || typeof window.openOnlinePlayerProfile !== "function") {
+            return false;
+        }
+
+        window.openOnlinePlayerProfile(playerId);
+        return true;
+    };
+
+    function enableFriendProfilesV11() {
+        const cards = [...document.querySelectorAll("#friendsList .friend-card")];
+        const friends = Array.isArray(state.friends) ? state.friends : [];
+
+        cards.forEach((card, index) => {
+            const displayedName = card.querySelector(".friend-name")?.textContent?.trim() || "";
+            const friend = friends.find(item => normV11(item.name) === normV11(displayedName)) || friends[index];
+            if (!friend) return;
+
+            const presence = resolvePresenceV11(friend);
+            const isOnline = Boolean(friend.online && presence);
+
+            card.classList.toggle("friend-profile-available", isOnline);
+
+            const avatar = card.querySelector(".friend-avatar");
+            const main = card.querySelector(".friend-main");
+            const actions = card.querySelector(".friend-actions");
+
+            if (!isOnline) {
+                card.querySelector(".friend-action.profile")?.remove();
+                if (avatar) {
+                    avatar.onclick = null;
+                    avatar.removeAttribute("title");
+                }
+                if (main) {
+                    main.onclick = null;
+                    main.removeAttribute("title");
+                }
+                return;
+            }
+
+            const key = String(friend.user_id || friend.id || friend.name || "");
+            const open = event => {
+                event?.preventDefault?.();
+                event?.stopPropagation?.();
+                window.openFriendProfileFromList(key);
+            };
+
+            if (avatar) {
+                avatar.onclick = open;
+                avatar.title = "Voir le profil de " + friend.name;
+            }
+
+            if (main) {
+                main.onclick = open;
+                main.title = "Voir le profil de " + friend.name;
+            }
+
+            if (actions && !actions.querySelector(".friend-action.profile")) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "friend-action profile";
+                button.textContent = "PROFIL";
+                button.title = "Voir le profil";
+                button.addEventListener("click", open);
+                actions.insertBefore(button, actions.firstChild);
+            }
+        });
+    }
+
+    const renderFriendsBeforeV11 = renderFriends;
+    renderFriends = function(...args) {
+        const result = renderFriendsBeforeV11(...args);
+        enableFriendProfilesV11();
+        return result;
+    };
+
+    /* Met aussi à jour les cartes quand la Presence change sans changer la liste d'amis. */
+    const refreshPresenceBeforeV11 = typeof refreshOnlinePresenceFromChannel === "function"
+        ? refreshOnlinePresenceFromChannel
+        : null;
+
+    if (refreshPresenceBeforeV11) {
+        refreshOnlinePresenceFromChannel = function(...args) {
+            const result = refreshPresenceBeforeV11(...args);
+            setTimeout(enableFriendProfilesV11, 0);
+            return result;
+        };
+    }
+
+    setTimeout(enableFriendProfilesV11, 0);
+})();
+</script>
+
+
+
+<!-- =========================================================
+     BRAWLERS V15 — FENÊTRE DE STATS TOUJOURS CENTRÉE
+     La modale ne dépend plus du scroll de la fiche Brawler.
+========================================================= -->
+<style id="brawler-stats-fixed-center-v15">
+#detailStatsOverlay.detail-stats-overlay{
+    position:fixed !important;
+    inset:auto !important;
+    left:50% !important;
+    top:50% !important;
+    width:390px !important;
+    height:min(844px, 100dvh) !important;
+    max-width:100vw !important;
+    transform:translate(-50%, -50%) !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:12px !important;
+    overflow:hidden !important;
+    overscroll-behavior:contain !important;
+}
+
+#detailStatsOverlay .detail-stats-modal{
+    position:relative !important;
+    left:auto !important;
+    top:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    margin:0 auto !important;
+    transform:none !important;
+    max-height:calc(100% - 24px) !important;
+}
+
+@media (max-width:430px){
+    #detailStatsOverlay.detail-stats-overlay{
+        width:100vw !important;
+        height:100dvh !important;
+        max-width:none !important;
+        border-radius:0 !important;
+    }
+}
+</style>
+
 </body>
 </html>
