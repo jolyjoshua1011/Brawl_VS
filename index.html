@@ -47753,7 +47753,7 @@ if ("serviceWorker" in navigator) {
         const matchId = String(match?.id || "");
         if (!matchId || V9.finishTimers.has(matchId)) return;
 
-        const timer = setTimeout(() => {
+        const timer = setTimeout(async () => {
             V9.finishTimers.delete(matchId);
 
             try {
@@ -47774,27 +47774,105 @@ if ("serviceWorker" in navigator) {
             if (window.BRAWLVS_ONLINE_V3) {
                 window.BRAWLVS_ONLINE_V3.launchedMatchId = null;
                 window.BRAWLVS_ONLINE_V3.finishing = false;
-            }
-
-            if (String(currentOnlineMatch?.id || "") === matchId) {
-                currentOnlineMatch = null;
+                window.BRAWLVS_ONLINE_V3.pendingInvite = null;
             }
 
             V9.localTurn = 1;
             updateTurnCounterV9(null);
 
+            /*
+               Après un Duel terminé, on NE détruit plus le salon.
+               On remet exactement le même match en "waiting" avec
+               les deux joueurs sur PAS PRÊT. Les deux téléphones
+               retombent donc dans le même écran VS / PRÊT.
+            */
+            let rematchLobby = null;
+            const client = getBrawlCloudClient();
+
+            if (client) {
+                try {
+                    const { data: fresh, error: freshError } = await client
+                        .from("matches")
+                        .select("*")
+                        .eq("id", matchId)
+                        .single();
+
+                    if (freshError) throw freshError;
+
+                    if (fresh?.status === "waiting") {
+                        rematchLobby = fresh;
+                    }
+                    else if (fresh?.status === "finished") {
+                        let gs;
+                        try {
+                            gs = structuredClone(fresh.game_state || {});
+                        } catch (_) {
+                            gs = JSON.parse(JSON.stringify(fresh.game_state || {}));
+                        }
+
+                        gs.lobby = gs.lobby || {};
+                        if (gs.lobby.p1) gs.lobby.p1 = { ...gs.lobby.p1, ready: false };
+                        if (gs.lobby.p2) gs.lobby.p2 = { ...gs.lobby.p2, ready: false };
+                        delete gs.battle;
+
+                        const { data: resetMatch, error: resetError } = await client
+                            .from("matches")
+                            .update({
+                                status: "waiting",
+                                winner_id: null,
+                                turn_user_id: null,
+                                game_state: gs,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq("id", matchId)
+                            .eq("status", "finished")
+                            .select()
+                            .maybeSingle();
+
+                        if (resetError) throw resetError;
+
+                        if (resetMatch) {
+                            rematchLobby = resetMatch;
+                        } else {
+                            const { data: afterRace } = await client
+                                .from("matches")
+                                .select("*")
+                                .eq("id", matchId)
+                                .maybeSingle();
+                            if (afterRace?.status === "waiting") {
+                                rematchLobby = afterRace;
+                            }
+                        }
+                    }
+                }
+                catch (error) {
+                    console.error("Retour au salon Duel impossible :", error);
+                }
+            }
+
+            if (rematchLobby?.status === "waiting") {
+                currentOnlineMatch = rematchLobby;
+
+                try {
+                    subscribeToOnlineMatch(rematchLobby.id);
+                } catch (_) {}
+
+                try { showHome(); } catch (_) {}
+                try { renderOnlineHomeLobby(); } catch (_) {}
+
+                setTimeout(() => {
+                    try { syncOnlinePresence(); } catch (_) {}
+                }, 50);
+                return;
+            }
+
+            /* Secours uniquement si Supabase n'a pas pu restaurer le salon. */
+            if (String(currentOnlineMatch?.id || "") === matchId) {
+                currentOnlineMatch = null;
+            }
+
             try { showHome(); } catch (_) {}
             try { renderOnlineHomeLobby(); } catch (_) {}
-
-            setTimeout(() => {
-                try { syncOnlinePresence(); } catch (_) {}
-                try {
-                    const pickerResult = openOnlineDuelPicker();
-                    if (pickerResult?.catch) pickerResult.catch(console.error);
-                } catch (error) {
-                    console.error("Retour vers l'interface Duel impossible :", error);
-                }
-            }, 120);
         }, 2300);
 
         V9.finishTimers.set(matchId, timer);
@@ -47844,5 +47922,177 @@ if ("serviceWorker" in navigator) {
 })();
 
 </script>
+
+<style id="brawl-online-v10-ui-fixes">
+/* =====================================================
+   BRAWL VS ONLINE V10 · lobby rematch / profils / amis
+===================================================== */
+.phone .phone-skin-overlay #onlineFriendProfileDialog[open] {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    width: min(352px, 100%) !important;
+    max-width: 100% !important;
+    max-height: calc(100% - 0px) !important;
+    transform: none !important;
+    align-self: center !important;
+    justify-self: center !important;
+}
+.phone .phone-skin-overlay #onlineFriendProfileDialog .online-friend-profile-shell {
+    width: 100% !important;
+    margin: 0 auto !important;
+}
+</style>
+<script id="brawl-online-v10-flow-fixes">
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V10_FLOW_FIXES__) return;
+    window.__BRAWL_V10_FLOW_FIXES__ = true;
+
+    const V10 = window.BRAWLVS_ONLINE_V10 = {
+        rejectingFriendRequests: new Set()
+    };
+
+    function inOnlineBattleV10() {
+        return Boolean(
+            currentOnlineMatch?.status === "playing" &&
+            currentOnlineMatch?.game_state?.battle &&
+            document.getElementById("battlePage")?.classList.contains("online-network-battle")
+        );
+    }
+
+    /* --------------------------------------------------
+       1) PROFIL AMI : centrage forcé dans le téléphone
+    -------------------------------------------------- */
+    const openProfileBeforeV10 = window.openOnlinePlayerProfile;
+    if (typeof openProfileBeforeV10 === "function") {
+        window.openOnlinePlayerProfile = function(...args) {
+            const result = openProfileBeforeV10(...args);
+            const dialog = document.getElementById("onlineFriendProfileDialog");
+            const overlay = dialog?.parentElement;
+
+            if (overlay?.classList.contains("phone-skin-overlay")) {
+                overlay.style.alignItems = "center";
+                overlay.style.justifyContent = "center";
+                overlay.style.padding = "14px";
+            }
+
+            if (dialog) {
+                dialog.style.position = "relative";
+                dialog.style.inset = "auto";
+                dialog.style.margin = "0";
+                dialog.style.transform = "none";
+                dialog.style.alignSelf = "center";
+                dialog.style.justifySelf = "center";
+            }
+
+            return result;
+        };
+    }
+
+    /* --------------------------------------------------
+       2) AUCUNE DEMANDE D'AMI REÇUE PENDANT UN COMBAT
+       Une éventuelle demande arrivée malgré une Presence
+       en retard est automatiquement refusée côté Supabase.
+    -------------------------------------------------- */
+    async function rejectIncomingDuringBattleV10(request) {
+        const requestId = request?.relationId || request?.id;
+        if (!requestId || V10.rejectingFriendRequests.has(requestId)) return;
+
+        V10.rejectingFriendRequests.add(requestId);
+        try {
+            const client = getBrawlCloudClient();
+            if (!client) return;
+            const { error } = await client.rpc("reject_friend_request", {
+                request_id: requestId
+            });
+            if (error) throw error;
+        }
+        catch (error) {
+            console.warn("Demande d'ami reçue pendant le combat : refus automatique impossible", error);
+        }
+        finally {
+            V10.rejectingFriendRequests.delete(requestId);
+            if (inOnlineBattleV10()) {
+                setTimeout(() => {
+                    try {
+                        if (typeof window.loadCloudFriends === "function") {
+                            window.loadCloudFriends();
+                        }
+                    } catch (_) {}
+                }, 120);
+            }
+        }
+    }
+
+    const renderFriendsBeforeV10 = renderFriends;
+    renderFriends = function(...args) {
+        if (inOnlineBattleV10()) {
+            const incoming = Array.isArray(state.friendRequests?.incoming)
+                ? [...state.friendRequests.incoming]
+                : [];
+
+            if (incoming.length) {
+                incoming.forEach(request => {
+                    rejectIncomingDuringBattleV10(request);
+                });
+
+                /* La demande ne doit même pas apparaître dans l'interface. */
+                state.friendRequests.incoming = [];
+            }
+        }
+
+        return renderFriendsBeforeV10(...args);
+    };
+
+    const acceptFriendBeforeV10 = acceptFriendRequest;
+    acceptFriendRequest = async function(...args) {
+        if (inOnlineBattleV10()) return false;
+        return acceptFriendBeforeV10(...args);
+    };
+
+    /* --------------------------------------------------
+       3) ACCEPTER UNE INVITATION DUEL = ouvrir directement
+          le salon MOI VS MON POTE avec le bouton PRÊT.
+    -------------------------------------------------- */
+    window.respondOnlineInvite = async function(inviteId, accept) {
+        const dialog = document.getElementById("onlineDuelInviteDialog");
+        const invite = dialog?._invite;
+
+        dialog?.close();
+
+        if (!invite || String(invite.id) !== String(inviteId)) return false;
+
+        if (!accept) {
+            await refuseOnlineDuelInvite(invite.id);
+            return true;
+        }
+
+        document.getElementById("onlineDuelPickerDialog")?.close();
+        document.getElementById("onlineFriendProfileDialog")?.close();
+
+        try { showHome(); } catch (_) {}
+
+        await acceptOnlineDuelInvite(invite);
+
+        if (currentOnlineMatch?.status === "waiting") {
+            try { showHome(); } catch (_) {}
+            try { renderOnlineHomeLobby(); } catch (_) {}
+            setTimeout(() => {
+                try { syncOnlinePresence(); } catch (_) {}
+            }, 50);
+            return true;
+        }
+
+        return false;
+    };
+})();
+</script>
+
 </body>
 </html>
