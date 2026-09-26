@@ -43926,14 +43926,14 @@ if ("serviceWorker" in navigator) {
        A joue
        B joue
        B choisit
-       A joue
        B joue
+       A joue
        A choisit
        A joue
        B joue
 
-       -> choix A/B/A/B
-       -> actions A/B/A/B/A/B
+       -> le choix alterne A/B/A/B
+       -> le chooser attaque toujours en premier
     ----------------------------------------------------- */
     async function completeOnlineActionV6() {
         if (V6.transitionBusy) return;
@@ -44028,7 +44028,11 @@ if ("serviceWorker" in navigator) {
                         ? meta.opponent
                         : meta.me;
 
-                const nextActor = meta.opponent;
+                /*
+                   Le prochain chooser est aussi celui qui commencera
+                   la prochaine séquence d'attaques après avoir choisi.
+                */
+                const nextActor = nextChooser;
 
                 nextBattle = buildBattleSnapshotV6(
                     serverBattle,
@@ -44206,10 +44210,11 @@ if ("serviceWorker" in navigator) {
                donc le premier chooser commence aussi la partie.
                Ensuite, next_actor_id garantit l'alternance stricte.
             */
-            const nextActor =
-                serverBattle.next_actor_id ||
-                serverBattle.chooser_id ||
-                meta.me;
+            /*
+               En Duel amical, le joueur qui choisit la distance
+               est TOUJOURS le premier à attaquer à cette distance.
+            */
+            const nextActor = meta.me;
 
             const nextBattle = buildBattleSnapshotV6(
                 serverBattle,
@@ -44498,6 +44503,660 @@ if ("serviceWorker" in navigator) {
         refreshHeaderVisibilityV6,
         { passive: true }
     );
+})();
+</script>
+
+
+<script id="brawl-online-v7-picker-fix">
+/* =====================================================
+   BRAWL VS ONLINE V7
+   - Le joueur qui choisit la distance commence à attaquer.
+   - Le picker Duel charge directement les amitiés Supabase.
+   - La présence online est rafraîchie avant d'afficher la liste.
+===================================================== */
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V7_PICKER_FIX__) return;
+    window.__BRAWL_V7_PICKER_FIX__ = true;
+
+    const waitV7 = ms =>
+        new Promise(resolve => setTimeout(resolve, ms));
+
+    async function refreshPresenceForPickerV7() {
+        try {
+            /*
+               Si le canal Presence n'est pas prêt, on le démarre.
+               Sinon on republie notre présence puis on relit l'état
+               du canal pour récupérer immédiatement les potes online.
+            */
+            if (!onlinePresenceChannel) {
+                await startOnlineLobbyPresence();
+                await waitV7(220);
+            } else {
+                await syncOnlinePresence();
+                await waitV7(120);
+            }
+
+            try {
+                refreshOnlinePresenceFromChannel();
+            } catch (_) {}
+
+            /*
+               Petit second passage pour laisser le temps à Realtime
+               d'envoyer un éventuel événement de synchronisation.
+            */
+            await waitV7(180);
+
+            try {
+                refreshOnlinePresenceFromChannel();
+            } catch (_) {}
+        } catch (error) {
+            console.warn(
+                "Actualisation Presence Duel impossible :",
+                error
+            );
+        }
+    }
+
+    async function loadAcceptedDuelFriendsV7() {
+        const client = getBrawlCloudClient();
+        if (!client) return [];
+
+        const {
+            data: { session },
+            error: sessionError
+        } = await client.auth.getSession();
+
+        if (sessionError || !session?.user) {
+            return [];
+        }
+
+        brawlCloudSession = session;
+
+        const me = session.user.id;
+
+        /*
+           On ne dépend PAS de state.friends ici.
+           On interroge directement Supabase pour être certain
+           que la fenêtre Duel voit les amitiés acceptées.
+        */
+        const {
+            data: rows,
+            error: rowsError
+        } = await client
+            .from("friend_requests")
+            .select(
+                "id,sender_id,receiver_id,status,created_at,updated_at"
+            )
+            .eq("status", "accepted")
+            .or(
+                `sender_id.eq.${me},receiver_id.eq.${me}`
+            )
+            .order("created_at", {
+                ascending: true
+            });
+
+        if (rowsError) {
+            throw rowsError;
+        }
+
+        const otherIds = [
+            ...new Set(
+                (rows || [])
+                    .map(row =>
+                        row.sender_id === me
+                            ? row.receiver_id
+                            : row.sender_id
+                    )
+                    .filter(Boolean)
+            )
+        ];
+
+        if (!otherIds.length) {
+            return [];
+        }
+
+        const {
+            data: profiles,
+            error: profileError
+        } = await client
+            .from("profiles")
+            .select("id,username")
+            .in("id", otherIds);
+
+        if (profileError) {
+            throw profileError;
+        }
+
+        const profileMap = new Map(
+            (profiles || []).map(profile => [
+                String(profile.id),
+                profile
+            ])
+        );
+
+        const oldFriendMap = new Map(
+            (state.friends || [])
+                .filter(friend => friend?.user_id)
+                .map(friend => [
+                    String(friend.user_id),
+                    friend
+                ])
+        );
+
+        const friends = otherIds.map(userId => {
+            const id = String(userId);
+            const profile = profileMap.get(id);
+            const oldFriend = oldFriendMap.get(id);
+
+            const presence =
+                onlineLobbyPlayers.get(id) ||
+                [...onlineLobbyPlayers.values()].find(player =>
+                    normalizeFriendName(
+                        player?.username || ""
+                    ) ===
+                    normalizeFriendName(
+                        profile?.username ||
+                        oldFriend?.name ||
+                        ""
+                    )
+                ) ||
+                null;
+
+            return {
+                id: "cloud-" + id,
+                relationId:
+                    (rows || []).find(row =>
+                        row.sender_id === id ||
+                        row.receiver_id === id
+                    )?.id || "",
+                user_id: id,
+                name:
+                    profile?.username ||
+                    oldFriend?.name ||
+                    presence?.username ||
+                    "JOUEUR",
+                online: Boolean(presence),
+                cloud: true,
+                presence
+            };
+        });
+
+        /*
+           On remet aussi state.friends à jour pour que la page AMIS
+           et le picker Duel restent cohérents entre eux.
+        */
+        state.friends = friends.map(friend => ({
+            id: friend.id,
+            relationId: friend.relationId,
+            user_id: friend.user_id,
+            name: friend.name,
+            online: friend.online,
+            cloud: true
+        }));
+
+        try {
+            renderFriends();
+        } catch (_) {}
+
+        return friends;
+    }
+
+    function duelFriendCardV7(friend) {
+        const presence =
+            friend.presence ||
+            onlineLobbyPlayers.get(
+                String(friend.user_id || "")
+            ) ||
+            null;
+
+        const online = Boolean(
+            presence || friend.online
+        );
+
+        const playerId = String(
+            friend.user_id ||
+            presence?.user_id ||
+            ""
+        ).replace(
+            /[^a-fA-F0-9-]/g,
+            ""
+        );
+
+        const name = escapeOnlineHtml(
+            friend.name ||
+            presence?.username ||
+            "AMI"
+        );
+
+        const icon = escapeOnlineHtml(
+            presence?.profile?.profile_icon ||
+            presence?.profile_icon ||
+            DEFAULT_PROFILE_ICON
+        );
+
+        return `
+            <article
+                class="online-duel-friend ${online ? "" : "offline"}"
+                data-user-id="${playerId}"
+            >
+                <button
+                    class="online-duel-friend-avatar"
+                    type="button"
+                    ${
+                        online && playerId
+                            ? `onclick="openOnlinePlayerProfile('${playerId}')"`
+                            : "disabled"
+                    }
+                >
+                    <img src="${icon}" alt="">
+                </button>
+
+                <div class="online-duel-friend-main">
+                    <strong>${name}</strong>
+                    <small class="${online ? "online" : ""}">
+                        ${
+                            online
+                                ? "EN LIGNE · DISPONIBLE"
+                                : "HORS LIGNE"
+                        }
+                    </small>
+                </div>
+
+                <button
+                    class="online-duel-invite-btn"
+                    type="button"
+                    ${
+                        online && playerId
+                            ? `onclick="inviteFriendFromDuelLobby('${playerId}')"`
+                            : "disabled"
+                    }
+                >
+                    ${online ? "INVITER" : "OFFLINE"}
+                </button>
+            </article>
+        `;
+    }
+
+    function duelFriendListHtmlV7(friends) {
+        if (!Array.isArray(friends) || !friends.length) {
+            return `
+                <div class="online-player-empty">
+                    <span class="online-player-empty-icon">👥</span>
+                    <strong>AUCUN AMI</strong>
+                    <small>
+                        Ajoute un joueur depuis la page AMIS,
+                        puis accepte la demande avant de lancer un Duel.
+                    </small>
+                </div>
+            `;
+        }
+
+        const sorted = [...friends].sort((a, b) => {
+            const ao = Boolean(a.presence || a.online);
+            const bo = Boolean(b.presence || b.online);
+
+            if (ao !== bo) {
+                return ao ? -1 : 1;
+            }
+
+            return String(a.name || "").localeCompare(
+                String(b.name || ""),
+                "fr",
+                { sensitivity: "base" }
+            );
+        });
+
+        return sorted
+            .map(duelFriendCardV7)
+            .join("");
+    }
+
+    /*
+       On ne dépend plus uniquement de onlineLobbyPlayers pour envoyer
+       l'invitation : on peut récupérer le pseudo par ID si nécessaire.
+    */
+    window.inviteFriendFromDuelLobby =
+        async function(playerId) {
+
+            const cleanId = String(
+                playerId || ""
+            ).replace(
+                /[^a-fA-F0-9-]/g,
+                ""
+            );
+
+            if (!cleanId) {
+                return false;
+            }
+
+            let player =
+                onlineLobbyPlayers.get(
+                    cleanId
+                ) ||
+                null;
+
+            const client =
+                getBrawlCloudClient();
+
+            if (!client) {
+                return false;
+            }
+
+            if (!player) {
+                /*
+                   On relit une dernière fois Presence avant de déclarer
+                   l'ami hors ligne.
+                */
+                await refreshPresenceForPickerV7();
+
+                player =
+                    onlineLobbyPlayers.get(
+                        cleanId
+                    ) ||
+                    null;
+            }
+
+            if (!player) {
+                setFriendFeedback(
+                    "Cet ami vient de se déconnecter.",
+                    "error"
+                );
+
+                await openOnlineDuelPicker();
+                return false;
+            }
+
+            let username =
+                player.username ||
+                "";
+
+            if (!username) {
+                const {
+                    data: profile
+                } = await client
+                    .from("profiles")
+                    .select("username")
+                    .eq("id", cleanId)
+                    .maybeSingle();
+
+                username =
+                    profile?.username ||
+                    "JOUEUR";
+            }
+
+            const result =
+                await sendOnlineDuelInviteToPlayer({
+                    id: cleanId,
+                    username
+                });
+
+            if (!result) {
+                return false;
+            }
+
+            if (window.BRAWLVS_ONLINE_V3) {
+                window.BRAWLVS_ONLINE_V3.pendingInvite = {
+                    id: result.id,
+                    opponent: {
+                        ...player,
+                        user_id: cleanId,
+                        username
+                    }
+                };
+            }
+
+            document
+                .getElementById(
+                    "onlineDuelPickerDialog"
+                )
+                ?.close();
+
+            showHome();
+
+            try {
+                renderOnlineHomeLobby();
+            } catch (_) {}
+
+            return true;
+        };
+
+    /*
+       Nouvelle ouverture du picker :
+       1. Presence fraîche
+       2. requête directe friend_requests
+       3. rendu seulement après réception des données
+    */
+    openOnlineDuelPicker =
+        async function() {
+
+            if (!brawlCloudSession?.user?.id) {
+                setFriendFeedback(
+                    "Connecte-toi d'abord pour jouer en Duel.",
+                    "error"
+                );
+
+                openAccountPopup("login");
+                return;
+            }
+
+            if (
+                currentOnlineMatch?.status ===
+                "waiting"
+            ) {
+                showHome();
+                renderOnlineHomeLobby();
+                return;
+            }
+
+            let dialog =
+                document.getElementById(
+                    "onlineDuelPickerDialog"
+                );
+
+            if (!dialog) {
+                dialog =
+                    document.createElement(
+                        "dialog"
+                    );
+
+                dialog.id =
+                    "onlineDuelPickerDialog";
+
+                dialog.setAttribute(
+                    "aria-labelledby",
+                    "onlineDuelPickerTitle"
+                );
+
+                mountPhoneSkinDialog(
+                    dialog
+                );
+            }
+
+            /*
+               On affiche immédiatement un état de chargement
+               au lieu d'une fausse liste vide.
+            */
+            dialog.innerHTML = `
+                <section class="online-duel-v3-shell">
+                    <div class="online-duel-v3-head">
+                        <div>
+                            <small>
+                                MODE PRIVÉ // 1 VS 1
+                            </small>
+                            <h2 id="onlineDuelPickerTitle">
+                                INVITER UN AMI
+                            </h2>
+                        </div>
+
+                        <button
+                            class="online-duel-v3-close"
+                            type="button"
+                            onclick="document.getElementById('onlineDuelPickerDialog')?.close()"
+                        >×</button>
+                    </div>
+
+                    <div class="online-duel-v3-intro">
+                        <strong>
+                            TA LISTE D'AMIS
+                        </strong>
+                        Chargement de tes amis et de leur statut en ligne...
+                    </div>
+
+                    <div class="online-duel-friends-list">
+                        <div class="online-player-empty">
+                            <span class="online-player-empty-icon">⌁</span>
+                            <strong>CHARGEMENT...</strong>
+                            <small>
+                                Synchronisation avec Supabase.
+                            </small>
+                        </div>
+                    </div>
+                </section>
+            `;
+
+            const overlay =
+                dialog.parentElement;
+
+            if (
+                overlay?.classList.contains(
+                    "phone-skin-overlay"
+                )
+            ) {
+                overlay.style.alignItems =
+                    "center";
+
+                overlay.style.justifyContent =
+                    "center";
+
+                overlay.style.padding =
+                    "14px";
+            }
+
+            dialog.style.position =
+                "relative";
+
+            dialog.style.inset =
+                "auto";
+
+            dialog.style.margin =
+                "0";
+
+            dialog.style.transform =
+                "none";
+
+            if (
+                typeof dialog.openInPhone ===
+                "function"
+            ) {
+                dialog.openInPhone();
+            }
+            else if (!dialog.open) {
+                dialog.show();
+            }
+
+            try {
+                /*
+                   Les deux opérations sont faites avant le rendu final.
+                */
+                await refreshPresenceForPickerV7();
+
+                const friends =
+                    await loadAcceptedDuelFriendsV7();
+
+                /*
+                   Une dernière lecture de Presence permet d'éviter
+                   de marquer offline un ami dont le join vient d'arriver.
+                */
+                try {
+                    refreshOnlinePresenceFromChannel();
+                } catch (_) {}
+
+                friends.forEach(friend => {
+                    const presence =
+                        onlineLobbyPlayers.get(
+                            String(friend.user_id)
+                        ) ||
+                        [...onlineLobbyPlayers.values()].find(
+                            player =>
+                                normalizeFriendName(
+                                    player?.username ||
+                                    ""
+                                ) ===
+                                normalizeFriendName(
+                                    friend.name ||
+                                    ""
+                                )
+                        ) ||
+                        null;
+
+                    friend.presence =
+                        presence;
+
+                    friend.online =
+                        Boolean(presence);
+                });
+
+                const list =
+                    dialog.querySelector(
+                        ".online-duel-friends-list"
+                    );
+
+                const intro =
+                    dialog.querySelector(
+                        ".online-duel-v3-intro"
+                    );
+
+                if (intro) {
+                    const onlineCount =
+                        friends.filter(
+                            friend =>
+                                friend.online
+                        ).length;
+
+                    intro.innerHTML = `
+                        <strong>
+                            TA LISTE D'AMIS
+                        </strong>
+                        ${onlineCount} ami${onlineCount > 1 ? "s" : ""}
+                        en ligne · les joueurs disponibles apparaissent en premier.
+                    `;
+                }
+
+                if (list) {
+                    list.innerHTML =
+                        duelFriendListHtmlV7(
+                            friends
+                        );
+                }
+            }
+            catch (error) {
+                console.error(
+                    "Chargement du picker Duel impossible :",
+                    error
+                );
+
+                const list =
+                    dialog.querySelector(
+                        ".online-duel-friends-list"
+                    );
+
+                if (list) {
+                    list.innerHTML = `
+                        <div class="online-player-empty">
+                            <span class="online-player-empty-icon">!</span>
+                            <strong>
+                                LISTE INDISPONIBLE
+                            </strong>
+                            <small>
+                                Impossible de charger tes amis depuis Supabase.
+                            </small>
+                        </div>
+                    `;
+                }
+            }
+        };
 })();
 </script>
 
