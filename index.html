@@ -41975,5 +41975,390 @@ function updateBattleActionHitChanceUI() {
     document.addEventListener("DOMContentLoaded",()=>{setTimeout(()=>{renderOnlineLobbyPlayers();renderOnlineHomeLobby();},350);});
 })();
 </script>
+<style id="brawl-v4-duel-fixes">
+/* =====================================================
+   BRAWL VS ONLINE V4 — corrections Duel amical
+===================================================== */
+.phone .phone-skin-overlay #onlineDuelInviteDialog[open] {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    width: min(340px, 100%) !important;
+    max-width: 100% !important;
+    transform: none !important;
+    align-self: center !important;
+    justify-self: center !important;
+}
+.phone .phone-skin-overlay #onlineDuelInviteDialog .online-invite-card {
+    width: 100%;
+    margin: 0 auto;
+}
+.online-network-battle.online-action-locked #battleAttackButton,
+.online-network-battle.online-action-locked #battleSuperButton,
+.online-network-battle.online-action-locked #battlePassTurnButton,
+.online-network-battle.online-action-locked #battleAbilitySlot1,
+.online-network-battle.online-action-locked #battleAbilitySlot2 {
+    pointer-events: none !important;
+    opacity: .48 !important;
+    filter: saturate(.55) !important;
+}
+</style>
+<script id="brawl-v4-duel-fixes-script">
+(() => {
+    "use strict";
+
+    const V4 = {
+        actionLocked: false,
+        actionLockedAtSeq: -1,
+        friendlyMatchId: null
+    };
+
+    const LOGIN_MEGA_SENTINEL = 990001;
+
+    function isOnlineBattlePage() {
+        return Boolean(
+            document.getElementById("battlePage")?.classList.contains("online-network-battle")
+        );
+    }
+
+    function isLiveFriendlyDuel() {
+        return Boolean(
+            isOnlineBattlePage() &&
+            currentOnlineMatch?.status === "playing" &&
+            currentOnlineMatch?.game_state?.battle
+        );
+    }
+
+    function getOnlineBattleMeta() {
+        const match = currentOnlineMatch;
+        const me = brawlCloudSession?.user?.id;
+        if (!match || !me) return null;
+        const amP1 = match.player1_id === me;
+        return {
+            me,
+            opponent: amP1 ? match.player2_id : match.player1_id,
+            myKey: amP1 ? "p1" : "p2",
+            opponentKey: amP1 ? "p2" : "p1"
+        };
+    }
+
+    function setOnlineActionLock(locked) {
+        V4.actionLocked = Boolean(locked);
+        const page = document.getElementById("battlePage");
+        page?.classList.toggle("online-action-locked", V4.actionLocked && isOnlineBattlePage());
+        try { syncBattleActionAvailability(); } catch (_) {}
+    }
+
+    /* -----------------------------------------------------
+       DUEL AMICAL = AUCUN TROPHÉE
+       On conserve les tokens et l'événement El Amigo.
+    ----------------------------------------------------- */
+    const originalApplyBattleTrophyDeltaV4 = applyBattleTrophyDelta;
+    applyBattleTrophyDelta = function(brawlerName, victory) {
+        if (battleState?.__friendlyOnlineDuel === true || isOnlineBattlePage()) {
+            return 0;
+        }
+        return originalApplyBattleTrophyDeltaV4(brawlerName, victory);
+    };
+
+    const originalPlayV4 = play;
+    play = function(...args) {
+        battleState.__friendlyOnlineDuel = false;
+        V4.friendlyMatchId = null;
+        setOnlineActionLock(false);
+        return originalPlayV4(...args);
+    };
+
+    const originalLaunchOnlineBattleV4 = window.launchOnlineBattleFromMatch;
+    if (typeof originalLaunchOnlineBattleV4 === "function") {
+        window.launchOnlineBattleFromMatch = function(match) {
+            battleState.__friendlyOnlineDuel = true;
+            V4.friendlyMatchId = match?.id || null;
+            V4.actionLocked = false;
+            V4.actionLockedAtSeq = Number(match?.game_state?.battle?.seq || 0);
+            const result = originalLaunchOnlineBattleV4(match);
+            setTimeout(() => setOnlineActionLock(false), 0);
+            return result;
+        };
+    }
+
+    /* -----------------------------------------------------
+       RÉCAP DUEL AMICAL : 0 TR + El Amigo
+    ----------------------------------------------------- */
+    const originalShowPostBattleRewardsV4 = showPostBattleRewards;
+    showPostBattleRewards = function(victory) {
+        if (battleState?.__friendlyOnlineDuel !== true) {
+            return originalShowPostBattleRewardsV4(victory);
+        }
+
+        const overlay = document.getElementById("postBattleRewardsOverlay");
+        const title = document.getElementById("postBattleRewardsTitle");
+        const subtitle = document.getElementById("postBattleRewardsSubtitle");
+        const content = document.getElementById("postBattleRewardsContent");
+        if (!overlay || !content) return;
+
+        if (title) title.innerText = "DUEL AMICAL";
+        if (subtitle) {
+            subtitle.innerText =
+                (battleState.playerName || "BRAWLER") +
+                (victory ? " · VICTOIRE" : " · DÉFAITE");
+        }
+
+        const tokenReward = victory ? 25 : 10;
+        const amigoReward = victory ? 3 : 1;
+        content.innerHTML = `
+            <div class="post-battle-reward-row">
+                <img src="Icon/trophy.png" alt="Trophées">
+                <div class="post-battle-reward-copy">
+                    <strong>TROPHÉES</strong>
+                    <span>DUEL AMICAL · AUCUN TROPHÉE</span>
+                </div>
+                <div class="post-battle-reward-amount">0</div>
+            </div>
+            <div class="post-battle-reward-row">
+                <img src="Icon/Jeton.png" alt="Tokens">
+                <div class="post-battle-reward-copy">
+                    <strong>TOKENS</strong>
+                    <span>${victory ? "RÉCOMPENSE DE VICTOIRE" : "RÉCOMPENSE DE DÉFAITE"}</span>
+                </div>
+                <div class="post-battle-reward-amount">+${tokenReward}</div>
+            </div>
+            <div class="post-battle-reward-row">
+                <img src="Profil/El_amigo.png" alt="El Amigo" onerror="this.src='Icon/Friends.png'">
+                <div class="post-battle-reward-copy">
+                    <strong>EL AMIGO</strong>
+                    <span>DUEL ENTRE AMIS</span>
+                </div>
+                <div class="post-battle-reward-amount">+${amigoReward}</div>
+            </div>
+        `;
+
+        overlay.classList.add("active");
+        overlay.setAttribute("aria-hidden", "false");
+    };
+
+    /* -----------------------------------------------------
+       SYNCHRO : strictement une action chacun.
+       Le joueur qui vient de jouer ne peut jamais rejouer
+       avant qu'un snapshot serveur lui redonne le tour.
+    ----------------------------------------------------- */
+    const originalSyncBattleActionAvailabilityV4 = syncBattleActionAvailability;
+    syncBattleActionAvailability = function() {
+        const result = originalSyncBattleActionAvailabilityV4();
+        if (isLiveFriendlyDuel() && V4.actionLocked) {
+            [
+                "battleAttackButton",
+                "battleSuperButton",
+                "battlePassTurnButton",
+                "battleAbilitySlot1",
+                "battleAbilitySlot2"
+            ].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = true;
+            });
+        }
+        return result;
+    };
+
+    function canStartOnlineAction() {
+        if (!isLiveFriendlyDuel()) return true;
+        if (V4.actionLocked) return false;
+        const meta = getOnlineBattleMeta();
+        const battle = currentOnlineMatch?.game_state?.battle;
+        return Boolean(
+            meta &&
+            battle &&
+            battle.phase === "action" &&
+            battle.turn_user_id === meta.me &&
+            !battleState.enemyTurn &&
+            battleState.distanceChosen
+        );
+    }
+
+    function runLockedOnlineAction(originalFn, args) {
+        if (!isLiveFriendlyDuel()) return originalFn(...args);
+        if (!canStartOnlineAction()) return false;
+
+        V4.actionLockedAtSeq = Number(currentOnlineMatch?.game_state?.battle?.seq || 0);
+        setOnlineActionLock(true);
+
+        let result;
+        try {
+            result = originalFn(...args);
+        } catch (error) {
+            setOnlineActionLock(false);
+            throw error;
+        }
+
+        /* Si l'action a été refusée par le moteur, on rend la main. */
+        setTimeout(() => {
+            if (
+                isLiveFriendlyDuel() &&
+                V4.actionLocked &&
+                currentOnlineMatch?.game_state?.battle?.turn_user_id === brawlCloudSession?.user?.id &&
+                battleState.enemyTurn === false
+            ) {
+                setOnlineActionLock(false);
+            }
+        }, 100);
+
+        return result;
+    }
+
+    const v3AttackEnemy = attackEnemy;
+    attackEnemy = function(...args) {
+        return runLockedOnlineAction(v3AttackEnemy, args);
+    };
+
+    const v3UseBattleSuper = useBattleSuper;
+    useBattleSuper = function(...args) {
+        return runLockedOnlineAction(v3UseBattleSuper, args);
+    };
+
+    const v3UseBattleAbility = useBattleAbility;
+    useBattleAbility = function(...args) {
+        return runLockedOnlineAction(v3UseBattleAbility, args);
+    };
+
+    const v3PassBattleTurn = passBattleTurn;
+    passBattleTurn = function(...args) {
+        return runLockedOnlineAction(v3PassBattleTurn, args);
+    };
+
+    /*
+       Le moteur solo pouvait faire :
+       A joue -> B joue -> B choisit -> B rejoue.
+       En Duel online on impose : A -> B -> A -> B.
+    */
+    const originalAdvanceDistanceRoundAfterAttackV4 = advanceDistanceRoundAfterAttack;
+    advanceDistanceRoundAfterAttack = function(actor) {
+        if (!isLiveFriendlyDuel()) {
+            return originalAdvanceDistanceRoundAfterAttackV4(actor);
+        }
+
+        if (battleState.playerHealth <= 0 || battleState.enemyHealth <= 0) return;
+
+        finalizeBattleActionRegen(actor);
+
+        if (actor === "player") {
+            consumeBattleShieldTurn("enemy");
+            consumeBattleEffectImmunityTurn("enemy");
+        } else {
+            consumeBattleShieldTurn("player");
+            consumeBattleEffectImmunityTurn("player");
+        }
+
+        /* Première action de la distance : l'autre joue avec la même distance. */
+        if (battleState.distanceRoundAttackIndex === 0) {
+            battleState.distanceRoundAttackIndex = 1;
+            if (actor === "player") beginEnemyActionSameDistance();
+            else beginPlayerActionSameDistance();
+            return;
+        }
+
+        /* Deuxième action terminée : l'autre joueur obtient le prochain tour. */
+        battleState.distanceRoundAttackIndex = 0;
+        if (actor === "player") {
+            startDistanceRound("bot");
+        } else {
+            startDistanceRound("player");
+        }
+    };
+
+    /* -----------------------------------------------------
+       MATCH UPDATE : déverrouillage + El Amigo garanti.
+    ----------------------------------------------------- */
+    const v3OnOnlineMatchUpdated = onOnlineMatchUpdated;
+    onOnlineMatchUpdated = function(match) {
+        const result = v3OnOnlineMatchUpdated(match);
+        const me = brawlCloudSession?.user?.id;
+        const battle = match?.game_state?.battle;
+
+        if (match?.status === "playing" && battle && me) {
+            if (battle.turn_user_id === me) {
+                V4.actionLocked = false;
+                V4.actionLockedAtSeq = Number(battle.seq || 0);
+                setTimeout(() => setOnlineActionLock(false), 0);
+            } else {
+                V4.actionLocked = true;
+                document.getElementById("battlePage")?.classList.add("online-action-locked");
+            }
+        }
+
+        if (match?.status === "finished" && me) {
+            battleState.__friendlyOnlineDuel = true;
+            setOnlineActionLock(true);
+            try {
+                registerElAmigoFriendMatch(
+                    match.winner_id === me ? "victory" : "defeat",
+                    match.id
+                );
+                updateElAmigoNotificationDot();
+            } catch (error) {
+                console.warn("Mise à jour El Amigo impossible :", error);
+            }
+
+            /* Le toast de défaite historique affichait encore « 0 TR ». */
+            setTimeout(() => {
+                const defeatMessage = document.querySelector("#battleLossToast .battle-defeat-message");
+                if (defeatMessage && match.winner_id !== me) {
+                    defeatMessage.innerText = "+10 TOKENS · DUEL AMICAL · 0 TR";
+                }
+            }, 650);
+        }
+
+        return result;
+    };
+
+    /* -----------------------------------------------------
+       MÉGABOÎTE DE CONNEXION — UNE FOIS PAR SAUVEGARDE.
+       Le marqueur est cloud-sync via trophyRoadClaimed.
+    ----------------------------------------------------- */
+    function grantConnectedMegaBoxOnce() {
+        if (!brawlCloudSession?.user?.id || !Array.isArray(state?.trophyRoadClaimed)) return false;
+        if (state.trophyRoadClaimed.includes(LOGIN_MEGA_SENTINEL)) return false;
+
+        state.trophyRoadClaimed.push(LOGIN_MEGA_SENTINEL);
+        saveGame();
+
+        let attempts = 0;
+        const openGift = () => {
+            attempts += 1;
+            if (boxOpeningActive) {
+                if (attempts < 30) setTimeout(openGift, 500);
+                return;
+            }
+            const opened = openFreeTrophyRoadBox("mega");
+            if (!opened && attempts < 30) {
+                setTimeout(openGift, 500);
+            }
+        };
+
+        setTimeout(openGift, 700);
+        return true;
+    }
+
+    const v3InitOnlineMultiplayer = initOnlineMultiplayer;
+    initOnlineMultiplayer = async function(...args) {
+        const result = await v3InitOnlineMultiplayer(...args);
+        setTimeout(grantConnectedMegaBoxOnce, 1600);
+        return result;
+    };
+
+    try {
+        const client = getBrawlCloudClient();
+        client?.auth?.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_IN" && session?.user) {
+                setTimeout(grantConnectedMegaBoxOnce, 1800);
+            }
+        });
+    } catch (_) {}
+})();
+</script>
+
 </body>
 </html>
