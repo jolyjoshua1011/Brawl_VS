@@ -4329,10 +4329,10 @@ const BRAWLER_ABILITY_CATALOG = {
         {
             id: "poco-ability-a",
             name: "MÉLODIE APAISANTE",
-            description: "Poco joue une douce mélodie qui soigne Poco et ses alliés de 20 PV par tour pendant 3 tours.",
+            description: "Poco joue une douce mélodie qui soigne Poco et ses alliés de 10 PV par tour pendant 3 tours.",
             effect: {
                 type: "healing_melody",
-                amount: 20,
+                amount: 10,
                 turns: 3
             },
             unlocked: true
@@ -4847,7 +4847,7 @@ const BRAWLER_ATTACK_DESCRIPTIONS = {
                 "Shelly tire une salve dont les dégâts diminuent avec la distance. Plus elle est proche de sa cible, plus son attaque est puissante."
         },
         super: {
-            title: "Super : Décharge",
+            title: "Super chevrotine",
             text:
                 "Shelly déclenche une attaque transperçante dont les dégâts varient selon la distance. Elle traverse les invocations et peut toucher l'invocation ainsi que le Brawler placé derrière."
         }
@@ -5651,7 +5651,7 @@ function getAbilityStatsRows(
         return [
             {
                 label: "SOIN",
-                value: "+20 PV / TOUR"
+                value: "+10 PV / TOUR"
             },
             {
                 label: "DURÉE",
@@ -7301,7 +7301,7 @@ function applyPocoHealingMelodyTick(
         turns - 1;
     return healPocoTeam(
         side,
-        20
+        10
     );
 }
 function getSideDisplayName(
@@ -7781,6 +7781,10 @@ const PROFILE_ICON_CHOICES = [
     {
         name: "3000 TR",
         icon: "Profil/3000tr.png"
+    },
+    {
+        name: "6000 TR",
+        icon: "Profil/6000tr.png"
     },
     {
         name: "Shelly",
@@ -11748,6 +11752,186 @@ const TROPHY_ROAD_VISUAL = [
         label: "ICÔNE 3000TR",
         reward: "Icône de profil",
         icon: "Profil/3000tr.png"
+    },
+    {
+        trophies: 3100,
+        label: "250 POINTS DE POUVOIR",
+        reward: "Récompense",
+        icon: "Icon/power.png"
+    },
+    {
+        trophies: 3200,
+        label: "BRAWL BOX",
+        reward: "Récompense",
+        icon: "Icon/Brawl_Box.webp"
+    },
+    {
+        trophies: 3300,
+        label: "10 GEMMES",
+        reward: "Récompense",
+        icon: "Icon/gemme.png"
+    },
+    {
+        trophies: 3400,
+        label: "30 TOKENS",
+        reward: "Récompense",
+        icon: "Icon/Jeton.png"
+    },
+    {
+        trophies: 3500,
+        label: "GROSSE BOÎTE",
+        reward: "Récompense",
+        icon: "Icon/Big_Box.webp"
+    },
+    {
+        trophies: 3600,
+        label: "400 PIÈCES",
+        reward: "Récompense",
+        icon: "Icon/coin.png"
+    },
+    {
+        trophies: 3700,
+        label: "250 POINTS DE POUVOIR",
+        reward: "Récompense",
+        icon: "Icon/power.png"
+    },
+    {
+        trophies: 3800,
+        label: "BRAWL BOX",
+        reward: "Récompense",
+        icon: "Icon/Brawl_Box.webp"
+    },
+    {
+        trophies: 3900,
+        label: "10 GEMMES",
+        reward: "Récompense",
+        icon: "Icon/gemme.png"
+    },
+    {
+        trophies: 4000,
+        label: "MEGA BOÎTE",
+        reward: "Récompense majeure",
+        icon: "Icon/Mega_Box.webp"
+    },
+    {
+        trophies: 4100,
+        label: "400 PIÈCES",
+        reward: "Récompense",
+        icon: "Icon/coin.png"
+    },
+    {
+        trophies: 4200,
+        label: "30 TOKENS",
+        reward: "Récompense",
+        icon: "Icon/Jeton.png"
+    },
+    {
+        trophies: 4300,
+        label: "250 POINTS DE POUVOIR",
+        reward: "Récompense",
+        icon: "Icon/power.png"
+    },
+    {
+        trophies: 4400,
+        label: "BRAWL BOX",
+        reward: "Récompense",
+        icon: "Icon/Brawl_Box.webp"
+    },
+    {
+        trophies: 4500,
+        label: "GROSSE BOÎTE",
+        reward: "Récompense",
+        icon: "Icon/Big_Box.webp"
+    },
+    {
+        trophies: 4600,
+        label: "10 GEMMES",
+        reward: "Récompense",
+        icon: "Icon/gemme.png"
+    },
+    {
+        trophies: 4700,
+        label: "400 PIÈCES",
+        reward: "Récompense",
+        icon: "Icon/coin.png"
+    },
+    {
+        trophies: 4800,
+        label: "250 POINTS DE POUVOIR",
+        reward: "Récompense",
+        icon: "Icon/power.png"
+    },
+    {
+        trophies: 4900,
+        label: "BRAWL BOX",
+        reward: "Récompense",
+        icon: "Icon/Brawl_Box.webp"
+    },
+    {
+        trophies: 5000,
+        label: "MEGA BOÎTE",
+        reward: "Récompense majeure",
+        icon: "Icon/Mega_Box.webp"
+    },
+    {
+        trophies: 5100,
+        label: "30 TOKENS",
+        reward: "Récompense",
+        icon: "Icon/Jeton.png"
+    },
+    {
+        trophies: 5200,
+        label: "10 GEMMES",
+        reward: "Récompense",
+        icon: "Icon/gemme.png"
+    },
+    {
+        trophies: 5300,
+        label: "400 PIÈCES",
+        reward: "Récompense",
+        icon: "Icon/coin.png"
+    },
+    {
+        trophies: 5400,
+        label: "250 POINTS DE POUVOIR",
+        reward: "Récompense",
+        icon: "Icon/power.png"
+    },
+    {
+        trophies: 5500,
+        label: "GROSSE BOÎTE",
+        reward: "Récompense",
+        icon: "Icon/Big_Box.webp"
+    },
+    {
+        trophies: 5600,
+        label: "BRAWL BOX",
+        reward: "Récompense",
+        icon: "Icon/Brawl_Box.webp"
+    },
+    {
+        trophies: 5700,
+        label: "10 GEMMES",
+        reward: "Récompense",
+        icon: "Icon/gemme.png"
+    },
+    {
+        trophies: 5800,
+        label: "400 PIÈCES",
+        reward: "Récompense",
+        icon: "Icon/coin.png"
+    },
+    {
+        trophies: 5900,
+        label: "30 TOKENS",
+        reward: "Récompense",
+        icon: "Icon/Jeton.png"
+    },
+    {
+        trophies: 6000,
+        label: "ICÔNE 6000TR",
+        reward: "Icône de profil",
+        icon: "Profil/6000tr.png"
     }
 ];
 function isTrophyRoadRewardClaimed(
@@ -11969,6 +12153,26 @@ function claimTrophyRoadReward(
         );
         return;
     }
+    if (
+        step.label ===
+        "MEGA BOÎTE"
+    ) {
+        if (
+            boxOpeningActive
+        ) {
+            return;
+        }
+        markTrophyRoadRewardClaimed(
+            target
+        );
+        saveGame();
+        renderTrophyRoad();
+        closeTrophyRoad();
+        openFreeTrophyRoadBox(
+            "mega"
+        );
+        return;
+    }
     /*
        Icônes de profil spéciales.
     */
@@ -12004,7 +12208,12 @@ function claimTrophyRoadReward(
        Ressources classiques.
     */
     let amount =
-        0;
+        Math.max(
+            0,
+            Number(
+                String(step.label).match(/\d+/)?.[0]
+            ) || 0
+        );
     let resourceKey =
         null;
     let description =
@@ -12014,36 +12223,40 @@ function claimTrophyRoadReward(
             "PIÈCES"
         )
     ) {
-        amount =
-            400;
         resourceKey =
             "coins";
         description =
-            "+400 pièces";
+            `+${amount} pièces`;
     }
     else if (
         step.label.includes(
             "TOKENS"
         )
     ) {
-        amount =
-            30;
         resourceKey =
             "tokens";
         description =
-            "+30 tokens";
+            `+${amount} tokens`;
     }
     else if (
         step.label.includes(
             "POINTS DE POUVOIR"
         )
     ) {
-        amount =
-            250;
         resourceKey =
             "power";
         description =
-            "+250 points de pouvoir";
+            `+${amount} points de pouvoir`;
+    }
+    else if (
+        step.label.includes(
+            "GEMMES"
+        )
+    ) {
+        resourceKey =
+            "gems";
+        description =
+            `+${amount} gemmes`;
     }
     if (
         !resourceKey
@@ -12088,7 +12301,11 @@ function getTrophyRoadVisualProgress(
     const lastIndex =
         steps.length - 1;
     const startX = 55;
-    const endX = 4360;
+    const stepSpacing = 145;
+    const endX =
+        startX +
+        Math.max(0, lastIndex) *
+        stepSpacing;
     const rewardTrackWidth =
         endX - startX;
     /*
@@ -12096,7 +12313,8 @@ function getTrophyRoadVisualProgress(
        de progression.
     */
     const progressLineStart = 42;
-    const progressLineEnd = 4378;
+    const progressLineEnd =
+        endX + 18;
     const progressLineWidth =
         progressLineEnd -
         progressLineStart;
@@ -12218,7 +12436,21 @@ function renderTrophyRoad() {
             TROPHY_ROAD_VISUAL.length - 1
         ]?.trophies || 1;
     const startX = 55;
-    const endX = 4360;
+    const stepSpacing = 145;
+    const endX =
+        startX +
+        Math.max(
+            0,
+            TROPHY_ROAD_VISUAL.length - 1
+        ) *
+        stepSpacing;
+    const trackWidth =
+        endX + 60;
+    track.style.setProperty(
+        "min-width",
+        trackWidth + "px",
+        "important"
+    );
     const width = endX - startX;
     const nextMilestone =
         TROPHY_ROAD_VISUAL.find(
@@ -14613,7 +14845,7 @@ function useBattleAbility(
        =================================================
        POCO — CAPACITÉ A
        =================================================
-       +20 PV par tour pendant 3 tours.
+       +10 PV par tour pendant 3 tours.
        Le premier tick est appliqué immédiatement,
        puis deux ticks lors des deux prochains tours
        de Poco.
@@ -14636,7 +14868,7 @@ function useBattleAbility(
         const actualHeal =
             healPocoTeam(
                 "player",
-                20
+                10
             );
         updateBattleAbilitySlots();
         updateBattleSuperUI();
@@ -15044,7 +15276,7 @@ function updateBattleAbilitySlots() {
             "poco-ability-a"
         ) {
             detailText =
-                "+20 PV × 3 TOURS";
+                "+10 PV × 3 TOURS";
         }
         else if (
             ability.id ===
@@ -21637,7 +21869,7 @@ function tryEnemyBattleAbility() {
         const actualHeal =
             healPocoTeam(
                 "enemy",
-                20
+                10
             );
         if (actionMessage) {
             actionMessage.innerText =
@@ -30439,6 +30671,7 @@ function getBrawlerSkins(
                     !(elAmigoSkin && elAmigoSkin.equipped) &&
                     !(championSkin && championSkin.equipped)
             },
+            neoSkin,
             {
                 id: 'star',
                 name: 'Shelly Star',
@@ -30446,7 +30679,6 @@ function getBrawlerSkins(
                 owned: state.seasonOne.skinOwned,
                 equipped: !!starEquipped
             },
-            neoSkin,
             elAmigoSkin,
             championSkin
         ]
@@ -30474,6 +30706,7 @@ function getBrawlerSkins(
                     !(elAmigoSkin && elAmigoSkin.equipped) &&
                     !(championSkin && championSkin.equipped)
             },
+            neoSkin,
             {
                 id: 'challenger',
                 name: 'Colt Challenger',
@@ -30481,7 +30714,6 @@ function getBrawlerSkins(
                 owned: state.seasonOne.coltSkinOwned,
                 equipped: !!challengerEquipped
             },
-            neoSkin,
             elAmigoSkin,
             championSkin
         ]
@@ -39888,5 +40120,392 @@ function updateBattleActionHitChanceUI() {
 })();
 </script>
 
+
+<!-- =========================================================
+     BRAWLERS V14 — JAUGE DE TROPHÉES SUR LES CARDS
+     Progression par segments : 0→250, 250→500, 500→750, 750→1000.
+========================================================= -->
+<style id="brawlers-trophy-gauge-v14">
+/* Jauge de trophées : toute la largeur en haut de la card */
+#brawlersPage .roster-card-trophy-gauge{
+    position:absolute !important;
+    left:0 !important;
+    right:0 !important;
+    top:0 !important;
+    z-index:40 !important;
+    height:27px !important;
+    overflow:hidden !important;
+    border-radius:16px 16px 7px 7px !important;
+    background:rgba(4,8,14,.90) !important;
+    border:0 !important;
+    border-bottom:1px solid rgba(255,221,120,.34) !important;
+    box-shadow:
+        inset 0 -1px 0 rgba(0,0,0,.35),
+        0 3px 10px rgba(0,0,0,.28) !important;
+    pointer-events:none !important;
+}
+
+#brawlersPage .roster-card-trophy-gauge-fill{
+    position:absolute !important;
+    left:0 !important;
+    top:0 !important;
+    bottom:0 !important;
+    width:var(--trophy-progress,0%) !important;
+    max-width:100% !important;
+    border-radius:0 !important;
+    background:linear-gradient(90deg,#b87400 0%,#e8a414 50%,#ffd760 100%) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.24),
+        0 0 12px rgba(255,190,45,.34) !important;
+    transition:width .28s cubic-bezier(.2,.75,.25,1) !important;
+}
+
+#brawlersPage .roster-card-trophy-gauge.is-max .roster-card-trophy-gauge-fill{
+    background:linear-gradient(90deg,#efa400 0%,#ffd34f 58%,#fff1aa 100%) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.40),
+        0 0 14px rgba(255,200,87,.60) !important;
+}
+
+/* Icône trophée au début de la jauge */
+#brawlersPage .roster-card-trophy-gauge-icon{
+    position:absolute !important;
+    left:8px !important;
+    top:50% !important;
+    z-index:4 !important;
+    width:19px !important;
+    height:19px !important;
+    transform:translateY(-50%) !important;
+    object-fit:contain !important;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.75)) !important;
+}
+
+/* Nombre de trophées parfaitement centré dans la jauge */
+#brawlersPage .roster-card-trophy-gauge-value{
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    z-index:5 !important;
+    transform:translate(-50%,-50%) !important;
+    color:#fff8d8 !important;
+    font-size:11px !important;
+    line-height:1 !important;
+    font-weight:1000 !important;
+    letter-spacing:.2px !important;
+    text-shadow:
+        0 1px 2px rgba(0,0,0,.95),
+        0 0 5px rgba(0,0,0,.70) !important;
+}
+
+/* Plus d'ancien petit compteur de trophées : la grande jauge le remplace */
+#brawlersPage .roster-card-mini-trophy{
+    display:none !important;
+}
+
+/* La rareté descend légèrement pour ne jamais chevaucher la jauge */
+#brawlersPage .roster-card.unlocked .roster-card-rarity{
+    top:31px !important;
+}
+
+/* Les anciens repères 250/500/750/1000 sont masqués pour garder la jauge lisible */
+#brawlersPage .roster-card-trophy-gauge-marker{
+    display:none !important;
+}
+
+#brawlersPage .roster-card-title{
+    bottom:7px !important;
+}
+
+@media(max-width:360px){
+    #brawlersPage .roster-card-trophy-gauge{
+        height:25px !important;
+    }
+    #brawlersPage .roster-card-trophy-gauge-icon{
+        left:7px !important;
+        width:18px !important;
+        height:18px !important;
+    }
+    #brawlersPage .roster-card-trophy-gauge-value{
+        font-size:10px !important;
+    }
+    #brawlersPage .roster-card.unlocked .roster-card-rarity{
+        top:29px !important;
+    }
+}
+</style>
+
+<script id="brawlers-trophy-gauge-v14-script">
+(function(){
+    window.renderBrawlers = function(){
+        const unlockedGrid = document.getElementById("unlockedGrid");
+        const lockedGrid = document.getElementById("lockedGrid");
+        if(!unlockedGrid || !lockedGrid || typeof brawlers === "undefined") return;
+
+        unlockedGrid.innerHTML = "";
+        lockedGrid.innerHTML = "";
+
+        const names = typeof getSortedBrawlerNames === "function"
+            ? getSortedBrawlerNames()
+            : Object.keys(brawlers);
+
+        names.forEach(name=>{
+            const brawler = brawlers[name];
+            if(!brawler) return;
+
+            const unlocked = typeof isBrawlerUnlocked === "function" && isBrawlerUnlocked(name);
+            const selected = unlocked && typeof state !== "undefined" && state.selectedBrawler === name;
+
+            const card = document.createElement(unlocked ? "button" : "div");
+            card.className =
+                `brawler-card roster-card rarity-${brawler.rarityClass} ` +
+                `${unlocked ? "unlocked" : "locked"} ` +
+                `${selected ? "selected" : ""}`;
+
+            if(name === "Poco") card.classList.add("poco-card");
+
+            const image = unlocked && typeof getBrawlerCardIcon === "function"
+                ? getBrawlerCardIcon(name)
+                : brawler.icon;
+
+            const trophies = unlocked && typeof getBrawlerTrophies === "function"
+                ? Math.max(0, Number(getBrawlerTrophies(name) || 0))
+                : 0;
+
+            /*
+               La jauge fonctionne par segments de 250 trophées :
+               0 → 250, 250 → 500, 500 → 750, 750 → 1000.
+               À chaque palier atteint, la jauge repart vide pour le segment suivant.
+               À 1000 trophées et au-delà, elle reste pleine.
+            */
+            let segmentStart = 0;
+            let nextMilestone = 250;
+            let trophyProgress = 0;
+
+            if(trophies >= 1000){
+                segmentStart = 750;
+                nextMilestone = 1000;
+                trophyProgress = 100;
+            }else{
+                segmentStart = Math.floor(trophies / 250) * 250;
+                nextMilestone = segmentStart + 250;
+                trophyProgress = Math.max(
+                    0,
+                    Math.min(100, ((trophies - segmentStart) / 250) * 100)
+                );
+            }
+
+            if(unlocked){
+                card.type = "button";
+                card.innerHTML = `
+                    <div class="roster-card-art">
+                        <img class="brawler-image" src="${image}" alt="${name}">
+
+                        <div class="roster-card-rarity">
+                            ${String(brawler.rarity || "").toUpperCase()}
+                        </div>
+
+                        <div class="roster-card-title">
+                            <strong>${name}</strong>
+                            <small data-power="${brawler.power}"></small>
+                        </div>
+                    </div>
+
+                    <div
+                        class="roster-card-trophy-gauge ${trophies >= 1000 ? "is-max" : ""}"
+                        style="--trophy-progress:${trophyProgress}%"
+                        aria-label="${trophies} trophées · progression ${segmentStart} à ${nextMilestone}"
+                    >
+                        <span class="roster-card-trophy-gauge-fill"></span>
+                        <img class="roster-card-trophy-gauge-icon" src="Icon/trophy.png" alt="">
+                        <strong class="roster-card-trophy-gauge-value">${trophies}</strong>
+                    </div>
+                `;
+
+                card.setAttribute(
+                    "aria-label",
+                    `${name}, ${brawler.rarity}, pouvoir ${brawler.power}, ${trophies} trophées`
+                );
+
+                card.addEventListener("click",()=>{
+                    if(typeof showBrawlerDetail === "function"){
+                        showBrawlerDetail(name);
+                    }
+                });
+
+                unlockedGrid.appendChild(card);
+            }else{
+                card.innerHTML = `
+                    <div class="roster-card-art">
+                        <img class="brawler-image" src="${brawler.icon}" alt="${name}">
+
+                        <div class="roster-card-rarity">
+                            ${String(brawler.rarity || "").toUpperCase()}
+                        </div>
+
+                        <div class="roster-card-lock">
+                            <img src="Icon/lock.png" alt="Verrouillé">
+                        </div>
+
+                        <div class="roster-card-title">
+                            <strong>${name}</strong>
+                            <small></small>
+                        </div>
+                    </div>
+                `;
+                lockedGrid.appendChild(card);
+            }
+        });
+
+        if(typeof updateRosterV11Summary === "function"){
+            updateRosterV11Summary();
+        }else{
+            const total = Object.keys(brawlers).length;
+            const unlocked = Object.keys(brawlers).filter(name =>
+                typeof isBrawlerUnlocked === "function" && isBrawlerUnlocked(name)
+            ).length;
+
+            const owned = document.getElementById("ownedBrawlers");
+            if(owned) owned.textContent = unlocked;
+
+            const totalLabel = document.querySelector("#brawlersPage .roster-count-orb span");
+            if(totalLabel) totalLabel.textContent = "/ " + total;
+
+            const progress = document.getElementById("rosterCollectionProgress");
+            if(progress) progress.style.width = (total ? unlocked / total * 100 : 0) + "%";
+
+            const ownedCount = document.getElementById("rosterOwnedSectionCount");
+            if(ownedCount) ownedCount.textContent = unlocked;
+
+            const lockedCount = document.getElementById("rosterLockedSectionCount");
+            if(lockedCount) lockedCount.textContent = Math.max(0,total-unlocked);
+        }
+
+        if(typeof updateBrawlerSortButtons === "function"){
+            updateBrawlerSortButtons();
+        }
+    };
+
+    function renderGaugeCardsIfVisible(){
+        const page = document.getElementById("brawlersPage");
+        if(page && page.classList.contains("active")){
+            window.renderBrawlers();
+        }
+    }
+
+    if(document.readyState === "loading"){
+        document.addEventListener("DOMContentLoaded", renderGaugeCardsIfVisible, {once:true});
+    }else{
+        renderGaugeCardsIfVisible();
+    }
+})();
+</script>
+
+
+
+<!-- BRAWLERS V15 — RARETÉ EN FOND + POUVOIR CHIFFRE SEUL -->
+<style id="brawlers-rarity-background-power-v15">
+/* La couleur de rareté devient réellement le fond visuel de la card. */
+#brawlersPage .brawler-card.roster-card{
+    background:
+        linear-gradient(180deg,
+            rgba(var(--r),.48) 0%,
+            rgba(var(--r),.30) 42%,
+            rgba(var(--r),.16) 72%,
+            rgba(5,10,17,.96) 100%
+        ) !important;
+    border-color:rgba(var(--r),.72) !important;
+    box-shadow:
+        0 8px 18px rgba(0,0,0,.28),
+        0 0 14px rgba(var(--r),.14),
+        inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+/* Teinte de rareté visible PAR-DESSUS l'artwork. */
+#brawlersPage .roster-card-art::after{
+    content:"" !important;
+    position:absolute !important;
+    inset:0 !important;
+    z-index:6 !important;
+    pointer-events:none !important;
+    border-radius:inherit !important;
+    background:
+        linear-gradient(180deg,
+            rgba(var(--r),.22) 0%,
+            rgba(var(--r),.10) 38%,
+            rgba(var(--r),.05) 55%,
+            rgba(3,7,13,.18) 69%,
+            rgba(3,7,13,.90) 100%
+        ) !important;
+}
+
+/* Un peu plus de présence de la rareté sur les zones transparentes de l'image. */
+#brawlersPage .roster-card-art{
+    background:
+        radial-gradient(circle at 50% 62%,rgba(var(--r),.48),rgba(var(--r),.24) 43%,rgba(var(--r),.10) 70%),
+        rgb(var(--r)) !important;
+}
+
+/* Pouvoir : uniquement le chiffre, gros, en bas à droite. */
+#brawlersPage .roster-card-title{
+    right:8px !important;
+    bottom:7px !important;
+    align-items:flex-end !important;
+}
+#brawlersPage .roster-card-title strong{
+    padding-right:34px !important;
+}
+#brawlersPage .roster-card-title small{
+    position:absolute !important;
+    right:0 !important;
+    bottom:-1px !important;
+    width:auto !important;
+    min-width:0 !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:0 !important;
+    margin:0 !important;
+    display:block !important;
+    border:0 !important;
+    border-radius:0 !important;
+    outline:0 !important;
+    color:#fff !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    font-size:0 !important;
+    line-height:1 !important;
+    text-shadow:2px 2px 0 rgba(0,0,0,.95),0 0 8px rgba(0,0,0,.48) !important;
+}
+#brawlersPage .roster-card-title small::before{
+    content:attr(data-power) !important;
+    display:block !important;
+    color:#fff !important;
+    font-size:25px !important;
+    line-height:.86 !important;
+    font-weight:1000 !important;
+    font-style:italic !important;
+    letter-spacing:-1.4px !important;
+    text-shadow:2px 2px 0 rgba(0,0,0,.95),0 0 7px rgba(255,255,255,.12) !important;
+}
+
+/* Pouvoir 10 reste juste un chiffre, avec une légère teinte or seulement sur le texte. */
+#brawlersPage .roster-card-title small[data-power="10"]::before{
+    color:#ffe07a !important;
+}
+
+/* Cards verrouillées : on conserve la couleur de rareté mais fortement assombrie. */
+#brawlersPage .brawler-card.roster-card.locked{
+    background:
+        linear-gradient(180deg,rgba(var(--r),.23),rgba(var(--r),.09) 55%,rgba(5,10,17,.97)) !important;
+}
+#brawlersPage .roster-card.locked .roster-card-art::after{
+    background:
+        linear-gradient(180deg,rgba(var(--r),.10),rgba(3,7,13,.40) 55%,rgba(3,7,13,.94) 100%) !important;
+}
+
+@media(max-width:360px){
+    #brawlersPage .roster-card-title small::before{font-size:23px !important;}
+    #brawlersPage .roster-card-title strong{padding-right:31px !important;}
+}
+</style>
 </body>
 </html>
