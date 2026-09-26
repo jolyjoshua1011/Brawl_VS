@@ -29464,7 +29464,7 @@ closePopup =
 /* Saison 1 : boutique découpée en GLOBAL / SHELLY STAR / COLT CHALLENGER. */
 const SHELLY_STAR_IMAGE = 'Brawlers_skin/shelly_star.png';
 const SHELLY_DEFAULT_IMAGE = brawlers.Shelly.image;
-const COLT_CHALLENGER_IMAGE = 'Brawlers_skin/Colt_Skin-Challenger.webp';
+const COLT_CHALLENGER_IMAGE = 'Brawlers_skin/Colt_Skin-Challenger.png';
 const COLT_DEFAULT_IMAGE = brawlers.Colt.image;
 if (state.seasonOne.skinEquipped) {
     brawlers.Shelly.image = SHELLY_STAR_IMAGE;
@@ -40507,5 +40507,246 @@ function updateBattleActionHitChanceUI() {
     #brawlersPage .roster-card-title strong{padding-right:31px !important;}
 }
 </style>
+
+<style id="brawlers-cards-final-fix">
+/* =========================================================
+   FIX DÉFINITIF — CARDS BRAWLERS
+   1) Jauge trophées = 100% de la largeur
+   2) Niveau de pouvoir = chiffre seul, aucun carré
+========================================================= */
+
+/* ---------- JAUGE TROPHÉES : VRAIMENT PLEINE LARGEUR ---------- */
+#brawlersPage .brawler-card.roster-card > .roster-card-trophy-gauge{
+    position:absolute !important;
+    top:0 !important;
+    left:0 !important;
+    right:auto !important;
+
+    /* IMPORTANT : l'ancienne règle imposait width:48px */
+    width:100% !important;
+    min-width:100% !important;
+    max-width:100% !important;
+
+    height:27px !important;
+    margin:0 !important;
+    padding:0 !important;
+
+    display:block !important;
+    overflow:hidden !important;
+
+    border:0 !important;
+    border-bottom:1px solid rgba(255,221,120,.34) !important;
+    border-radius:20px 20px 7px 7px !important;
+
+    background:rgba(4,8,14,.90) !important;
+    box-shadow:
+        inset 0 -1px 0 rgba(0,0,0,.35),
+        0 3px 10px rgba(0,0,0,.28) !important;
+
+    z-index:60 !important;
+    pointer-events:none !important;
+
+    box-sizing:border-box !important;
+    transform:none !important;
+}
+
+#brawlersPage .brawler-card.roster-card > .roster-card-trophy-gauge > .roster-card-trophy-gauge-fill{
+    position:absolute !important;
+    top:0 !important;
+    left:0 !important;
+    bottom:0 !important;
+
+    width:var(--trophy-progress,0%) !important;
+    min-width:0 !important;
+    max-width:100% !important;
+
+    margin:0 !important;
+    padding:0 !important;
+
+    border:0 !important;
+    border-radius:0 !important;
+
+    background:linear-gradient(
+        90deg,
+        #b87400 0%,
+        #e8a414 50%,
+        #ffd760 100%
+    ) !important;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.24),
+        0 0 12px rgba(255,190,45,.34) !important;
+}
+
+#brawlersPage .brawler-card.roster-card > .roster-card-trophy-gauge > .roster-card-trophy-gauge-icon{
+    position:absolute !important;
+    left:8px !important;
+    top:50% !important;
+
+    width:19px !important;
+    height:19px !important;
+
+    margin:0 !important;
+    padding:0 !important;
+
+    transform:translateY(-50%) !important;
+    object-fit:contain !important;
+
+    z-index:4 !important;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.75)) !important;
+}
+
+#brawlersPage .brawler-card.roster-card > .roster-card-trophy-gauge > .roster-card-trophy-gauge-value{
+    position:absolute !important;
+    inset:0 !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    width:100% !important;
+    height:100% !important;
+
+    margin:0 !important;
+    padding:0 30px !important;
+
+    color:#fff8d8 !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+
+    font-size:11px !important;
+    line-height:1 !important;
+    font-weight:1000 !important;
+
+    transform:none !important;
+    text-align:center !important;
+    text-shadow:
+        0 1px 2px rgba(0,0,0,.95),
+        0 0 5px rgba(0,0,0,.70) !important;
+
+    z-index:5 !important;
+}
+
+/* ---------- POUVOIR : CHIFFRE SEUL, ZÉRO CARRÉ ---------- */
+#brawlersPage .brawler-card.roster-card .roster-card-title small,
+#brawlersPage .brawler-card.roster-card.selected .roster-card-title small,
+#brawlersPage .brawler-card.roster-card.unlocked.selected .roster-card-title small{
+    position:absolute !important;
+    right:0 !important;
+    bottom:-1px !important;
+
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+
+    margin:0 !important;
+    padding:0 !important;
+
+    display:block !important;
+
+    /* on tue toutes les anciennes variantes de badge */
+    background:none !important;
+    background-color:transparent !important;
+    background-image:none !important;
+
+    border:0 !important;
+    border-color:transparent !important;
+    border-radius:0 !important;
+    outline:0 !important;
+
+    box-shadow:none !important;
+    filter:none !important;
+    backdrop-filter:none !important;
+
+    color:transparent !important;
+    font-size:0 !important;
+    line-height:1 !important;
+}
+
+/* Aucun pseudo-élément décoratif sauf le chiffre lui-même */
+#brawlersPage .brawler-card.roster-card .roster-card-title small::after,
+#brawlersPage .brawler-card.roster-card.selected .roster-card-title small::after{
+    content:none !important;
+    display:none !important;
+    background:none !important;
+    border:0 !important;
+    box-shadow:none !important;
+}
+
+#brawlersPage .brawler-card.roster-card .roster-card-title small::before,
+#brawlersPage .brawler-card.roster-card.selected .roster-card-title small::before,
+#brawlersPage .brawler-card.roster-card.unlocked.selected .roster-card-title small::before{
+    content:attr(data-power) !important;
+
+    display:block !important;
+
+    width:auto !important;
+    min-width:0 !important;
+    height:auto !important;
+
+    margin:0 !important;
+    padding:0 !important;
+
+    background:none !important;
+    background-color:transparent !important;
+    background-image:none !important;
+
+    border:0 !important;
+    border-radius:0 !important;
+    outline:0 !important;
+
+    box-shadow:none !important;
+
+    color:#fff !important;
+    font-size:25px !important;
+    line-height:.86 !important;
+    font-weight:1000 !important;
+    font-style:italic !important;
+    letter-spacing:-1.4px !important;
+
+    text-shadow:
+        2px 2px 0 rgba(0,0,0,.95),
+        0 0 7px rgba(255,255,255,.12) !important;
+}
+
+/* Pouvoir 10 : texte doré uniquement */
+#brawlersPage .brawler-card.roster-card .roster-card-title small[data-power="10"]::before,
+#brawlersPage .brawler-card.roster-card.selected .roster-card-title small[data-power="10"]::before{
+    color:#ffe07a !important;
+}
+
+/* sécurité pour les anciennes cards si jamais elles réapparaissent */
+#brawlersPage .brawler-power,
+#brawlersPage .brawler-card .brawler-power,
+#brawlersPage .brawler-card.selected .brawler-power{
+    background:none !important;
+    background-color:transparent !important;
+    background-image:none !important;
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    outline:0 !important;
+    padding:0 !important;
+}
+
+@media(max-width:360px){
+    #brawlersPage .brawler-card.roster-card > .roster-card-trophy-gauge{
+        width:100% !important;
+        min-width:100% !important;
+        max-width:100% !important;
+        height:25px !important;
+    }
+
+    #brawlersPage .brawler-card.roster-card .roster-card-title small::before{
+        font-size:23px !important;
+    }
+}
+</style>
+
 </body>
 </html>
