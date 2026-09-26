@@ -1092,6 +1092,27 @@ body{
 }
 </style>
 
+
+<style id="brawl-v5-subpage-header-clean">
+/* =====================================================
+   BRAWL VS V5 · HEADER
+   Sur les pages autres que l'accueil, le header conserve
+   son contenu mais n'a plus de fond / bande colorée.
+===================================================== */
+.phone.brawl-subpage-active > header.arena-header{
+    background: transparent !important;
+    background-image: none !important;
+    border-bottom-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+.phone.brawl-subpage-active > header.arena-header::before,
+.phone.brawl-subpage-active > header.arena-header::after{
+    display: none !important;
+}
+</style>
+
 </head>
 <body>
 <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none;overflow:hidden">
@@ -43147,6 +43168,379 @@ if ("serviceWorker" in navigator) {
     window.addEventListener(
         "pageshow",
         updateBrawlVisibleHeight,
+        { passive: true }
+    );
+})();
+</script>
+
+
+<script id="brawl-online-v5-fixes">
+/* =====================================================
+   BRAWL VS ONLINE V5
+   1. Choix de distance réellement alterné.
+   2. Quitter un duel amical = match annulé, 0 récompense.
+      Les DEUX joueurs retournent automatiquement au lobby.
+   3. Header transparent hors accueil.
+===================================================== */
+(() => {
+    if (window.__BRAWL_V5_FIXES__) return;
+    window.__BRAWL_V5_FIXES__ = true;
+
+    function friendlyBattleActiveV5() {
+        return Boolean(
+            currentOnlineMatch &&
+            currentOnlineMatch.status === "playing" &&
+            currentOnlineMatch.game_state?.battle &&
+            document.getElementById("battlePage")?.classList.contains("online-network-battle")
+        );
+    }
+
+    function onlineMetaV5() {
+        const match = currentOnlineMatch;
+        const me = brawlCloudSession?.user?.id;
+        if (!match || !me) return null;
+        const amP1 = match.player1_id === me;
+        return {
+            me,
+            opponent: amP1 ? match.player2_id : match.player1_id
+        };
+    }
+
+    /* -----------------------------------------------------
+       1) DISTANCE : alternance garantie
+       ---------------------------------
+       Règle :
+       A choisit -> A joue -> B joue
+       B choisit -> B joue -> A joue
+       A choisit -> ...
+
+       Donc le joueur qui termine la DEUXIÈME action de la
+       distance devient automatiquement le prochain chooser.
+       On ne dépend plus d'un chooser_id potentiellement ancien.
+    ----------------------------------------------------- */
+    const previousAdvanceDistanceV5 = advanceDistanceRoundAfterAttack;
+
+    advanceDistanceRoundAfterAttack = function(actor) {
+        if (!friendlyBattleActiveV5()) {
+            return previousAdvanceDistanceV5(actor);
+        }
+
+        if (
+            battleState.playerHealth <= 0 ||
+            battleState.enemyHealth <= 0
+        ) {
+            return;
+        }
+
+        finalizeBattleActionRegen(actor);
+
+        if (actor === "player") {
+            consumeBattleShieldTurn("enemy");
+            consumeBattleEffectImmunityTurn("enemy");
+        } else {
+            consumeBattleShieldTurn("player");
+            consumeBattleEffectImmunityTurn("player");
+        }
+
+        /*
+           Première action à cette distance :
+           l'autre joueur joue immédiatement avec la même distance.
+        */
+        if (Number(battleState.distanceRoundAttackIndex || 0) === 0) {
+            battleState.distanceRoundAttackIndex = 1;
+
+            if (actor === "player") {
+                beginEnemyActionSameDistance();
+            } else {
+                beginPlayerActionSameDistance();
+            }
+            return;
+        }
+
+        /*
+           Deuxième action terminée.
+           Le joueur qui vient de jouer devient le prochain chooser.
+           Dans un Duel online, "player" = ce téléphone.
+        */
+        battleState.distanceRoundAttackIndex = 0;
+
+        const nextChooser =
+            actor === "player"
+                ? "player"
+                : "bot";
+
+        startDistanceRound(nextChooser);
+    };
+
+    /* -----------------------------------------------------
+       2) ANNULATION D'UN DUEL AMICAL
+    ----------------------------------------------------- */
+    function hideFriendlyBattleOverlaysV5() {
+        [
+            "battleVictoryRecap",
+            "battleLossToast",
+            "postBattleRewardsOverlay"
+        ].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove("active");
+            el.setAttribute("aria-hidden", "true");
+        });
+
+        const startTransition =
+            document.getElementById("battleStartTransition");
+
+        if (startTransition) {
+            startTransition.classList.remove(
+                "active",
+                "starter-mode"
+            );
+        }
+    }
+
+    function stopFriendlyBattleTimersV5() {
+        try {
+            if (battleEnemyAttackTimer) {
+                clearTimeout(battleEnemyAttackTimer);
+                battleEnemyAttackTimer = null;
+            }
+        } catch (_) {}
+
+        try {
+            if (battleLaunchTransitionTimer) {
+                clearTimeout(battleLaunchTransitionTimer);
+                battleLaunchTransitionTimer = null;
+            }
+        } catch (_) {}
+    }
+
+    function returnBothToLobbyAfterCancelV5(message) {
+        stopFriendlyBattleTimersV5();
+        hideFriendlyBattleOverlaysV5();
+
+        /*
+           Annule quêtes / ressources gagnées pendant le combat
+           grâce au snapshot créé au lancement du Duel.
+        */
+        try {
+            restoreBattleQuestStateFromSnapshot();
+        } catch (error) {
+            console.warn(
+                "Impossible de restaurer le snapshot du Duel :",
+                error
+            );
+        }
+
+        /*
+           Bloque toute récompense provenant d'un ancien timeout
+           qui se terminerait juste après avoir quitté.
+        */
+        battleState.rewardsGranted = true;
+        battleState.__friendlyOnlineDuel = false;
+        battleState.trophyChange = 0;
+
+        document
+            .getElementById("battlePage")
+            ?.classList.remove(
+                "online-network-battle",
+                "online-action-locked"
+            );
+
+        if (window.BRAWLVS_ONLINE_V3) {
+            window.BRAWLVS_ONLINE_V3.launchedMatchId = null;
+            window.BRAWLVS_ONLINE_V3.finishing = false;
+        }
+
+        currentOnlineMatch = null;
+
+        /*
+           Retour automatique à l'accueil pour les deux joueurs.
+        */
+        playTransitionLoading(
+            "DUEL ANNULÉ",
+            () => {
+                showHome();
+
+                if (message) {
+                    const homeMessage =
+                        document.getElementById(
+                            "battleActionMessage"
+                        );
+
+                    console.info(message);
+                }
+            },
+            550
+        );
+    }
+
+    const previousQuitBattleMatchV5 = quitBattleMatch;
+
+    quitBattleMatch = async function() {
+        if (!friendlyBattleActiveV5()) {
+            return previousQuitBattleMatchV5();
+        }
+
+        const client = getBrawlCloudClient();
+        const meta = onlineMetaV5();
+        const match = currentOnlineMatch;
+
+        /*
+           Localement, on bloque immédiatement les récompenses.
+        */
+        battleState.rewardsGranted = true;
+
+        if (client && meta && match?.id) {
+            const gameState =
+                typeof structuredCloneSafe === "function"
+                    ? structuredCloneSafe(match.game_state || {})
+                    : JSON.parse(
+                        JSON.stringify(match.game_state || {})
+                    );
+
+            gameState.battle = {
+                ...(gameState.battle || {}),
+                phase: "cancelled",
+                turn_user_id: null,
+                cancelled_by: meta.me,
+                cancelled_at: new Date().toISOString(),
+                last_action: "DUEL ANNULÉ"
+            };
+
+            const { error } =
+                await client
+                    .from("matches")
+                    .update({
+                        status: "cancelled",
+                        winner_id: null,
+                        turn_user_id: null,
+                        game_state: gameState,
+                        updated_at:
+                            new Date().toISOString()
+                    })
+                    .eq("id", match.id)
+                    .eq("status", "playing");
+
+            if (error) {
+                console.error(
+                    "Impossible d'annuler le Duel en ligne :",
+                    error
+                );
+            }
+        }
+
+        /*
+           IMPORTANT :
+           aucun finishOnlineDuel(false), donc :
+           - pas de victoire offerte à l'autre joueur
+           - pas de tokens
+           - pas de points El Amigo
+           - pas de trophées
+        */
+        returnBothToLobbyAfterCancelV5(
+            "Tu as quitté le Duel. Récompenses annulées."
+        );
+    };
+
+    /*
+       Quand le serveur annonce "cancelled", l'AUTRE joueur
+       quitte aussi automatiquement le combat.
+    */
+    const previousOnOnlineMatchUpdatedV5 =
+        onOnlineMatchUpdated;
+
+    onOnlineMatchUpdated = function(match) {
+        const battlePage =
+            document.getElementById("battlePage");
+
+        const cancelledWhilePlaying =
+            match?.status === "cancelled" &&
+            (
+                battlePage?.classList.contains(
+                    "online-network-battle"
+                ) ||
+                (
+                    window.BRAWLVS_ONLINE_V3 &&
+                    window.BRAWLVS_ONLINE_V3.launchedMatchId ===
+                        match?.id
+                )
+            );
+
+        if (cancelledWhilePlaying) {
+            currentOnlineMatch = match;
+
+            const me =
+                brawlCloudSession?.user?.id;
+
+            const quitter =
+                match?.game_state?.battle?.cancelled_by;
+
+            const message =
+                quitter && quitter !== me
+                    ? "Ton ami a quitté le Duel. Récompenses annulées."
+                    : "Duel annulé. Récompenses annulées.";
+
+            returnBothToLobbyAfterCancelV5(
+                message
+            );
+
+            return;
+        }
+
+        return previousOnOnlineMatchUpdatedV5(
+            match
+        );
+    };
+
+    /* -----------------------------------------------------
+       3) HEADER SANS BACKGROUND HORS ACCUEIL
+    ----------------------------------------------------- */
+    function refreshHeaderSurfaceV5() {
+        const phone =
+            document.querySelector(".phone");
+
+        if (!phone) return;
+
+        const activePage =
+            phone.querySelector(".page.active");
+
+        const isSubpage =
+            Boolean(
+                activePage &&
+                activePage.id !== "homePage" &&
+                activePage.id !== "battlePage"
+            );
+
+        phone.classList.toggle(
+            "brawl-subpage-active",
+            isSubpage
+        );
+    }
+
+    refreshHeaderSurfaceV5();
+
+    const phone =
+        document.querySelector(".phone");
+
+    if (phone) {
+        const observer =
+            new MutationObserver(
+                refreshHeaderSurfaceV5
+            );
+
+        observer.observe(
+            phone,
+            {
+                subtree: true,
+                attributes: true,
+                attributeFilter: ["class"]
+            }
+        );
+    }
+
+    window.addEventListener(
+        "pageshow",
+        refreshHeaderSurfaceV5,
         { passive: true }
     );
 })();
