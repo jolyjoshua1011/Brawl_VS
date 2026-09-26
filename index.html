@@ -48277,6 +48277,374 @@ if ("serviceWorker" in navigator) {
 
 
 
+
+
+<style id="brawl-online-v12-offline-profile-style">
+/* =====================================================
+   BRAWL VS ONLINE V12 · profils hors ligne + rythme combat
+===================================================== */
+#friendsList .friend-card.friend-profile-available .friend-avatar,
+#friendsList .friend-card.friend-profile-available .friend-main{
+    cursor:pointer !important;
+}
+#friendsList .friend-card.friend-profile-available .friend-main:hover .friend-name{
+    color:var(--blue-light) !important;
+}
+#onlineFriendProfileDialog .online-profile-online.offline{
+    color:#98a7b9 !important;
+}
+#onlineFriendProfileDialog .online-profile-online.offline::before{
+    background:#687386 !important;
+    box-shadow:none !important;
+}
+#onlineFriendProfileDialog .online-profile-duel:disabled{
+    color:#8290a2 !important;
+    background:#182334 !important;
+    border:1px solid rgba(255,255,255,.08) !important;
+    cursor:not-allowed !important;
+    filter:none !important;
+}
+#onlineFriendProfileDialog .offline-profile-note{
+    grid-column:1 / -1;
+    padding:18px 12px;
+    border:1px dashed rgba(255,255,255,.12);
+    border-radius:12px 4px 12px 4px;
+    color:#7f90a6;
+    background:rgba(8,15,26,.55);
+    text-align:center;
+    font-size:9px;
+    line-height:1.5;
+    font-weight:900;
+}
+</style>
+<script id="brawl-online-v12-offline-profile-script">
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V12_OFFLINE_PROFILE__) return;
+    window.__BRAWL_V12_OFFLINE_PROFILE__ = true;
+
+    const CACHE_KEY = "brawlvs_friend_public_profiles_v1";
+
+    function normV12(value) {
+        try {
+            if (typeof normalizeFriendName === "function") {
+                return normalizeFriendName(value || "");
+            }
+        } catch (_) {}
+        return String(value || "").trim().toLowerCase();
+    }
+
+    function readCacheV12() {
+        try {
+            const value = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+            return value && typeof value === "object" ? value : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function writeCacheV12(cache) {
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(cache || {}));
+        } catch (_) {}
+    }
+
+    function cachePresenceV12(player) {
+        if (!player?.profile) return;
+        const uid = String(player.user_id || "");
+        if (!uid) return;
+
+        const cache = readCacheV12();
+        const record = {
+            user_id: uid,
+            username: player.username || "JOUEUR",
+            friend_code: player.friend_code || getPersonalFriendCode(uid),
+            profile: player.profile,
+            cached_at: Date.now()
+        };
+
+        cache[uid] = record;
+        cache["name:" + normV12(record.username)] = record;
+        writeCacheV12(cache);
+    }
+
+    function cacheAllOnlineProfilesV12() {
+        try {
+            if (!(onlineLobbyPlayers instanceof Map)) return;
+            onlineLobbyPlayers.forEach(cachePresenceV12);
+        } catch (_) {}
+    }
+
+    function resolveFriendV12(key) {
+        const wanted = String(key || "");
+        const wantedNorm = normV12(wanted);
+        return (state.friends || []).find(friend =>
+            String(friend.user_id || "") === wanted ||
+            String(friend.id || "") === wanted ||
+            normV12(friend.name) === wantedNorm
+        ) || null;
+    }
+
+    function resolvePresenceV12(friend) {
+        if (!friend || !(onlineLobbyPlayers instanceof Map)) return null;
+        const uid = String(friend.user_id || "");
+        if (uid && onlineLobbyPlayers.has(uid)) return onlineLobbyPlayers.get(uid);
+        const wanted = normV12(friend.name);
+        return [...onlineLobbyPlayers.values()].find(player =>
+            normV12(player?.username) === wanted
+        ) || null;
+    }
+
+    function cachedProfileV12(friend) {
+        if (!friend) return null;
+        const cache = readCacheV12();
+        const uid = String(friend.user_id || "");
+        return (uid && cache[uid]) || cache["name:" + normV12(friend.name)] || null;
+    }
+
+    function safeV12(value) {
+        try {
+            return typeof escapeOnlineHtml === "function"
+                ? escapeOnlineHtml(value)
+                : String(value ?? "");
+        } catch (_) {
+            return String(value ?? "");
+        }
+    }
+
+    function centerProfileDialogV12(dialog) {
+        const overlay = dialog?.parentElement;
+        if (overlay?.classList.contains("phone-skin-overlay")) {
+            overlay.style.alignItems = "center";
+            overlay.style.justifyContent = "center";
+            overlay.style.padding = "14px";
+        }
+        if (dialog) {
+            dialog.style.position = "relative";
+            dialog.style.inset = "auto";
+            dialog.style.margin = "0";
+            dialog.style.transform = "none";
+            dialog.style.alignSelf = "center";
+            dialog.style.justifySelf = "center";
+        }
+    }
+
+    function openCachedFriendProfileV12(friend, cached) {
+        const profile = cached?.profile || {};
+        const list = Array.isArray(profile.brawlers) ? profile.brawlers : [];
+        const uid = String(friend?.user_id || cached?.user_id || "");
+        const username = safeV12(cached?.username || friend?.name || "AMI");
+        const code = safeV12(cached?.friend_code || (uid ? getPersonalFriendCode(uid) : "HORS LIGNE"));
+        const icon = safeV12(profile.profile_icon || DEFAULT_PROFILE_ICON);
+
+        let dialog = document.getElementById("onlineFriendProfileDialog");
+        if (!dialog) {
+            dialog = document.createElement("dialog");
+            dialog.id = "onlineFriendProfileDialog";
+            mountPhoneSkinDialog(dialog);
+        }
+
+        const brawlersHtml = list.length
+            ? list.map(item => {
+                const name = safeV12(item?.name || "Brawler");
+                const image = safeV12(
+                    item?.icon ||
+                    brawlers[item?.name]?.icon ||
+                    item?.image ||
+                    brawlers[item?.name]?.image ||
+                    ""
+                );
+                return `<article class="online-profile-brawler"><img src="${image}" alt="${name}"><div class="online-profile-brawler-info"><div><strong>${name}</strong><small>🏆 ${Number(item?.trophies || 0)}</small></div><strong class="online-profile-power">P${Number(item?.power || 1)}</strong></div></article>`;
+            }).join("")
+            : `<div class="offline-profile-note">Le profil est consultable hors ligne. Les détails de sa collection seront mémorisés automatiquement la prochaine fois que cet ami sera connecté.</div>`;
+
+        dialog.innerHTML = `<section class="online-friend-profile-shell">
+            <div class="online-profile-hero"><div class="online-profile-avatar"><img src="${icon}" alt=""></div><div><span class="online-profile-online offline">HORS LIGNE</span><div class="online-profile-name">${username}</div><div class="online-profile-code">${code}</div></div></div>
+            <div class="online-profile-stats"><div class="online-profile-stat trophy"><span>TROPHÉES</span><strong>🏆 ${Number(profile.trophies || 0)}</strong></div><div class="online-profile-stat"><span>BRAWLERS</span><strong>${list.length} / ${Object.keys(brawlers).length}</strong></div></div>
+            <div class="online-profile-section"><div class="online-profile-section-head"><span>COLLECTION DE BRAWLERS</span><span>${list.length}</span></div><div class="online-profile-brawlers">${brawlersHtml}</div></div>
+            <div class="online-profile-actions"><button class="online-profile-duel" type="button" disabled>HORS LIGNE</button><button class="online-profile-close" type="button" onclick="document.getElementById('onlineFriendProfileDialog')?.close()">×</button></div>
+        </section>`;
+
+        centerProfileDialogV12(dialog);
+        if (typeof dialog.openInPhone === "function") dialog.openInPhone();
+        else if (!dialog.open) dialog.show();
+        centerProfileDialogV12(dialog);
+        return true;
+    }
+
+    /* Conserve automatiquement le dernier profil public vu en ligne. */
+    cacheAllOnlineProfilesV12();
+
+    const openOnlineBeforeV12 = window.openOnlinePlayerProfile;
+    if (typeof openOnlineBeforeV12 === "function") {
+        window.openOnlinePlayerProfile = function(playerId) {
+            try {
+                const player = onlineLobbyPlayers.get(String(playerId || ""));
+                if (player) cachePresenceV12(player);
+            } catch (_) {}
+            return openOnlineBeforeV12(playerId);
+        };
+    }
+
+    /* Tous les amis sont maintenant ouvrables, même hors ligne. */
+    window.openFriendProfileFromList = async function(friendKey) {
+        const friend = resolveFriendV12(friendKey);
+        if (!friend) return false;
+
+        let presence = resolvePresenceV12(friend);
+        if (!presence && friend.online) {
+            try {
+                if (typeof syncOnlinePresence === "function") {
+                    await Promise.resolve(syncOnlinePresence());
+                }
+            } catch (_) {}
+            await new Promise(resolve => setTimeout(resolve, 100));
+            presence = resolvePresenceV12(friend);
+        }
+
+        if (presence) {
+            cachePresenceV12(presence);
+            const playerId = String(presence.user_id || friend.user_id || "");
+            if (playerId && typeof window.openOnlinePlayerProfile === "function") {
+                window.openOnlinePlayerProfile(playerId);
+                return true;
+            }
+        }
+
+        return openCachedFriendProfileV12(friend, cachedProfileV12(friend));
+    };
+
+    function enableAllFriendProfilesV12() {
+        cacheAllOnlineProfilesV12();
+
+        const cards = [...document.querySelectorAll("#friendsList .friend-card")];
+        const friends = Array.isArray(state.friends) ? state.friends : [];
+
+        cards.forEach((card, index) => {
+            const displayedName = card.querySelector(".friend-name")?.textContent?.trim() || "";
+            const friend = friends.find(item => normV12(item.name) === normV12(displayedName)) || friends[index];
+            if (!friend) return;
+
+            card.classList.add("friend-profile-available");
+            const key = String(friend.user_id || friend.id || friend.name || "");
+            const open = event => {
+                event?.preventDefault?.();
+                event?.stopPropagation?.();
+                window.openFriendProfileFromList(key);
+            };
+
+            const avatar = card.querySelector(".friend-avatar");
+            const main = card.querySelector(".friend-main");
+            const actions = card.querySelector(".friend-actions");
+
+            if (avatar) {
+                avatar.onclick = open;
+                avatar.title = "Voir le profil de " + friend.name;
+
+                /* Si l'ami est hors ligne, réutilise aussi sa dernière icône connue. */
+                if (!resolvePresenceV12(friend)) {
+                    const cached = cachedProfileV12(friend);
+                    const cachedIcon = cached?.profile?.profile_icon;
+                    if (cachedIcon) {
+                        avatar.classList.add("has-online-profile");
+                        avatar.innerHTML = `<img src="${safeV12(cachedIcon)}" alt=""><span class="friend-status-dot"></span>`;
+                    }
+                }
+            }
+
+            if (main) {
+                main.onclick = open;
+                main.title = "Voir le profil de " + friend.name;
+            }
+
+            if (actions && !actions.querySelector(".friend-action.profile")) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "friend-action profile";
+                button.textContent = "PROFIL";
+                button.title = "Voir le profil";
+                button.addEventListener("click", open);
+                actions.insertBefore(button, actions.firstChild);
+            }
+        });
+    }
+
+    const renderFriendsBeforeV12 = renderFriends;
+    renderFriends = function(...args) {
+        const result = renderFriendsBeforeV12(...args);
+        enableAllFriendProfilesV12();
+        return result;
+    };
+
+    const refreshPresenceBeforeV12 = typeof refreshOnlinePresenceFromChannel === "function"
+        ? refreshOnlinePresenceFromChannel
+        : null;
+    if (refreshPresenceBeforeV12) {
+        refreshOnlinePresenceFromChannel = function(...args) {
+            /* Sauvegarde les profils encore présents juste avant un éventuel leave. */
+            cacheAllOnlineProfilesV12();
+            const result = refreshPresenceBeforeV12(...args);
+            cacheAllOnlineProfilesV12();
+            setTimeout(enableAllFriendProfilesV12, 0);
+            return result;
+        };
+    }
+
+    setTimeout(enableAllFriendProfilesV12, 0);
+})();
+</script>
+
+<script id="brawl-combat-v16-faster-rhythm">
+/* =====================================================
+   BRAWL VS COMBAT V16 · rythme légèrement accéléré
+   Réduit seulement les temps morts des actions de combat.
+===================================================== */
+(() => {
+    "use strict";
+    if (window.__BRAWL_COMBAT_V16_FASTER__) return;
+    window.__BRAWL_COMBAT_V16_FASTER__ = true;
+
+    const originalSetTimeoutV16 = window.setTimeout.bind(window);
+
+    function battleVisibleV16() {
+        const page = document.getElementById("battlePage");
+        return Boolean(page && (page.classList.contains("active") || page.classList.contains("online-network-battle")));
+    }
+
+    window.setTimeout = function(callback, delay, ...args) {
+        let nextDelay = Number(delay);
+
+        if (
+            battleVisibleV16() &&
+            typeof callback === "function" &&
+            Number.isFinite(nextDelay) &&
+            nextDelay >= 900
+        ) {
+            let source = "";
+            try { source = Function.prototype.toString.call(callback); } catch (_) {}
+
+            const isCombatBeat = [
+                "battleEnemyAttackTimer",
+                "enemyAttack",
+                "advanceDistanceRoundAfterAttack",
+                "beginEnemyActionSameDistance",
+                "beginPlayerActionSameDistance",
+                "grantBattleVictoryRewards",
+                "showBattleLossMessage",
+                "completeOnlineAction"
+            ].some(token => source.includes(token));
+
+            if (isCombatBeat) {
+                nextDelay = Math.max(650, Math.round(nextDelay * 0.82));
+            }
+        }
+
+        return originalSetTimeoutV16(callback, nextDelay, ...args);
+    };
+})();
+</script>
+
 <!-- =========================================================
      BRAWLERS V15 — FENÊTRE DE STATS TOUJOURS CENTRÉE
      La modale ne dépend plus du scroll de la fiche Brawler.
