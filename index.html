@@ -45160,5 +45160,2126 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+<script id="brawl-online-v8-brawler-friends-fix">
+/* =====================================================
+   BRAWL VS ONLINE V8
+   FIXES :
+   1) Le Brawler sélectionné est TOUJOURS resynchronisé :
+      - pendant une invitation en attente
+      - dans le salon
+      - au moment de cliquer PRÊT
+      - juste avant le lancement du combat
+   2) La fenêtre DUEL affiche réellement les AMIS EN LIGNE :
+      - recharge Presence
+      - recharge friend_requests
+      - fusionne state.friends + Supabase
+      - affiche uniquement les amis connectés
+===================================================== */
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_ONLINE_V8__) return;
+    window.__BRAWL_ONLINE_V8__ = true;
+
+    const V8 = window.BRAWLVS_ONLINE_V8 = {
+        syncingBrawler: false,
+        pickerLoading: false
+    };
+
+    const sleepV8 = ms =>
+        new Promise(resolve => setTimeout(resolve, ms));
+
+    function cloneV8(value) {
+        try {
+            return structuredClone(value);
+        } catch (_) {
+            return JSON.parse(
+                JSON.stringify(value || {})
+            );
+        }
+    }
+
+    function ownAbilityIdsV8(name) {
+        try {
+            return Object.values(
+                getBrawlerAbilityLoadout(name) || {}
+            ).filter(Boolean);
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function publicProfileV8() {
+        const owned =
+            Array.isArray(state.ownedBrawlers)
+                ? state.ownedBrawlers
+                : [];
+
+        return {
+            profile_icon:
+                normalizeProfileIcon(
+                    state.profile.icon ||
+                    DEFAULT_PROFILE_ICON
+                ),
+
+            trophies:
+                Number(
+                    state.resources?.trophies ||
+                    0
+                ),
+
+            selected_brawler:
+                state.selectedBrawler ||
+                "Shelly",
+
+            brawlers:
+                owned
+                    .map(name => {
+                        const b =
+                            brawlers[name];
+
+                        if (!b) return null;
+
+                        return {
+                            name,
+                            power:
+                                Number(
+                                    b.power ||
+                                    1
+                                ),
+                            trophies:
+                                Number(
+                                    getBrawlerTrophies(
+                                        name
+                                    ) ||
+                                    0
+                                ),
+                            image:
+                                b.image ||
+                                getDefaultSkinImage(
+                                    name
+                                ),
+                            icon:
+                                b.icon ||
+                                "",
+                            rarity:
+                                b.rarity ||
+                                "",
+                            rarity_class:
+                                b.rarityClass ||
+                                "starter",
+                            ability_ids:
+                                ownAbilityIdsV8(
+                                    name
+                                ),
+                            star_power:
+                                Boolean(
+                                    isBrawlerStarPowerOwned(
+                                        name
+                                    )
+                                )
+                        };
+                    })
+                    .filter(Boolean)
+        };
+    }
+
+    function fighterFromProfileV8(
+        profile,
+        brawlerName
+    ) {
+        const selected =
+            String(
+                brawlerName ||
+                profile?.selected_brawler ||
+                "Shelly"
+            );
+
+        const publicFighter =
+            (profile?.brawlers || [])
+                .find(
+                    b =>
+                        b.name ===
+                        selected
+                ) ||
+            null;
+
+        const base =
+            brawlers[selected] ||
+            brawlers.Shelly;
+
+        return {
+            name:
+                selected,
+
+            power:
+                Number(
+                    publicFighter?.power ||
+                    base?.power ||
+                    1
+                ),
+
+            trophies:
+                Number(
+                    publicFighter?.trophies ||
+                    0
+                ),
+
+            image:
+                publicFighter?.image ||
+                base?.image ||
+                getDefaultSkinImage(
+                    selected
+                ),
+
+            ability_ids:
+                Array.isArray(
+                    publicFighter?.ability_ids
+                )
+                    ? [
+                        ...publicFighter
+                            .ability_ids
+                    ]
+                    : [],
+
+            star_power:
+                Boolean(
+                    publicFighter
+                        ?.star_power
+                )
+        };
+    }
+
+    function currentLobbySelfV8(
+        previous = {},
+        ready = false
+    ) {
+        const profile =
+            publicProfileV8();
+
+        const selected =
+            state.selectedBrawler ||
+            "Shelly";
+
+        return {
+            ...previous,
+
+            user_id:
+                brawlCloudSession
+                    ?.user?.id ||
+                previous.user_id ||
+                "",
+
+            username:
+                state.profile.name ||
+                previous.username ||
+                "JOUEUR",
+
+            icon:
+                profile.profile_icon ||
+                previous.icon ||
+                DEFAULT_PROFILE_ICON,
+
+            profile,
+
+            brawler:
+                selected,
+
+            fighter:
+                fighterFromProfileV8(
+                    profile,
+                    selected
+                ),
+
+            ready:
+                Boolean(ready)
+        };
+    }
+
+    /* =====================================================
+       BRAWLER : synchronisation partout
+    ===================================================== */
+
+    async function syncSelectedBrawlerEverywhereV8(
+        resetReady = true
+    ) {
+        if (V8.syncingBrawler) return;
+
+        const client =
+            getBrawlCloudClient();
+
+        if (!client) return;
+
+        const {
+            data: {
+                session
+            }
+        } =
+            await client.auth.getSession();
+
+        if (!session?.user) {
+            return;
+        }
+
+        brawlCloudSession =
+            session;
+
+        V8.syncingBrawler =
+            true;
+
+        try {
+            const selected =
+                state.selectedBrawler ||
+                "Shelly";
+
+            /*
+               PRESENCE :
+               les autres joueurs voient immédiatement
+               notre nouveau Brawler public.
+            */
+            try {
+                await syncOnlinePresence();
+            } catch (_) {}
+
+            /*
+               INVITATION EN ATTENTE :
+               on ne garde PLUS le Brawler sélectionné
+               au moment où l'invitation a été envoyée.
+            */
+            const pendingId =
+                window.BRAWLVS_ONLINE_V3
+                    ?.pendingInvite
+                    ?.id;
+
+            if (pendingId) {
+                const {
+                    error
+                } =
+                    await client
+                        .from(
+                            "duel_invites"
+                        )
+                        .update({
+                            sender_brawler:
+                                selected
+                        })
+                        .eq(
+                            "id",
+                            pendingId
+                        )
+                        .eq(
+                            "sender_id",
+                            session.user.id
+                        )
+                        .eq(
+                            "status",
+                            "pending"
+                        );
+
+                if (error) {
+                    console.warn(
+                        "Mise à jour du Brawler de l'invitation impossible :",
+                        error
+                    );
+                }
+            }
+
+            /*
+               SALON EN ATTENTE :
+               on remplace le Brawler dans lobby.p1/p2
+               ET player1_brawler/player2_brawler.
+            */
+            if (
+                currentOnlineMatch?.id &&
+                currentOnlineMatch
+                    .status ===
+                    "waiting"
+            ) {
+                const {
+                    data: fresh,
+                    error: freshError
+                } =
+                    await client
+                        .from("matches")
+                        .select("*")
+                        .eq(
+                            "id",
+                            currentOnlineMatch.id
+                        )
+                        .single();
+
+                if (
+                    freshError ||
+                    !fresh ||
+                    fresh.status !==
+                        "waiting"
+                ) {
+                    return;
+                }
+
+                const amP1 =
+                    fresh.player1_id ===
+                    session.user.id;
+
+                const key =
+                    amP1
+                        ? "p1"
+                        : "p2";
+
+                const gs =
+                    cloneV8(
+                        fresh.game_state ||
+                        {}
+                    );
+
+                gs.version =
+                    Math.max(
+                        Number(
+                            gs.version ||
+                            0
+                        ),
+                        3
+                    );
+
+                gs.lobby =
+                    gs.lobby ||
+                    {};
+
+                const old =
+                    gs.lobby[key] ||
+                    {};
+
+                gs.lobby[key] =
+                    currentLobbySelfV8(
+                        old,
+                        resetReady
+                            ? false
+                            : Boolean(
+                                old.ready
+                            )
+                    );
+
+                const patch = {
+                    game_state:
+                        gs,
+                    updated_at:
+                        new Date()
+                            .toISOString()
+                };
+
+                if (amP1) {
+                    patch.player1_brawler =
+                        selected;
+                }
+                else {
+                    patch.player2_brawler =
+                        selected;
+                }
+
+                const {
+                    data: updated,
+                    error: updateError
+                } =
+                    await client
+                        .from("matches")
+                        .update(patch)
+                        .eq(
+                            "id",
+                            fresh.id
+                        )
+                        .eq(
+                            "status",
+                            "waiting"
+                        )
+                        .select()
+                        .single();
+
+                if (updateError) {
+                    console.error(
+                        "Synchronisation du nouveau Brawler impossible :",
+                        updateError
+                    );
+                }
+                else if (updated) {
+                    currentOnlineMatch =
+                        updated;
+
+                    try {
+                        renderOnlineHomeLobby();
+                    } catch (_) {}
+                }
+            }
+        }
+        finally {
+            V8.syncingBrawler =
+                false;
+        }
+    }
+
+    /*
+       Le bouton CHOISIR de la fiche Brawler passe
+       obligatoirement par cette synchronisation.
+    */
+    const confirmBrawlerChoiceBeforeV8 =
+        confirmBrawlerChoice;
+
+    confirmBrawlerChoice =
+        function(...args) {
+
+            const result =
+                confirmBrawlerChoiceBeforeV8(
+                    ...args
+                );
+
+            /*
+               Le code original vient de mettre
+               state.selectedBrawler à jour.
+            */
+            setTimeout(
+                () => {
+                    syncSelectedBrawlerEverywhereV8(
+                        true
+                    ).catch(
+                        console.error
+                    );
+                },
+                0
+            );
+
+            return result;
+        };
+
+    /* =====================================================
+       ACCEPTATION :
+       relit l'invitation AVANT de créer le salon.
+       Donc si l'hôte a changé de Brawler entre temps,
+       le nouveau Brawler est utilisé.
+    ===================================================== */
+
+    acceptOnlineDuelInvite =
+        async function(invite) {
+
+            const client =
+                getBrawlCloudClient();
+
+            if (!client) return;
+
+            const {
+                data: {
+                    session
+                },
+                error: sessionError
+            } =
+                await client.auth
+                    .getSession();
+
+            if (
+                sessionError ||
+                !session?.user
+            ) {
+                return;
+            }
+
+            brawlCloudSession =
+                session;
+
+            /*
+               Relire la vraie invitation depuis Supabase.
+            */
+            const {
+                data: freshInvite,
+                error: inviteReadError
+            } =
+                await client
+                    .from(
+                        "duel_invites"
+                    )
+                    .select("*")
+                    .eq(
+                        "id",
+                        invite.id
+                    )
+                    .eq(
+                        "status",
+                        "pending"
+                    )
+                    .maybeSingle();
+
+            if (
+                inviteReadError ||
+                !freshInvite
+            ) {
+                console.error(
+                    "Invitation Duel introuvable :",
+                    inviteReadError
+                );
+                return;
+            }
+
+            /*
+               Rafraîchir Presence pour récupérer
+               le Brawler ACTUEL de l'hôte.
+            */
+            try {
+                if (
+                    !onlinePresenceChannel
+                ) {
+                    await startOnlineLobbyPresence();
+                }
+                else {
+                    await syncOnlinePresence();
+                }
+
+                await sleepV8(180);
+
+                refreshOnlinePresenceFromChannel();
+            }
+            catch (_) {}
+
+            const senderPresence =
+                onlineLobbyPlayers.get(
+                    String(
+                        freshInvite
+                            .sender_id
+                    )
+                ) ||
+                null;
+
+            const senderProfile =
+                senderPresence
+                    ?.profile ||
+                null;
+
+            const senderBrawler =
+                senderProfile
+                    ?.selected_brawler ||
+                senderPresence
+                    ?.brawler ||
+                freshInvite
+                    .sender_brawler ||
+                "Shelly";
+
+            const receiverProfile =
+                publicProfileV8();
+
+            const receiverBrawler =
+                state.selectedBrawler ||
+                "Shelly";
+
+            const p1 = {
+                user_id:
+                    freshInvite
+                        .sender_id,
+
+                username:
+                    senderPresence
+                        ?.username ||
+                    "JOUEUR",
+
+                icon:
+                    senderProfile
+                        ?.profile_icon ||
+                    senderPresence
+                        ?.profile_icon ||
+                    DEFAULT_PROFILE_ICON,
+
+                profile:
+                    senderProfile,
+
+                brawler:
+                    senderBrawler,
+
+                fighter:
+                    fighterFromProfileV8(
+                        senderProfile,
+                        senderBrawler
+                    ),
+
+                ready:
+                    false
+            };
+
+            const p2 = {
+                user_id:
+                    session.user.id,
+
+                username:
+                    state.profile.name ||
+                    "JOUEUR",
+
+                icon:
+                    receiverProfile
+                        .profile_icon,
+
+                profile:
+                    receiverProfile,
+
+                brawler:
+                    receiverBrawler,
+
+                fighter:
+                    fighterFromProfileV8(
+                        receiverProfile,
+                        receiverBrawler
+                    ),
+
+                ready:
+                    false
+            };
+
+            const gameState = {
+                version:
+                    8,
+
+                lobby: {
+                    p1,
+                    p2
+                }
+            };
+
+            const {
+                data: match,
+                error
+            } =
+                await client
+                    .from("matches")
+                    .insert({
+                        player1_id:
+                            freshInvite
+                                .sender_id,
+
+                        player2_id:
+                            session.user.id,
+
+                        player1_brawler:
+                            senderBrawler,
+
+                        player2_brawler:
+                            receiverBrawler,
+
+                        turn_user_id:
+                            null,
+
+                        status:
+                            "waiting",
+
+                        game_state:
+                            gameState
+                    })
+                    .select()
+                    .single();
+
+            if (
+                error ||
+                !match
+            ) {
+                console.error(
+                    "Impossible de créer le salon Duel :",
+                    error
+                );
+
+                alert(
+                    "Impossible de créer le salon Duel."
+                );
+
+                return;
+            }
+
+            const {
+                error:
+                    inviteError
+            } =
+                await client
+                    .from(
+                        "duel_invites"
+                    )
+                    .update({
+                        status:
+                            "accepted",
+
+                        match_id:
+                            match.id
+                    })
+                    .eq(
+                        "id",
+                        freshInvite.id
+                    )
+                    .eq(
+                        "status",
+                        "pending"
+                    );
+
+            if (inviteError) {
+                console.error(
+                    inviteError
+                );
+                return;
+            }
+
+            await startOnlineMatch(
+                match.id
+            );
+        };
+
+    /* =====================================================
+       PRÊT :
+       enregistre EN MÊME TEMPS le Brawler actuel.
+       Impossible de lancer avec un ancien Brawler.
+    ===================================================== */
+
+    window.toggleOnlineLobbyReady =
+        async function() {
+
+            if (
+                !currentOnlineMatch
+                    ?.id ||
+                currentOnlineMatch
+                    .status !==
+                    "waiting"
+            ) {
+                return;
+            }
+
+            const client =
+                getBrawlCloudClient();
+
+            const me =
+                brawlCloudSession
+                    ?.user?.id;
+
+            if (
+                !client ||
+                !me
+            ) {
+                return;
+            }
+
+            const {
+                data: fresh,
+                error: freshError
+            } =
+                await client
+                    .from("matches")
+                    .select("*")
+                    .eq(
+                        "id",
+                        currentOnlineMatch.id
+                    )
+                    .single();
+
+            if (
+                freshError ||
+                !fresh ||
+                fresh.status !==
+                    "waiting"
+            ) {
+                return;
+            }
+
+            const amP1 =
+                fresh.player1_id ===
+                me;
+
+            const key =
+                amP1
+                    ? "p1"
+                    : "p2";
+
+            const gs =
+                cloneV8(
+                    fresh.game_state ||
+                    {}
+                );
+
+            gs.version =
+                8;
+
+            gs.lobby =
+                gs.lobby ||
+                {};
+
+            const wasReady =
+                Boolean(
+                    gs.lobby[key]
+                        ?.ready
+                );
+
+            const selected =
+                state.selectedBrawler ||
+                "Shelly";
+
+            /*
+               IMPORTANT :
+               le clic PRÊT publie d'abord le Brawler courant.
+            */
+            gs.lobby[key] =
+                currentLobbySelfV8(
+                    gs.lobby[key] ||
+                    {},
+                    !wasReady
+                );
+
+            const patch = {
+                game_state:
+                    gs,
+                updated_at:
+                    new Date()
+                        .toISOString()
+            };
+
+            if (amP1) {
+                patch.player1_brawler =
+                    selected;
+            }
+            else {
+                patch.player2_brawler =
+                    selected;
+            }
+
+            const {
+                data: updated,
+                error
+            } =
+                await client
+                    .from("matches")
+                    .update(patch)
+                    .eq(
+                        "id",
+                        fresh.id
+                    )
+                    .eq(
+                        "status",
+                        "waiting"
+                    )
+                    .select()
+                    .single();
+
+            if (
+                error ||
+                !updated
+            ) {
+                console.error(
+                    "Mise à jour PRÊT impossible :",
+                    error
+                );
+                return;
+            }
+
+            currentOnlineMatch =
+                updated;
+
+            renderOnlineHomeLobby();
+
+            /*
+               Si les deux sont prêts et que je suis l'hôte,
+               je relis ENCORE UNE FOIS le salon et je lance
+               avec lobby.p1.brawler / lobby.p2.brawler.
+            */
+            const lobby =
+                updated
+                    .game_state
+                    ?.lobby ||
+                {};
+
+            if (
+                lobby.p1?.ready &&
+                lobby.p2?.ready &&
+                me ===
+                    updated
+                        .player1_id
+            ) {
+                await startFreshOnlineBattleV8(
+                    updated.id
+                );
+            }
+        };
+
+    function buildInitialFighterV8(
+        lobbyData,
+        brawlerName
+    ) {
+        const selected =
+            String(
+                brawlerName ||
+                lobbyData?.brawler ||
+                "Shelly"
+            );
+
+        const publicFighter =
+            lobbyData
+                ?.fighter ||
+            fighterFromProfileV8(
+                lobbyData
+                    ?.profile,
+                selected
+            );
+
+        const base =
+            brawlers[selected] ||
+            brawlers.Shelly;
+
+        const power =
+            Math.max(
+                1,
+                Math.min(
+                    10,
+                    Number(
+                        publicFighter
+                            ?.power ||
+                        base?.power ||
+                        1
+                    )
+                )
+            );
+
+        const maxHealth =
+            getBrawlerHealth({
+                ...base,
+                power
+            });
+
+        return {
+            name:
+                selected,
+
+            username:
+                lobbyData
+                    ?.username ||
+                "JOUEUR",
+
+            image:
+                publicFighter
+                    ?.image ||
+                base?.image ||
+                getDefaultSkinImage(
+                    selected
+                ),
+
+            power,
+
+            abilityIds:
+                Array.isArray(
+                    publicFighter
+                        ?.ability_ids
+                )
+                    ? [
+                        ...publicFighter
+                            .ability_ids
+                    ]
+                    : [],
+
+            hasStarPower:
+                Boolean(
+                    publicFighter
+                        ?.star_power
+                ),
+
+            health:
+                maxHealth,
+
+            maxHealth,
+
+            bearHealth:
+                0,
+
+            bearMaxHealth:
+                0,
+
+            shieldTurns:
+                0,
+
+            paralyzedTurns:
+                0,
+
+            cowboyRollDodges:
+                0,
+
+            burnTurns:
+                0,
+
+            poisonTurns:
+                0,
+
+            slowTurns:
+                0,
+
+            slowAmount:
+                0,
+
+            pocoHealingTurns:
+                0,
+
+            effectImmunityTurns:
+                0,
+
+            meteorPending:
+                null,
+
+            superCharge:
+                0,
+
+            usedAbilities:
+                {}
+        };
+    }
+
+    async function startFreshOnlineBattleV8(
+        matchId
+    ) {
+        const client =
+            getBrawlCloudClient();
+
+        if (!client) return;
+
+        const {
+            data: fresh,
+            error
+        } =
+            await client
+                .from("matches")
+                .select("*")
+                .eq(
+                    "id",
+                    matchId
+                )
+                .single();
+
+        if (
+            error ||
+            !fresh ||
+            fresh.status !==
+                "waiting"
+        ) {
+            return;
+        }
+
+        const lobby =
+            fresh.game_state
+                ?.lobby ||
+            {};
+
+        if (
+            !lobby.p1?.ready ||
+            !lobby.p2?.ready
+        ) {
+            return;
+        }
+
+        /*
+           SOURCE DE VÉRITÉ =
+           les Brawlers du lobby, PAS ceux d'une ancienne invitation.
+        */
+        const p1Brawler =
+            lobby.p1
+                ?.brawler ||
+            fresh.player1_brawler ||
+            "Shelly";
+
+        const p2Brawler =
+            lobby.p2
+                ?.brawler ||
+            fresh.player2_brawler ||
+            "Shelly";
+
+        const p1 =
+            buildInitialFighterV8(
+                lobby.p1,
+                p1Brawler
+            );
+
+        const p2 =
+            buildInitialFighterV8(
+                lobby.p2,
+                p2Brawler
+            );
+
+        const starter =
+            Math.random() <
+            0.5
+                ? fresh.player1_id
+                : fresh.player2_id;
+
+        const battle = {
+            version:
+                8,
+
+            seq:
+                1,
+
+            phase:
+                "choose_distance",
+
+            turn_user_id:
+                starter,
+
+            chooser_id:
+                starter,
+
+            current_distance:
+                null,
+
+            distance_choices:
+                getBattleDistanceChoices(),
+
+            distance_round_attack_index:
+                0,
+
+            p1,
+            p2,
+
+            last_action:
+                "La partie commence !"
+        };
+
+        const gs =
+            cloneV8(
+                fresh.game_state ||
+                {}
+            );
+
+        gs.version =
+            8;
+
+        gs.battle =
+            battle;
+
+        const {
+            data: updated,
+            error: startError
+        } =
+            await client
+                .from("matches")
+                .update({
+                    status:
+                        "playing",
+
+                    player1_brawler:
+                        p1Brawler,
+
+                    player2_brawler:
+                        p2Brawler,
+
+                    turn_user_id:
+                        starter,
+
+                    game_state:
+                        gs,
+
+                    updated_at:
+                        new Date()
+                            .toISOString()
+                })
+                .eq(
+                    "id",
+                    fresh.id
+                )
+                .eq(
+                    "status",
+                    "waiting"
+                )
+                .select()
+                .maybeSingle();
+
+        if (startError) {
+            console.error(
+                "Lancement Duel impossible :",
+                startError
+            );
+            return;
+        }
+
+        if (updated) {
+            currentOnlineMatch =
+                updated;
+
+            launchOnlineBattleFromMatch(
+                updated
+            );
+        }
+    }
+
+    /* =====================================================
+       AMIS EN LIGNE DANS LA FENÊTRE DUEL
+    ===================================================== */
+
+    function presenceForFriendV8(
+        friend
+    ) {
+        if (!friend) return null;
+
+        const userId =
+            String(
+                friend.user_id ||
+                ""
+            );
+
+        if (
+            userId &&
+            onlineLobbyPlayers.has(
+                userId
+            )
+        ) {
+            return onlineLobbyPlayers.get(
+                userId
+            );
+        }
+
+        const wanted =
+            normalizeFriendName(
+                friend.name ||
+                ""
+            );
+
+        if (!wanted) {
+            return null;
+        }
+
+        return (
+            [
+                ...onlineLobbyPlayers
+                    .values()
+            ]
+                .find(player =>
+                    normalizeFriendName(
+                        player
+                            ?.username ||
+                        ""
+                    ) ===
+                    wanted
+                ) ||
+            null
+        );
+    }
+
+    async function directAcceptedFriendsV8() {
+        const client =
+            getBrawlCloudClient();
+
+        if (!client) {
+            return [];
+        }
+
+        const {
+            data: {
+                session
+            }
+        } =
+            await client.auth
+                .getSession();
+
+        if (!session?.user) {
+            return [];
+        }
+
+        const me =
+            session.user.id;
+
+        const {
+            data: rows,
+            error
+        } =
+            await client
+                .from(
+                    "friend_requests"
+                )
+                .select(
+                    "id,sender_id,receiver_id,status,created_at"
+                )
+                .eq(
+                    "status",
+                    "accepted"
+                )
+                .or(
+                    `sender_id.eq.${me},receiver_id.eq.${me}`
+                );
+
+        if (error) {
+            console.warn(
+                "Lecture directe des amis impossible :",
+                error
+            );
+            return [];
+        }
+
+        const ids =
+            [
+                ...new Set(
+                    (rows || [])
+                        .map(row =>
+                            row.sender_id ===
+                            me
+                                ? row.receiver_id
+                                : row.sender_id
+                        )
+                        .filter(Boolean)
+                )
+            ];
+
+        if (!ids.length) {
+            return [];
+        }
+
+        const {
+            data: profiles,
+            error: profileError
+        } =
+            await client
+                .from("profiles")
+                .select(
+                    "id,username"
+                )
+                .in(
+                    "id",
+                    ids
+                );
+
+        if (profileError) {
+            console.warn(
+                "Lecture des profils amis impossible :",
+                profileError
+            );
+        }
+
+        const names =
+            new Map(
+                (profiles || [])
+                    .map(profile => [
+                        String(
+                            profile.id
+                        ),
+                        profile.username ||
+                        "JOUEUR"
+                    ])
+            );
+
+        return ids.map(id => ({
+            id:
+                "cloud-" +
+                id,
+
+            user_id:
+                String(id),
+
+            name:
+                names.get(
+                    String(id)
+                ) ||
+                "JOUEUR",
+
+            cloud:
+                true,
+
+            online:
+                false
+        }));
+    }
+
+    async function loadOnlineFriendsForDuelV8() {
+        /*
+           1. D'abord Presence.
+        */
+        try {
+            if (
+                !onlinePresenceChannel
+            ) {
+                await startOnlineLobbyPresence();
+            }
+            else {
+                await syncOnlinePresence();
+            }
+
+            await sleepV8(220);
+
+            refreshOnlinePresenceFromChannel();
+
+            /*
+               Deuxième passage pour éviter de rater
+               un JOIN reçu juste après l'ouverture.
+            */
+            await sleepV8(180);
+
+            refreshOnlinePresenceFromChannel();
+        }
+        catch (error) {
+            console.warn(
+                "Presence Duel :",
+                error
+            );
+        }
+
+        /*
+           2. Recharge la vraie liste d'amis utilisée
+              par la page AMIS.
+        */
+        try {
+            if (
+                typeof window
+                    .loadCloudFriends ===
+                "function"
+            ) {
+                await window
+                    .loadCloudFriends();
+            }
+        }
+        catch (error) {
+            console.warn(
+                "Recharge amis :",
+                error
+            );
+        }
+
+        /*
+           3. Lecture Supabase directe en secours.
+        */
+        const directFriends =
+            await directAcceptedFriendsV8();
+
+        const merged =
+            new Map();
+
+        for (
+            const friend of
+            state.friends ||
+            []
+        ) {
+            const key =
+                String(
+                    friend.user_id ||
+                    normalizeFriendName(
+                        friend.name ||
+                        ""
+                    )
+                );
+
+            if (key) {
+                merged.set(
+                    key,
+                    {
+                        ...friend
+                    }
+                );
+            }
+        }
+
+        for (
+            const friend of
+            directFriends
+        ) {
+            const key =
+                String(
+                    friend.user_id ||
+                    ""
+                );
+
+            if (!key) continue;
+
+            merged.set(
+                key,
+                {
+                    ...(
+                        merged.get(
+                            key
+                        ) ||
+                        {}
+                    ),
+                    ...friend
+                }
+            );
+        }
+
+        /*
+           4. Refaire une dernière synchro après
+              avoir obtenu les IDs des amis.
+        */
+        try {
+            await syncOnlinePresence();
+            await sleepV8(160);
+            refreshOnlinePresenceFromChannel();
+        }
+        catch (_) {}
+
+        const allFriends =
+            [
+                ...merged.values()
+            ]
+                .map(friend => {
+                    const presence =
+                        presenceForFriendV8(
+                            friend
+                        );
+
+                    return {
+                        ...friend,
+
+                        presence,
+
+                        /*
+                           user_id exact + Presence = source principale.
+                           friend.online reste un secours.
+                        */
+                        online:
+                            Boolean(
+                                presence ||
+                                friend.online
+                            )
+                    };
+                });
+
+        /*
+           DEMANDE UTILISATEUR :
+           la fenêtre Duel affiche les AMIS EN LIGNE.
+        */
+        return allFriends
+            .filter(
+                friend =>
+                    friend.online
+            )
+            .sort(
+                (a, b) =>
+                    String(
+                        a.name ||
+                        ""
+                    )
+                        .localeCompare(
+                            String(
+                                b.name ||
+                                ""
+                            ),
+                            "fr",
+                            {
+                                sensitivity:
+                                    "base"
+                            }
+                        )
+            );
+    }
+
+    function onlineFriendCardV8(
+        friend
+    ) {
+        const presence =
+            friend.presence ||
+            presenceForFriendV8(
+                friend
+            );
+
+        const playerId =
+            String(
+                friend.user_id ||
+                presence?.user_id ||
+                ""
+            )
+                .replace(
+                    /[^a-fA-F0-9-]/g,
+                    ""
+                );
+
+        const username =
+            friend.name ||
+            presence?.username ||
+            "AMI";
+
+        const icon =
+            presence
+                ?.profile
+                ?.profile_icon ||
+            presence
+                ?.profile_icon ||
+            DEFAULT_PROFILE_ICON;
+
+        const selected =
+            presence
+                ?.profile
+                ?.selected_brawler ||
+            presence
+                ?.brawler ||
+            "Brawler";
+
+        return `
+            <article class="online-duel-friend">
+                <button
+                    class="online-duel-friend-avatar"
+                    type="button"
+                    ${
+                        playerId
+                            ? `onclick="openOnlinePlayerProfile('${playerId}')"`
+                            : ""
+                    }
+                >
+                    <img
+                        src="${escapeOnlineHtml(icon)}"
+                        alt=""
+                    >
+                </button>
+
+                <div class="online-duel-friend-main">
+                    <strong>
+                        ${escapeOnlineHtml(username)}
+                    </strong>
+
+                    <small class="online">
+                        EN LIGNE · ${escapeOnlineHtml(selected)}
+                    </small>
+                </div>
+
+                <button
+                    class="online-duel-invite-btn"
+                    type="button"
+                    ${
+                        playerId
+                            ? `onclick="inviteFriendFromDuelLobby('${playerId}')"`
+                            : "disabled"
+                    }
+                >
+                    INVITER
+                </button>
+            </article>
+        `;
+    }
+
+    async function renderOnlineDuelFriendsV8(
+        dialog
+    ) {
+        const list =
+            dialog?.querySelector(
+                ".online-duel-friends-list"
+            );
+
+        const intro =
+            dialog?.querySelector(
+                ".online-duel-v3-intro"
+            );
+
+        if (!list) return;
+
+        const friends =
+            await loadOnlineFriendsForDuelV8();
+
+        if (intro) {
+            intro.innerHTML = `
+                <strong>
+                    AMIS EN LIGNE
+                </strong>
+                ${friends.length}
+                ami${friends.length > 1 ? "s" : ""}
+                disponible${friends.length > 1 ? "s" : ""}
+                maintenant.
+            `;
+        }
+
+        if (!friends.length) {
+            list.innerHTML = `
+                <div class="online-player-empty">
+                    <span class="online-player-empty-icon">
+                        👥
+                    </span>
+
+                    <strong>
+                        AUCUN AMI EN LIGNE
+                    </strong>
+
+                    <small>
+                        Tes amis apparaissent ici automatiquement
+                        dès qu'ils ouvrent BRAWL VS avec leur compte.
+                    </small>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML =
+            friends
+                .map(
+                    onlineFriendCardV8
+                )
+                .join("");
+    }
+
+    /*
+       INVITATION depuis le picker :
+       plus besoin que la Presence soit encore présente
+       à la milliseconde exacte du clic.
+       L'ID + pseudo de l'ami suffisent.
+    */
+    window.inviteFriendFromDuelLobby =
+        async function(playerId) {
+
+            const cleanId =
+                String(
+                    playerId ||
+                    ""
+                )
+                    .replace(
+                        /[^a-fA-F0-9-]/g,
+                        ""
+                    );
+
+            if (!cleanId) {
+                return false;
+            }
+
+            const friend =
+                (state.friends || [])
+                    .find(
+                        item =>
+                            String(
+                                item.user_id ||
+                                ""
+                            ) ===
+                            cleanId
+                    );
+
+            const presence =
+                onlineLobbyPlayers.get(
+                    cleanId
+                ) ||
+                presenceForFriendV8(
+                    friend
+                );
+
+            const username =
+                presence
+                    ?.username ||
+                friend
+                    ?.name ||
+                "JOUEUR";
+
+            const result =
+                await sendOnlineDuelInviteToPlayer({
+                    id:
+                        cleanId,
+                    username
+                });
+
+            if (!result) {
+                return false;
+            }
+
+            if (
+                window
+                    .BRAWLVS_ONLINE_V3
+            ) {
+                window
+                    .BRAWLVS_ONLINE_V3
+                    .pendingInvite = {
+                        id:
+                            result.id,
+
+                        opponent: {
+                            ...(
+                                presence ||
+                                {}
+                            ),
+
+                            user_id:
+                                cleanId,
+
+                            username
+                        }
+                    };
+            }
+
+            /*
+               Juste après l'envoi :
+               garantir que sender_brawler = Brawler ACTUEL.
+            */
+            await syncSelectedBrawlerEverywhereV8(
+                false
+            );
+
+            document
+                .getElementById(
+                    "onlineDuelPickerDialog"
+                )
+                ?.close();
+
+            showHome();
+
+            renderOnlineHomeLobby();
+
+            return true;
+        };
+
+    /*
+       FENÊTRE DUEL :
+       chargement visible puis vraie liste d'amis online.
+    */
+    openOnlineDuelPicker =
+        async function() {
+
+            if (
+                !brawlCloudSession
+                    ?.user?.id
+            ) {
+                setFriendFeedback(
+                    "Connecte-toi d'abord pour jouer en Duel.",
+                    "error"
+                );
+
+                openAccountPopup(
+                    "login"
+                );
+
+                return;
+            }
+
+            if (
+                currentOnlineMatch
+                    ?.status ===
+                    "waiting"
+            ) {
+                showHome();
+                renderOnlineHomeLobby();
+                return;
+            }
+
+            let dialog =
+                document
+                    .getElementById(
+                        "onlineDuelPickerDialog"
+                    );
+
+            if (!dialog) {
+                dialog =
+                    document
+                        .createElement(
+                            "dialog"
+                        );
+
+                dialog.id =
+                    "onlineDuelPickerDialog";
+
+                dialog.setAttribute(
+                    "aria-labelledby",
+                    "onlineDuelPickerTitle"
+                );
+
+                mountPhoneSkinDialog(
+                    dialog
+                );
+            }
+
+            dialog.innerHTML = `
+                <section class="online-duel-v3-shell">
+                    <div class="online-duel-v3-head">
+                        <div>
+                            <small>
+                                MODE PRIVÉ // 1 VS 1
+                            </small>
+
+                            <h2 id="onlineDuelPickerTitle">
+                                INVITER UN AMI
+                            </h2>
+                        </div>
+
+                        <button
+                            class="online-duel-v3-close"
+                            type="button"
+                            onclick="document.getElementById('onlineDuelPickerDialog')?.close()"
+                        >
+                            ×
+                        </button>
+                    </div>
+
+                    <div class="online-duel-v3-intro">
+                        <strong>
+                            AMIS EN LIGNE
+                        </strong>
+                        Recherche de tes amis actuellement connectés...
+                    </div>
+
+                    <div class="online-duel-friends-list">
+                        <div class="online-player-empty">
+                            <span class="online-player-empty-icon">
+                                ⌁
+                            </span>
+
+                            <strong>
+                                SYNCHRONISATION...
+                            </strong>
+
+                            <small>
+                                Chargement de ta liste d'amis et de Presence.
+                            </small>
+                        </div>
+                    </div>
+                </section>
+            `;
+
+            /*
+               Centrage forcé dans le téléphone.
+            */
+            const overlay =
+                dialog.parentElement;
+
+            if (
+                overlay
+                    ?.classList
+                    .contains(
+                        "phone-skin-overlay"
+                    )
+            ) {
+                overlay.style
+                    .alignItems =
+                    "center";
+
+                overlay.style
+                    .justifyContent =
+                    "center";
+
+                overlay.style
+                    .padding =
+                    "14px";
+            }
+
+            dialog.style
+                .position =
+                "relative";
+
+            dialog.style
+                .inset =
+                "auto";
+
+            dialog.style
+                .margin =
+                "0";
+
+            dialog.style
+                .transform =
+                "none";
+
+            if (
+                typeof dialog
+                    .openInPhone ===
+                "function"
+            ) {
+                dialog.openInPhone();
+            }
+            else if (!dialog.open) {
+                dialog.show();
+            }
+
+            try {
+                V8.pickerLoading =
+                    true;
+
+                await renderOnlineDuelFriendsV8(
+                    dialog
+                );
+            }
+            catch (error) {
+                console.error(
+                    "Impossible d'afficher les amis en ligne dans Duel :",
+                    error
+                );
+
+                const list =
+                    dialog.querySelector(
+                        ".online-duel-friends-list"
+                    );
+
+                if (list) {
+                    list.innerHTML = `
+                        <div class="online-player-empty">
+                            <span class="online-player-empty-icon">
+                                !
+                            </span>
+
+                            <strong>
+                                ERREUR DE SYNCHRO
+                            </strong>
+
+                            <small>
+                                Ferme puis rouvre le mode Duel.
+                            </small>
+                        </div>
+                    `;
+                }
+            }
+            finally {
+                V8.pickerLoading =
+                    false;
+            }
+        };
+
+    /*
+       Si un ami se connecte/déconnecte ALORS QUE
+       la fenêtre Duel est ouverte, la liste se met à jour.
+    */
+    const refreshPresenceBeforeV8 =
+        refreshOnlinePresenceFromChannel;
+
+    refreshOnlinePresenceFromChannel =
+        function(...args) {
+
+            const result =
+                refreshPresenceBeforeV8(
+                    ...args
+                );
+
+            const dialog =
+                document
+                    .getElementById(
+                        "onlineDuelPickerDialog"
+                    );
+
+            if (
+                dialog?.open &&
+                !V8.pickerLoading
+            ) {
+                setTimeout(
+                    () => {
+                        renderOnlineDuelFriendsV8(
+                            dialog
+                        ).catch(
+                            console.error
+                        );
+                    },
+                    80
+                );
+            }
+
+            return result;
+        };
+
+    /*
+       Dernière sécurité :
+       quand un salon waiting est affiché,
+       republier le Brawler actuel.
+    */
+    const showHomeBeforeV8 =
+        showHome;
+
+    showHome =
+        function(...args) {
+
+            const result =
+                showHomeBeforeV8(
+                    ...args
+                );
+
+            if (
+                currentOnlineMatch
+                    ?.status ===
+                    "waiting"
+            ) {
+                setTimeout(
+                    () => {
+                        syncSelectedBrawlerEverywhereV8(
+                            false
+                        ).catch(
+                            console.error
+                        );
+                    },
+                    60
+                );
+            }
+
+            return result;
+        };
+})();
+</script>
+
 </body>
 </html>
