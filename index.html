@@ -41492,5 +41492,488 @@ function updateBattleActionHitChanceUI() {
 @keyframes brawlOnlinePulse{0%,100%{transform:scale(.85);opacity:.55}50%{transform:scale(1.12);opacity:1}}
 </style>
 
+
+<style id="brawl-online-v3-style">
+/* =====================================================
+   BRAWL VS ONLINE V3 — profils + lobby duel privé
+===================================================== */
+.online-player-card{display:grid!important;grid-template-columns:54px minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;text-align:left!important}
+.online-player-avatar{position:relative!important;width:54px!important;height:54px!important;display:grid!important;place-items:center!important;overflow:hidden!important;padding:0!important;border-radius:16px 5px 16px 5px!important;background:linear-gradient(145deg,#214d73,#2a2351 62%,#76256e)!important;border:1px solid rgba(115,223,255,.48)!important;box-shadow:0 7px 18px rgba(0,0,0,.28),0 0 16px rgba(53,191,255,.12)!important;cursor:pointer!important}
+.online-player-avatar img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;transform:scale(1.04)}
+.online-player-avatar:hover{border-color:#a6efff!important;filter:brightness(1.09)}
+.online-player-dot{position:absolute!important;right:3px!important;bottom:3px!important;width:11px!important;height:11px!important;border:2px solid #08101d!important;border-radius:50%!important;background:#50ff87!important;box-shadow:0 0 9px rgba(80,255,135,.8)!important}
+.online-player-profile-hit{min-width:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;padding:0}
+.online-player-invite{border:1px solid rgba(87,216,255,.36)!important;background:linear-gradient(130deg,rgba(53,191,255,.20),rgba(255,61,220,.14))!important;border-radius:11px 3px 11px 3px!important;padding:8px 9px!important;cursor:pointer!important;color:white!important}
+.online-player-invite:hover{border-color:rgba(168,237,255,.8)!important;transform:translateY(-1px)}
+.friend-avatar.has-online-profile{overflow:hidden!important;padding:0!important;cursor:pointer!important}
+.friend-avatar.has-online-profile img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Profil public d'un ami */
+#onlineFriendProfileDialog{width:min(352px,calc(100vw - 28px));max-height:min(760px,calc(100dvh - 28px));padding:0;border:0;background:transparent;color:white;overflow:visible}
+.online-friend-profile-shell{overflow:hidden;border:1px solid rgba(111,220,255,.42);border-radius:24px 8px 24px 8px;background:radial-gradient(circle at 20% 0%,rgba(53,191,255,.21),transparent 35%),radial-gradient(circle at 100% 20%,rgba(255,61,220,.15),transparent 35%),linear-gradient(155deg,#12263e,#090f1e 78%);box-shadow:0 26px 70px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08)}
+.online-profile-hero{position:relative;display:grid;grid-template-columns:82px 1fr;gap:13px;align-items:center;padding:17px 16px 14px;border-bottom:1px solid rgba(138,213,255,.16)}
+.online-profile-avatar{width:82px;height:82px;overflow:hidden;border-radius:24px 7px 24px 7px;border:2px solid #83e2ff;background:#13233a;box-shadow:0 0 0 4px rgba(53,191,255,.08),0 12px 24px rgba(0,0,0,.35)}
+.online-profile-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.online-profile-online{display:inline-flex;align-items:center;gap:6px;color:#78ffa0;font-size:8px;font-weight:1000;letter-spacing:1.4px}.online-profile-online::before{content:"";width:7px;height:7px;border-radius:50%;background:#50ff87;box-shadow:0 0 8px #50ff87}
+.online-profile-name{margin-top:4px;font-size:27px;line-height:1;font-weight:1000;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.online-profile-code{margin-top:5px;color:#8fa8c2;font-size:8px;font-weight:900;letter-spacing:.9px}
+.online-profile-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:11px 14px}.online-profile-stat{padding:9px 10px;border:1px solid rgba(122,204,255,.17);border-radius:12px 4px 12px 4px;background:rgba(9,20,35,.72)}.online-profile-stat span{display:block;color:#7890aa;font-size:7.5px;font-weight:1000;letter-spacing:1px}.online-profile-stat strong{display:block;margin-top:3px;font-size:18px;color:white}.online-profile-stat.trophy strong{color:#ffd66f}
+.online-profile-section{padding:4px 14px 15px}.online-profile-section-head{display:flex;align-items:center;justify-content:space-between;margin:5px 0 8px;color:#dff5ff;font-size:9px;font-weight:1000;letter-spacing:1.4px}.online-profile-brawlers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:330px;overflow-y:auto;padding-right:2px}
+.online-profile-brawler{position:relative;min-height:105px;overflow:hidden;border:1px solid rgba(255,255,255,.10);border-radius:14px 5px 14px 5px;background:linear-gradient(145deg,#152942,#0a1220)}.online-profile-brawler img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 25%;filter:drop-shadow(0 8px 8px rgba(0,0,0,.35))}.online-profile-brawler::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(4,8,15,.92))}.online-profile-brawler-info{position:absolute;z-index:2;left:8px;right:8px;bottom:7px;display:flex;align-items:flex-end;justify-content:space-between;gap:6px}.online-profile-brawler-info strong{font-size:12px;font-weight:1000;font-style:italic}.online-profile-brawler-info small{display:block;margin-top:2px;color:#ffd66f;font-size:8px;font-weight:1000}.online-profile-power{font-size:18px!important;color:#b9efff!important;text-shadow:0 0 8px rgba(53,191,255,.35)}
+.online-profile-actions{display:grid;grid-template-columns:1fr auto;gap:8px;padding:0 14px 15px}.online-profile-duel{min-height:44px;border:0;border-radius:13px 4px 13px 4px;color:#04273d;background:linear-gradient(110deg,#a7efff,#49d5ff 55%,#ff72c2 140%);font-size:11px;font-weight:1000;cursor:pointer}.online-profile-close{width:48px;border:1px solid rgba(255,255,255,.13);border-radius:13px 4px 13px 4px;color:#c3d2e4;background:#152138;font-size:22px;cursor:pointer}
+
+/* Picker Duel = liste d'amis */
+#onlineDuelPickerDialog{width:min(356px,calc(100vw - 26px));max-height:min(720px,calc(100dvh - 26px));padding:0;border:0;background:transparent;color:#fff}
+.online-duel-v3-shell{overflow:hidden;border:1px solid rgba(105,218,255,.43);border-radius:24px 8px 24px 8px;background:radial-gradient(circle at 0 0,rgba(53,191,255,.20),transparent 37%),radial-gradient(circle at 100% 0,rgba(255,61,220,.13),transparent 34%),linear-gradient(155deg,#12263f,#080f1e 80%);box-shadow:0 25px 70px rgba(0,0,0,.64),inset 0 1px rgba(255,255,255,.08)}
+.online-duel-v3-head{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 15px 12px;border-bottom:1px solid rgba(116,209,255,.16)}.online-duel-v3-head small{color:#79e3ff;font-size:8px;font-weight:1000;letter-spacing:2px}.online-duel-v3-head h2{margin:3px 0 0;font-size:27px;font-weight:1000;font-style:italic}.online-duel-v3-close{width:36px;height:36px;border:1px solid rgba(255,255,255,.12);border-radius:11px 4px 11px 4px;background:#15243a;color:#dff6ff;font-size:22px;cursor:pointer}
+.online-duel-v3-intro{margin:12px 13px 7px;padding:11px 12px;border:1px solid rgba(99,212,255,.19);border-radius:14px 5px 14px 5px;background:linear-gradient(120deg,rgba(53,191,255,.10),rgba(255,61,220,.07));color:#aabed3;font-size:9px;line-height:1.45}.online-duel-v3-intro strong{display:block;color:white;font-size:11px;margin-bottom:3px}
+.online-duel-friends-list{display:flex;flex-direction:column;gap:7px;max-height:430px;overflow-y:auto;padding:7px 13px 14px}.online-duel-friend{display:grid;grid-template-columns:48px 1fr auto;gap:9px;align-items:center;padding:8px;border:1px solid rgba(255,255,255,.08);border-radius:14px 5px 14px 5px;background:linear-gradient(135deg,rgba(18,37,60,.98),rgba(8,14,26,.98))}.online-duel-friend.offline{opacity:.48}.online-duel-friend-avatar{position:relative;width:48px;height:48px;overflow:hidden;border-radius:13px 4px 13px 4px;border:1px solid rgba(104,219,255,.35);background:#192841}.online-duel-friend-avatar img{width:100%;height:100%;object-fit:cover}.online-duel-friend-main{min-width:0}.online-duel-friend-main strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.online-duel-friend-main small{display:flex;align-items:center;gap:5px;margin-top:4px;color:#72859d;font-size:8px;font-weight:1000;letter-spacing:.7px}.online-duel-friend-main small.online{color:#6fff97}.online-duel-friend-main small::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.online-duel-invite-btn{min-height:36px;padding:0 10px;border:0;border-radius:10px 3px 10px 3px;color:#032a42;background:linear-gradient(110deg,#8de7ff,#48cfff);font-size:9px;font-weight:1000;cursor:pointer}.online-duel-invite-btn:disabled{color:#6f7d8e;background:#202a38;cursor:not-allowed}
+
+/* Invitation reçue */
+#onlineDuelInviteDialog{width:min(340px,calc(100vw - 28px));padding:0;border:0;background:transparent;color:#fff}.online-invite-card{position:relative;overflow:hidden;padding:18px 16px 15px;border:1px solid rgba(116,225,255,.46);border-radius:24px 8px 24px 8px;text-align:center;background:radial-gradient(circle at 50% 0,rgba(53,191,255,.24),transparent 42%),radial-gradient(circle at 100% 100%,rgba(255,61,220,.15),transparent 42%),linear-gradient(155deg,#132842,#090f1e);box-shadow:0 28px 70px rgba(0,0,0,.65)}.online-invite-kicker{color:#82e8ff;font-size:8px;font-weight:1000;letter-spacing:2.2px}.online-invite-vs{margin:7px 0 4px;font-size:31px;font-weight:1000;font-style:italic}.online-invite-sender{color:#fff;font-size:17px;font-weight:1000}.online-invite-note{margin:7px 0 14px;color:#91a7bd;font-size:9px;line-height:1.45}.online-invite-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.online-invite-accept,.online-invite-refuse{min-height:44px;border:0;border-radius:12px 4px 12px 4px;font-size:10px;font-weight:1000;cursor:pointer}.online-invite-accept{color:#052f22;background:linear-gradient(120deg,#83ffb1,#42db79)}.online-invite-refuse{color:#ff9cad;background:rgba(255,61,93,.10);border:1px solid rgba(255,61,93,.28)}
+
+/* Lobby VS directement sur l'accueil */
+#homePage.online-duel-lobby-active .selected-panel,#homePage.online-duel-lobby-active .home-actions,#homePage.online-duel-lobby-active .home-guide-side-button,#homePage.online-duel-lobby-active .home-options-side-button,#homePage.online-duel-lobby-active .home-quests-side-button,#homePage.online-duel-lobby-active .home-box-side-button{display:none!important}
+#onlineHomeDuelLobby{width:100%;flex:1;min-height:0;margin-top:10px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;animation:onlineLobbyIn .25s ease both}
+@keyframes onlineLobbyIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+.online-home-lobby-card{position:relative;overflow:hidden;padding:12px;border:1px solid rgba(100,218,255,.35);border-radius:21px 7px 21px 7px;background:radial-gradient(circle at 0 0,rgba(53,191,255,.18),transparent 38%),radial-gradient(circle at 100% 0,rgba(255,61,220,.14),transparent 38%),linear-gradient(160deg,rgba(13,28,47,.96),rgba(6,11,21,.97));box-shadow:0 17px 38px rgba(0,0,0,.36),inset 0 1px rgba(255,255,255,.07)}
+.online-home-lobby-top{display:flex;align-items:center;justify-content:space-between;text-align:left}.online-home-lobby-top small{display:block;color:#65dfff;font-size:7px;font-weight:1000;letter-spacing:1.7px}.online-home-lobby-top strong{display:block;margin-top:2px;font-size:15px;font-weight:1000}.online-home-room-code{padding:6px 8px;border:1px solid rgba(255,255,255,.09);border-radius:8px 3px 8px 3px;color:#8ca2b8;background:rgba(5,12,23,.55);font-size:8px;font-weight:1000;letter-spacing:1px}
+.online-home-vs{display:grid;grid-template-columns:1fr 42px 1fr;align-items:stretch;gap:5px;margin-top:10px}.online-home-fighter{position:relative;min-width:0;min-height:292px;overflow:hidden;border:1px solid rgba(255,255,255,.09);border-radius:17px 6px 17px 6px;background:linear-gradient(160deg,rgba(19,43,66,.96),rgba(8,14,25,.97))}.online-home-fighter.me{border-color:rgba(83,217,255,.39)}.online-home-fighter.enemy{background:linear-gradient(160deg,rgba(45,28,57,.96),rgba(9,14,25,.97));border-color:rgba(255,91,209,.25)}.online-home-fighter-img{position:absolute;z-index:1;left:50%;top:41px;width:150px;height:196px;transform:translateX(-50%);object-fit:contain;filter:drop-shadow(0 15px 10px rgba(0,0,0,.55))}.online-home-fighter.enemy .online-home-fighter-img{filter:brightness(.08) saturate(0) drop-shadow(0 15px 10px rgba(0,0,0,.6));opacity:.9}.online-home-secret{position:absolute;z-index:3;left:50%;top:102px;transform:translateX(-50%);width:64px;height:64px;display:grid;place-items:center;border:1px solid rgba(255,112,211,.35);border-radius:50%;color:#ff9bde;background:rgba(15,11,26,.84);font-size:31px;font-weight:1000;box-shadow:0 0 22px rgba(255,61,220,.13)}.online-home-fighter-foot{position:absolute;z-index:4;left:8px;right:8px;bottom:8px;text-align:center}.online-home-fighter-foot strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:1000}.online-home-fighter-foot small{display:block;margin-top:3px;color:#8295ac;font-size:7px;font-weight:1000;letter-spacing:.8px}.online-home-ready{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;margin:6px auto 0!important;padding:4px 7px;border-radius:999px;color:#ff93a6!important;background:rgba(255,61,93,.10);border:1px solid rgba(255,61,93,.22);font-size:7px!important}.online-home-ready.ready{color:#69ff98!important;background:rgba(80,255,135,.10);border-color:rgba(80,255,135,.28)}.online-home-vs-mark{display:grid;place-items:center;color:white;font-size:22px;font-weight:1000;font-style:italic;text-shadow:0 0 14px rgba(53,191,255,.35),0 0 14px rgba(255,61,220,.25)}
+.online-home-lobby-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}.online-home-ready-btn{min-height:48px;border:0;border-radius:14px 4px 14px 4px;color:#042d3f;background:linear-gradient(110deg,#a8f1ff,#4bd9ff 58%,#ff79c7 145%);font-size:13px;font-weight:1000;font-style:italic;cursor:pointer;box-shadow:0 6px 0 #082239,0 10px 20px rgba(53,191,255,.18)}.online-home-ready-btn.is-ready{color:#062c1d;background:linear-gradient(110deg,#a6ffc0,#50ef88);box-shadow:0 6px 0 #155b31,0 10px 20px rgba(80,255,135,.14)}.online-home-leave-btn{width:48px;border:1px solid rgba(255,86,112,.28);border-radius:14px 4px 14px 4px;color:#ff8ba0;background:rgba(255,61,93,.08);font-size:18px;cursor:pointer}.online-home-lobby-tip{margin-top:9px;color:#71869d;font-size:7.5px;font-weight:900;letter-spacing:.5px;line-height:1.4}.online-home-lobby-tip b{color:#bcefff}
+.online-home-waiting{padding:25px 18px;text-align:center;border:1px solid rgba(98,218,255,.28);border-radius:21px 7px 21px 7px;background:radial-gradient(circle at 50% 0,rgba(53,191,255,.18),transparent 45%),linear-gradient(155deg,rgba(15,31,51,.95),rgba(7,12,22,.97));box-shadow:0 17px 38px rgba(0,0,0,.32)}.online-home-waiting-icon{width:70px;height:70px;margin:0 auto 10px;display:grid;place-items:center;border-radius:22px 7px 22px 7px;color:#9deaff;background:linear-gradient(145deg,rgba(53,191,255,.18),rgba(255,61,220,.12));border:1px solid rgba(101,220,255,.30);font-size:31px;animation:onlineWaitPulse 1.5s ease-in-out infinite}@keyframes onlineWaitPulse{50%{transform:scale(1.055);box-shadow:0 0 26px rgba(53,191,255,.16)}}.online-home-waiting strong{display:block;font-size:18px}.online-home-waiting p{margin:6px 0 13px;color:#8fa2b7;font-size:9px;line-height:1.5}
+
+/* Combat en ligne */
+#battlePage.online-network-battle::before{content:"DUEL EN LIGNE";position:absolute;z-index:80;top:4px;left:50%;transform:translateX(-50%);padding:4px 9px;border-radius:999px;color:#a8edff;background:rgba(5,16,28,.75);border:1px solid rgba(53,191,255,.26);font-size:7px;font-weight:1000;letter-spacing:1.2px;pointer-events:none}
+@media(max-width:430px){#onlineHomeDuelLobby{margin-top:4px}.online-home-vs{grid-template-columns:1fr 34px 1fr}.online-home-fighter{min-height:280px}.online-home-fighter-img{width:140px;height:185px}.online-home-vs-mark{font-size:19px}}
+</style>
+
+<script id="brawl-online-v3-script">
+/* =====================================================
+   BRAWL VS ONLINE V3
+   - Icônes de profil + profil public des joueurs en ligne
+   - Duel picker basé sur la liste d'amis
+   - Salon VS sur l'accueil avec PRÊT / PAS PRÊT
+   - Combat tour par tour synchronisé via matches.game_state
+===================================================== */
+(() => {
+    const V3 = window.BRAWLVS_ONLINE_V3 = {
+        pendingInvite: null,
+        launchedMatchId: null,
+        applyingRemote: false,
+        lastAppliedSeq: -1,
+        turnPreparedSeq: -1,
+        finishing: false
+    };
+
+    function ownAbilityIds(name) {
+        try {
+            return Object.values(getBrawlerAbilityLoadout(name) || {}).filter(Boolean);
+        } catch (_) { return []; }
+    }
+
+    function getOwnPublicProfile() {
+        const owned = Array.isArray(state.ownedBrawlers) ? state.ownedBrawlers : [];
+        return {
+            profile_icon: normalizeProfileIcon(state.profile.icon || DEFAULT_PROFILE_ICON),
+            trophies: Number(state.resources?.trophies || 0),
+            selected_brawler: state.selectedBrawler || "Shelly",
+            brawlers: owned.map(name => {
+                const b = brawlers[name];
+                if (!b) return null;
+                return {
+                    name,
+                    power: Number(b.power || 1),
+                    trophies: Number(getBrawlerTrophies(name) || 0),
+                    image: b.image || getDefaultSkinImage(name),
+                    icon: b.icon || "",
+                    rarity: b.rarity || "",
+                    rarity_class: b.rarityClass || "starter",
+                    ability_ids: ownAbilityIds(name),
+                    star_power: Boolean(isBrawlerStarPowerOwned(name))
+                };
+            }).filter(Boolean)
+        };
+    }
+
+    function getPresenceByName(name) {
+        const wanted = normalizeFriendName(name);
+        return [...onlineLobbyPlayers.values()].find(p => normalizeFriendName(p.username) === wanted) || null;
+    }
+
+    function presenceIcon(player) {
+        return player?.profile?.profile_icon || player?.profile_icon || DEFAULT_PROFILE_ICON;
+    }
+
+    function selectedPublicBrawler(profile, fallbackName) {
+        const name = profile?.selected_brawler || fallbackName || "Shelly";
+        return (profile?.brawlers || []).find(b => b.name === name) || {
+            name,
+            power: Number(brawlers[name]?.power || 1),
+            trophies: 0,
+            image: brawlers[name]?.image || getDefaultSkinImage(name),
+            ability_ids: [],
+            star_power: false
+        };
+    }
+
+    /* ---------- Presence enrichie ---------- */
+    const originalPresencePayload = getOnlinePresencePayload;
+    getOnlinePresencePayload = function(session) {
+        const base = originalPresencePayload(session);
+        return { ...base, profile: getOwnPublicProfile() };
+    };
+
+    refreshOnlinePresenceFromChannel = function() {
+        if (!onlinePresenceChannel) return;
+        const stateNow = onlinePresenceChannel.presenceState() || {};
+        const me = brawlCloudSession?.user?.id || "";
+        const next = new Map();
+        Object.values(stateNow).flat().forEach(presence => {
+            const userId = String(presence?.user_id || "");
+            if (!userId || userId === me) return;
+            const current = next.get(userId);
+            if (!current || String(presence.online_at || "") > String(current.online_at || "")) {
+                next.set(userId, {
+                    user_id: userId,
+                    username: presence.username || "JOUEUR",
+                    brawler: presence.brawler || presence.profile?.selected_brawler || "Shelly",
+                    friend_code: presence.friend_code || getPersonalFriendCode(userId),
+                    online_at: presence.online_at || "",
+                    profile: presence.profile || null
+                });
+            }
+        });
+        onlineLobbyPlayers = next;
+        renderOnlineLobbyPlayers();
+    };
+
+    buildOnlinePlayerCards = function() {
+        const players = [...onlineLobbyPlayers.values()].sort((a,b) => String(a.username||"").localeCompare(String(b.username||""), "fr", {sensitivity:"base"}));
+        if (!brawlCloudSession?.user?.id) return `<div class="online-player-empty"><span class="online-player-empty-icon">☁</span><strong>CONNECTE-TOI</strong><small>Un compte BRAWL VS est nécessaire pour voir les joueurs en ligne.</small></div>`;
+        if (!players.length) return `<div class="online-player-empty"><span class="online-player-empty-icon">⌁</span><strong>PERSONNE EN LIGNE</strong><small>Quand un pote ouvre BRAWL VS, il apparaîtra ici automatiquement.</small></div>`;
+        return players.map(player => {
+            const username = escapeOnlineHtml(player.username || "JOUEUR");
+            const code = escapeOnlineHtml(player.friend_code || getPersonalFriendCode(player.user_id));
+            const icon = escapeOnlineHtml(presenceIcon(player));
+            const id = String(player.user_id || "").replace(/[^a-fA-F0-9-]/g, "");
+            const count = Number(player.profile?.brawlers?.length || 0);
+            return `<div class="online-player-card">
+                <button class="online-player-avatar" type="button" onclick="openOnlinePlayerProfile('${id}')" aria-label="Voir le profil de ${username}"><img src="${icon}" alt=""><i class="online-player-dot"></i></button>
+                <button class="online-player-profile-hit" type="button" onclick="openOnlinePlayerProfile('${id}')"><span class="online-player-info"><strong>${username}</strong><small><b>${count} BRAWLERS</b> · ${code}</small></span></button>
+                <button class="online-player-invite" type="button" onclick="inviteOnlinePlayerById('${id}')"><span>DUEL</span><b>INVITER</b><i>›</i></button>
+            </div>`;
+        }).join("");
+    };
+
+    window.openOnlinePlayerProfile = function(playerId) {
+        const player = onlineLobbyPlayers.get(String(playerId || ""));
+        if (!player) { setFriendFeedback("Ce joueur n'est plus en ligne.", "error"); return; }
+        const profile = player.profile || {};
+        const brawlerList = Array.isArray(profile.brawlers) ? profile.brawlers : [];
+        const username = escapeOnlineHtml(player.username || "JOUEUR");
+        const icon = escapeOnlineHtml(presenceIcon(player));
+        const code = escapeOnlineHtml(player.friend_code || getPersonalFriendCode(player.user_id));
+        let dialog = document.getElementById("onlineFriendProfileDialog");
+        if (!dialog) {
+            dialog = document.createElement("dialog");
+            dialog.id = "onlineFriendProfileDialog";
+            mountPhoneSkinDialog(dialog);
+        }
+        const brawlersHtml = brawlerList.length ? brawlerList.map(item => {
+            const name = escapeOnlineHtml(item.name || "Brawler");
+            const image = escapeOnlineHtml(item.image || brawlers[item.name]?.image || "");
+            return `<article class="online-profile-brawler"><img src="${image}" alt="${name}"><div class="online-profile-brawler-info"><div><strong>${name}</strong><small>🏆 ${Number(item.trophies||0)}</small></div><strong class="online-profile-power">P${Number(item.power||1)}</strong></div></article>`;
+        }).join("") : `<div class="online-player-empty">Aucun Brawler public.</div>`;
+        dialog.innerHTML = `<section class="online-friend-profile-shell">
+            <div class="online-profile-hero"><div class="online-profile-avatar"><img src="${icon}" alt=""></div><div><span class="online-profile-online">EN LIGNE</span><div class="online-profile-name">${username}</div><div class="online-profile-code">${code}</div></div></div>
+            <div class="online-profile-stats"><div class="online-profile-stat trophy"><span>TROPHÉES</span><strong>🏆 ${Number(profile.trophies||0)}</strong></div><div class="online-profile-stat"><span>BRAWLERS</span><strong>${brawlerList.length} / ${Object.keys(brawlers).length}</strong></div></div>
+            <div class="online-profile-section"><div class="online-profile-section-head"><span>COLLECTION DE BRAWLERS</span><span>${brawlerList.length}</span></div><div class="online-profile-brawlers">${brawlersHtml}</div></div>
+            <div class="online-profile-actions"><button class="online-profile-duel" type="button" onclick="document.getElementById('onlineFriendProfileDialog')?.close(); inviteOnlinePlayerById('${String(player.user_id).replace(/[^a-fA-F0-9-]/g,'')}')">⚔ INVITER EN DUEL</button><button class="online-profile-close" type="button" onclick="document.getElementById('onlineFriendProfileDialog')?.close()">×</button></div>
+        </section>`;
+        if (typeof dialog.openInPhone === "function") dialog.openInPhone(); else if (!dialog.open) dialog.show();
+    };
+
+    /* Icône réelle aussi dans MES AMIS quand l'ami est en ligne */
+    const originalRenderFriendsV3 = renderFriends;
+    renderFriends = function() {
+        originalRenderFriendsV3();
+        document.querySelectorAll("#friendsList .friend-card").forEach(card => {
+            const name = card.querySelector(".friend-name")?.textContent?.trim();
+            const online = getPresenceByName(name);
+            const avatar = card.querySelector(".friend-avatar");
+            if (!online || !avatar) return;
+            avatar.classList.add("has-online-profile");
+            avatar.innerHTML = `<img src="${escapeOnlineHtml(presenceIcon(online))}" alt=""><span class="friend-status-dot online"></span>`;
+            avatar.onclick = () => openOnlinePlayerProfile(online.user_id);
+            avatar.title = "Voir le profil";
+        });
+    };
+
+    /* ---------- Picker Duel : uniquement les amis ---------- */
+    function buildDuelFriendsList() {
+        const friends = Array.isArray(state.friends) ? state.friends : [];
+        if (!friends.length) return `<div class="online-player-empty"><span class="online-player-empty-icon">👥</span><strong>AUCUN AMI</strong><small>Ajoute d'abord des amis pour les inviter en Duel.</small></div>`;
+        return friends.map(friend => {
+            const online = getPresenceByName(friend.name);
+            const name = escapeOnlineHtml(friend.name || "AMI");
+            const icon = escapeOnlineHtml(online ? presenceIcon(online) : DEFAULT_PROFILE_ICON);
+            const id = online ? String(online.user_id).replace(/[^a-fA-F0-9-]/g, "") : "";
+            return `<article class="online-duel-friend ${online ? "" : "offline"}">
+                <button class="online-duel-friend-avatar" type="button" ${online ? `onclick="openOnlinePlayerProfile('${id}')"` : "disabled"}><img src="${icon}" alt=""></button>
+                <div class="online-duel-friend-main"><strong>${name}</strong><small class="${online ? "online" : ""}">${online ? "EN LIGNE · DISPONIBLE" : "HORS LIGNE"}</small></div>
+                <button class="online-duel-invite-btn" type="button" ${online ? `onclick="inviteFriendFromDuelLobby('${id}')"` : "disabled"}>INVITER</button>
+            </article>`;
+        }).join("");
+    }
+
+    window.inviteFriendFromDuelLobby = async function(playerId) {
+        const player = onlineLobbyPlayers.get(String(playerId || ""));
+        if (!player) return;
+        const result = await sendOnlineDuelInviteToPlayer({id: player.user_id, username: player.username});
+        if (!result) return;
+        V3.pendingInvite = { id: result.id, opponent: player };
+        document.getElementById("onlineDuelPickerDialog")?.close();
+        showHome();
+        renderOnlineHomeLobby();
+    };
+
+    openOnlineDuelPicker = function() {
+        if (!brawlCloudSession?.user?.id) { setFriendFeedback("Connecte-toi d'abord pour jouer en Duel.", "error"); openAccountPopup("login"); return; }
+        if (currentOnlineMatch?.status === "waiting") { showHome(); renderOnlineHomeLobby(); return; }
+        let dialog = document.getElementById("onlineDuelPickerDialog");
+        if (!dialog) { dialog = document.createElement("dialog"); dialog.id = "onlineDuelPickerDialog"; mountPhoneSkinDialog(dialog); }
+        dialog.innerHTML = `<section class="online-duel-v3-shell"><div class="online-duel-v3-head"><div><small>MODE PRIVÉ // 1 VS 1</small><h2>INVITER UN AMI</h2></div><button class="online-duel-v3-close" type="button" onclick="document.getElementById('onlineDuelPickerDialog')?.close()">×</button></div><div class="online-duel-v3-intro"><strong>CHOISIS TON ADVERSAIRE</strong>Ta liste d'amis est affichée directement. Seuls les amis actuellement en ligne peuvent être invités.</div><div class="online-duel-friends-list">${buildDuelFriendsList()}</div></section>`;
+        if (typeof dialog.openInPhone === "function") dialog.openInPhone(); else if (!dialog.open) dialog.show();
+    };
+
+    /* ---------- Invitation reçue stylée ---------- */
+    showIncomingOnlineDuelInvite = async function(invite) {
+        if (!invite?.id || onlineHandledInviteIds.has(invite.id)) return;
+        onlineHandledInviteIds.add(invite.id);
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        const { data: sender } = await client.from("profiles").select("username").eq("id", invite.sender_id).maybeSingle();
+        const p = onlineLobbyPlayers.get(String(invite.sender_id));
+        const senderName = p?.username || sender?.username || "Un joueur";
+        let dialog = document.getElementById("onlineDuelInviteDialog");
+        if (!dialog) { dialog = document.createElement("dialog"); dialog.id = "onlineDuelInviteDialog"; mountPhoneSkinDialog(dialog); }
+        dialog.innerHTML = `<section class="online-invite-card"><div class="online-invite-kicker">INVITATION PRIVÉE</div><div class="online-invite-vs">DUEL 1 VS 1</div><div class="online-invite-sender">${escapeOnlineHtml(senderName)} t'invite</div><div class="online-invite-note">Accepte pour rejoindre le même salon. Le Brawler adverse restera secret jusqu'au lancement.</div><div class="online-invite-actions"><button class="online-invite-refuse" type="button" onclick="respondOnlineInvite('${invite.id}',false)">REFUSER</button><button class="online-invite-accept" type="button" onclick="respondOnlineInvite('${invite.id}',true)">ACCEPTER</button></div></section>`;
+        dialog._invite = invite;
+        if (typeof dialog.openInPhone === "function") dialog.openInPhone(); else if (!dialog.open) dialog.show();
+    };
+
+    window.respondOnlineInvite = async function(inviteId, accept) {
+        const dialog = document.getElementById("onlineDuelInviteDialog");
+        const invite = dialog?._invite;
+        dialog?.close();
+        if (!invite || invite.id !== inviteId) return;
+        if (accept) await acceptOnlineDuelInvite(invite); else await refuseOnlineDuelInvite(invite.id);
+    };
+
+    function makeLobbyPlayerData() {
+        const publicProfile = getOwnPublicProfile();
+        const selected = selectedPublicBrawler(publicProfile, state.selectedBrawler);
+        return {
+            user_id: brawlCloudSession?.user?.id || "",
+            username: state.profile.name || "JOUEUR",
+            icon: publicProfile.profile_icon,
+            profile: publicProfile,
+            brawler: state.selectedBrawler,
+            fighter: selected,
+            ready: false
+        };
+    }
+
+    acceptOnlineDuelInvite = async function(invite) {
+        const client = getBrawlCloudClient(); if (!client) return;
+        const { data:{session}, error:sessionError } = await client.auth.getSession(); if (sessionError || !session?.user) return;
+        const senderPresence = onlineLobbyPlayers.get(String(invite.sender_id));
+        const senderProfile = senderPresence?.profile || null;
+        const senderFighter = selectedPublicBrawler(senderProfile, invite.sender_brawler);
+        const receiverData = makeLobbyPlayerData();
+        const gameState = { version:3, lobby:{
+            p1:{user_id:invite.sender_id, username:senderPresence?.username || "JOUEUR", icon:presenceIcon(senderPresence), profile:senderProfile, brawler:invite.sender_brawler, fighter:senderFighter, ready:false},
+            p2:{...receiverData, ready:false}
+        }};
+        const { data:match, error } = await client.from("matches").insert({
+            player1_id:invite.sender_id, player2_id:session.user.id,
+            player1_brawler:invite.sender_brawler, player2_brawler:state.selectedBrawler,
+            turn_user_id:null, status:"waiting", game_state:gameState
+        }).select().single();
+        if (error || !match) { console.error("Impossible de créer le salon Duel :", error); alert("Impossible de créer le salon Duel."); return; }
+        const { error:inviteError } = await client.from("duel_invites").update({status:"accepted",match_id:match.id}).eq("id",invite.id).eq("status","pending");
+        if (inviteError) { console.error(inviteError); return; }
+        await startOnlineMatch(match.id);
+    };
+
+    async function publishLobbySelfData(resetReady=false) {
+        if (!currentOnlineMatch?.id || currentOnlineMatch.status !== "waiting") return;
+        const client = getBrawlCloudClient(); if (!client) return;
+        const { data:{session} } = await client.auth.getSession(); if (!session?.user) return;
+        const { data:fresh, error } = await client.from("matches").select("*").eq("id",currentOnlineMatch.id).single();
+        if (error || !fresh || fresh.status !== "waiting") return;
+        const amP1 = fresh.player1_id === session.user.id;
+        const gs = structuredCloneSafe(fresh.game_state || {}); gs.version=3; gs.lobby = gs.lobby || {};
+        const key = amP1 ? "p1" : "p2";
+        const previousReady = Boolean(gs.lobby[key]?.ready);
+        gs.lobby[key] = {...makeLobbyPlayerData(), ready: resetReady ? false : previousReady};
+        const patch = {game_state:gs, updated_at:new Date().toISOString()};
+        if (amP1) patch.player1_brawler = state.selectedBrawler; else patch.player2_brawler = state.selectedBrawler;
+        const { data:updated } = await client.from("matches").update(patch).eq("id",fresh.id).select().single();
+        if (updated) { currentOnlineMatch=updated; renderOnlineHomeLobby(); }
+    }
+
+    function structuredCloneSafe(value) { try { return structuredClone(value); } catch (_) { return JSON.parse(JSON.stringify(value || {})); } }
+
+    startOnlineMatch = async function(matchId) {
+        const client=getBrawlCloudClient(); if(!client)return;
+        const {data:{session}}=await client.auth.getSession(); if(!session?.user)return;
+        const {data:match,error}=await client.from("matches").select("*").eq("id",matchId).single();
+        if(error||!match){console.error("Salon introuvable :",error);return;}
+        V3.pendingInvite=null; currentOnlineMatch=match; subscribeToOnlineMatch(match.id);
+        if(match.status==="waiting"){
+            await publishLobbySelfData(false);
+            showHome(); renderOnlineHomeLobby();
+        } else if(match.status==="playing") launchOnlineBattleFromMatch(match);
+    };
+
+    function localLobbyInfo(match=currentOnlineMatch) {
+        const me=brawlCloudSession?.user?.id; if(!match||!me)return null;
+        const amP1=match.player1_id===me; const lobby=match.game_state?.lobby||{};
+        return {amP1, mine:amP1?lobby.p1:lobby.p2, enemy:amP1?lobby.p2:lobby.p1, myKey:amP1?"p1":"p2", enemyKey:amP1?"p2":"p1"};
+    }
+
+    window.toggleOnlineLobbyReady = async function() {
+        if(!currentOnlineMatch?.id||currentOnlineMatch.status!=="waiting")return;
+        const client=getBrawlCloudClient(); const me=brawlCloudSession?.user?.id; if(!client||!me)return;
+        const {data:fresh}=await client.from("matches").select("*").eq("id",currentOnlineMatch.id).single(); if(!fresh||fresh.status!=="waiting")return;
+        const amP1=fresh.player1_id===me; const gs=structuredCloneSafe(fresh.game_state||{}); gs.lobby=gs.lobby||{}; const key=amP1?"p1":"p2";
+        gs.lobby[key]={...(gs.lobby[key]||makeLobbyPlayerData()),ready:!Boolean(gs.lobby[key]?.ready)};
+        const {data:updated,error}=await client.from("matches").update({game_state:gs,updated_at:new Date().toISOString()}).eq("id",fresh.id).select().single();
+        if(error){console.error(error);return;} currentOnlineMatch=updated; renderOnlineHomeLobby(); maybeStartReadyOnlineMatch(updated);
+    };
+
+    async function maybeStartReadyOnlineMatch(match) {
+        if(!match||match.status!=="waiting")return;
+        const lobby=match.game_state?.lobby||{}; if(!lobby.p1?.ready||!lobby.p2?.ready)return;
+        const me=brawlCloudSession?.user?.id; if(me!==match.player1_id)return; // l'hôte initialise une seule fois
+        const p1F=buildInitialOnlineFighter(lobby.p1,match.player1_brawler); const p2F=buildInitialOnlineFighter(lobby.p2,match.player2_brawler);
+        const starter=Math.random()<.5?match.player1_id:match.player2_id;
+        const battle={version:1,seq:1,phase:"choose_distance",turn_user_id:starter,chooser_id:starter,current_distance:null,distance_choices:getBattleDistanceChoices(),distance_round_attack_index:0,p1:p1F,p2:p2F,last_action:"La partie commence !"};
+        const gs=structuredCloneSafe(match.game_state||{}); gs.battle=battle;
+        const client=getBrawlCloudClient();
+        const {data:updated,error}=await client.from("matches").update({status:"playing",turn_user_id:starter,game_state:gs,updated_at:new Date().toISOString()}).eq("id",match.id).eq("status","waiting").select().single();
+        if(error){console.error("Lancement Duel impossible",error);return;} if(updated){currentOnlineMatch=updated;launchOnlineBattleFromMatch(updated);}
+    }
+
+    function buildInitialOnlineFighter(lobbyData,brawlerName) {
+        const f=lobbyData?.fighter||selectedPublicBrawler(lobbyData?.profile,brawlerName); const base=brawlers[brawlerName]||brawlers.Shelly; const power=Math.max(1,Math.min(10,Number(f?.power||1))); const maxHealth=getBrawlerHealth({...base,power});
+        return {name:brawlerName,username:lobbyData?.username||"JOUEUR",image:f?.image||base.image,power,abilityIds:Array.isArray(f?.ability_ids)?f.ability_ids:[],hasStarPower:Boolean(f?.star_power),health:maxHealth,maxHealth,bearHealth:0,bearMaxHealth:0,shieldTurns:0,paralyzedTurns:0,cowboyRollDodges:0,burnTurns:0,poisonTurns:0,slowTurns:0,slowAmount:0,pocoHealingTurns:0,effectImmunityTurns:0,meteorPending:null,superCharge:0,usedAbilities:{}};
+    }
+
+    window.leaveOnlineLobby = async function() {
+        const match=currentOnlineMatch; const client=getBrawlCloudClient();
+        if(match?.id&&client&&match.status==="waiting") await client.from("matches").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",match.id);
+        currentOnlineMatch=null; V3.pendingInvite=null; renderOnlineHomeLobby(); showHome();
+    };
+
+    window.cancelPendingOnlineInvite = async function() {
+        const pending=V3.pendingInvite; const client=getBrawlCloudClient();
+        if(pending?.id&&client) await client.from("duel_invites").update({status:"cancelled"}).eq("id",pending.id).eq("status","pending");
+        V3.pendingInvite=null; renderOnlineHomeLobby();
+    };
+
+    window.renderOnlineHomeLobby = function() {
+        const home=document.getElementById("homePage"); const content=home?.querySelector(".home-content"); if(!home||!content)return;
+        let box=document.getElementById("onlineHomeDuelLobby");
+        const waitingMatch=currentOnlineMatch?.status==="waiting";
+        if(!waitingMatch && !V3.pendingInvite){ home.classList.remove("online-duel-lobby-active"); box?.remove(); return; }
+        home.classList.add("online-duel-lobby-active"); if(!box){box=document.createElement("section");box.id="onlineHomeDuelLobby";content.appendChild(box);}
+        if(V3.pendingInvite&&!waitingMatch){const opp=V3.pendingInvite.opponent;box.innerHTML=`<div class="online-home-waiting"><div class="online-home-waiting-icon">⌛</div><strong>INVITATION ENVOYÉE</strong><p>En attente de <b>${escapeOnlineHtml(opp?.username||"ton ami")}</b>.<br>Le salon apparaîtra ici dès qu'il accepte.</p><button class="cancel-button" type="button" onclick="cancelPendingOnlineInvite()">ANNULER L'INVITATION</button></div>`;return;}
+        const info=localLobbyInfo(); if(!info)return; const mine=info.mine||makeLobbyPlayerData(); const enemy=info.enemy||{}; const myBrawler=state.selectedBrawler||mine.brawler||"Shelly"; const myImg=brawlers[myBrawler]?.image||getDefaultSkinImage(myBrawler); const enemyImg=brawlers[enemy.brawler]?.image||getDefaultSkinImage(enemy.brawler||"Shelly"); const meReady=Boolean(mine.ready), enemyReady=Boolean(enemy.ready);
+        box.innerHTML=`<div class="online-home-lobby-card"><div class="online-home-lobby-top"><div><small>SALON PRIVÉ // DUEL</small><strong>${escapeOnlineHtml(mine.username||state.profile.name||"MOI")} VS ${escapeOnlineHtml(enemy.username||"AMI")}</strong></div><span class="online-home-room-code">#${String(currentOnlineMatch.id).slice(0,6).toUpperCase()}</span></div>
+        <div class="online-home-vs"><article class="online-home-fighter me"><img class="online-home-fighter-img" src="${escapeOnlineHtml(myImg)}" alt=""><div class="online-home-fighter-foot"><strong>${escapeOnlineHtml(myBrawler)}</strong><small>TON BRAWLER</small><span class="online-home-ready ${meReady?"ready":""}">${meReady?"✓ PRÊT":"PAS PRÊT"}</span></div></article><div class="online-home-vs-mark">VS</div><article class="online-home-fighter enemy"><div class="online-home-secret">?</div><div class="online-home-fighter-foot"><strong>${escapeOnlineHtml(enemy.username||"ADVERSAIRE")}</strong><small>BRAWLER SECRET</small><span class="online-home-ready ${enemyReady?"ready":""}">${enemyReady?"✓ PRÊT":"PAS PRÊT"}</span></div></article></div>
+        <div class="online-home-lobby-actions"><button class="online-home-ready-btn ${meReady?"is-ready":""}" type="button" onclick="toggleOnlineLobbyReady()">${meReady?"✓ JE SUIS PRÊT":"JE SUIS PRÊT"}</button><button class="online-home-leave-btn" type="button" onclick="leaveOnlineLobby()" title="Quitter">×</button></div><div class="online-home-lobby-tip"><b>Ton adversaire ne voit pas ton Brawler.</b> Tu peux encore changer de Brawler depuis la collection : ton statut repassera automatiquement sur PAS PRÊT.</div></div>`;
+    };
+
+    /* Quand le joueur change de Brawler dans le salon, on synchronise et on retire PRÊT */
+    const originalConfirmChoiceV3=confirmBrawlerChoice;
+    confirmBrawlerChoice=function(){ originalConfirmChoiceV3(); syncOnlinePresence(); if(currentOnlineMatch?.status==="waiting") setTimeout(()=>publishLobbySelfData(true),0); };
+    const originalShowHomeV3=showHome;
+    showHome=function(){ originalShowHomeV3(); setTimeout(renderOnlineHomeLobby,0); };
+
+    /* ---------- Réseau combat ---------- */
+    function isOnlineBattleActive(){return Boolean(currentOnlineMatch?.status==="playing"&&currentOnlineMatch?.game_state?.battle&&V3.launchedMatchId===currentOnlineMatch.id);}
+    function ids(){const m=currentOnlineMatch,me=brawlCloudSession?.user?.id; if(!m||!me)return null; const amP1=m.player1_id===me; return {me,opp:amP1?m.player2_id:m.player1_id,amP1,myKey:amP1?"p1":"p2",oppKey:amP1?"p2":"p1"};}
+    function captureSide(side){const player=side==="player"; const pre=player?"player":"enemy"; const name=battleState[pre+"Name"]; return {name,username:player?(state.profile.name||"JOUEUR"):(battleState.enemyPseudo||"ADVERSAIRE"),image:player?(brawlers[name]?.image||getDefaultSkinImage(name)):(currentOnlineMatch?.game_state?.battle?.[ids()?.oppKey]?.image||brawlers[name]?.image||getDefaultSkinImage(name)),power:player?Number(brawlers[name]?.power||1):Number(battleState.enemyPower||1),abilityIds:player?ownAbilityIds(name):[...(battleState.enemyAbilityIds||[])],hasStarPower:player?Boolean(isBrawlerStarPowerOwned(name)):Boolean(battleState.enemyHasStarPower),health:Number(battleState[pre+"Health"]||0),maxHealth:Number(battleState[pre+"MaxHealth"]||0),bearHealth:Number(battleState[pre+"BearHealth"]||0),bearMaxHealth:Number(battleState[pre+"BearMaxHealth"]||0),shieldTurns:Number(battleState[pre+"ShieldTurns"]||0),paralyzedTurns:Number(battleState[pre+"ParalyzedTurns"]||0),cowboyRollDodges:Number(battleState[pre+"CowboyRollDodges"]||0),burnTurns:Number(battleState[pre+"BurnTurns"]||0),poisonTurns:Number(battleState[pre+"PoisonTurns"]||0),slowTurns:Number(battleState[pre+"SlowTurns"]||0),slowAmount:Number(battleState[pre+"SlowAmount"]||0),pocoHealingTurns:Number(battleState[pre+"PocoHealingTurns"]||0),effectImmunityTurns:Number(battleState[pre+"EffectImmunityTurns"]||0),meteorPending:battleState[pre+"MeteorPending"]||null,superCharge:Number(player?battleState.superCharge:battleState.enemySuperCharge||0),usedAbilities:structuredCloneSafe(player?battleState.usedAbilities:battleState.enemyUsedAbilities||{})};}
+    function applySide(data,side){if(!data)return;const player=side==="player",pre=player?"player":"enemy";battleState[pre+"Name"]=data.name;battleState[pre+"Health"]=Number(data.health||0);battleState[pre+"MaxHealth"]=Number(data.maxHealth||0);battleState[pre+"BearHealth"]=Number(data.bearHealth||0);battleState[pre+"BearMaxHealth"]=Number(data.bearMaxHealth||0);battleState[pre+"ShieldTurns"]=Number(data.shieldTurns||0);battleState[pre+"ParalyzedTurns"]=Number(data.paralyzedTurns||0);battleState[pre+"CowboyRollDodges"]=Number(data.cowboyRollDodges||0);battleState[pre+"BurnTurns"]=Number(data.burnTurns||0);battleState[pre+"PoisonTurns"]=Number(data.poisonTurns||0);battleState[pre+"SlowTurns"]=Number(data.slowTurns||0);battleState[pre+"SlowAmount"]=Number(data.slowAmount||0);battleState[pre+"PocoHealingTurns"]=Number(data.pocoHealingTurns||0);battleState[pre+"EffectImmunityTurns"]=Number(data.effectImmunityTurns||0);battleState[pre+"MeteorPending"]=data.meteorPending||null;if(player){battleState.superCharge=Number(data.superCharge||0);battleState.usedAbilities=structuredCloneSafe(data.usedAbilities||{});}else{battleState.enemySuperCharge=Number(data.superCharge||0);battleState.enemyUsedAbilities=structuredCloneSafe(data.usedAbilities||{});battleState.enemyPower=Number(data.power||1);battleState.enemyAbilityIds=[...(data.abilityIds||[])];battleState.enemyHasStarPower=Boolean(data.hasStarPower);battleState.enemyPseudo=data.username||"ADVERSAIRE";}}
+    function captureSnapshot(overrides={}){const meta=ids();const old=currentOnlineMatch?.game_state?.battle||{};const mine=captureSide("player"),enemy=captureSide("enemy");const chooser=battleState.distanceRoundChooser==="player"?meta.me:meta.opp;const message=document.getElementById("battleActionMessage")?.textContent||old.last_action||"";return {...old,seq:Number(old.seq||0)+1,phase:overrides.phase||old.phase||"action",turn_user_id:overrides.turn_user_id||old.turn_user_id||meta.me,chooser_id:overrides.chooser_id||chooser,current_distance:battleState.currentDistance??old.current_distance??null,distance_choices:overrides.distance_choices!==undefined?overrides.distance_choices:[...(battleState.distanceChoices||[])],distance_round_attack_index:Number(battleState.distanceRoundAttackIndex||0),last_action:overrides.last_action||message,[meta.myKey]:mine,[meta.oppKey]:enemy,...overrides};}
+    async function pushSnapshot(overrides={}){if(!isOnlineBattleActive()||V3.applyingRemote)return;const client=getBrawlCloudClient();if(!client)return;const battle=captureSnapshot(overrides);const gs=structuredCloneSafe(currentOnlineMatch.game_state||{});gs.battle=battle;const {data:updated,error}=await client.from("matches").update({game_state:gs,turn_user_id:battle.turn_user_id,updated_at:new Date().toISOString()}).eq("id",currentOnlineMatch.id).eq("status","playing").select().single();if(error){console.error("Sync combat impossible",error);return;}if(updated)currentOnlineMatch=updated;}
+    function applyBattleUi(meta,battle){const mine=battle[meta.myKey],enemy=battle[meta.oppKey];applySide(mine,"player");applySide(enemy,"enemy");battleState.currentDistance=battle.current_distance??null;battleState.distanceRoundChooser=battle.chooser_id===meta.me?"player":"bot";battleState.distanceRoundAttackIndex=Number(battle.distance_round_attack_index||0);const myTurn=battle.turn_user_id===meta.me;if(battle.phase==="choose_distance"){battleState.distanceChosen=false;battleState.distanceChoices=myTurn?[...(battle.distance_choices||[])]:[];battleState.enemyTurn=!myTurn;}else{battleState.distanceChosen=Boolean(battle.current_distance);battleState.distanceChoices=[];battleState.enemyTurn=!myTurn;}if(battleState.currentDistance)applyBattleDistanceVisual(battleState.currentDistance);updateBattleHealthUI("player");updateBattleHealthUI("enemy");updateBattleDistanceUI();updateBattleShieldVisuals();updateBattleSuperUI();updateBattleAbilitySlots();syncBattleActionAvailability();const msg=document.getElementById("battleActionMessage");if(msg){if(myTurn&&battle.phase==="choose_distance")msg.textContent="À TOI · choisis la distance.";else if(myTurn)msg.textContent="À TOI DE JOUER · distance "+battle.current_distance+".";else msg.textContent=(enemy?.username||"Ton adversaire")+(battle.phase==="choose_distance"?" choisit la distance...":" joue...");}const ep=document.getElementById("battleEnemyPseudo");if(ep)ep.textContent=enemy?.username||"ADVERSAIRE";const en=document.getElementById("battleEnemyName");if(en)en.textContent=enemy?.name||"";const ePow=document.getElementById("battleEnemyPower");if(ePow)ePow.textContent="POWER "+Number(enemy?.power||1);const pPow=document.getElementById("battlePlayerPower");if(pPow)pPow.textContent="POWER "+Number(mine?.power||brawlers[mine?.name]?.power||1);const eImg=document.getElementById("battleEnemyImage");if(eImg&&enemy?.image)eImg.src=enemy.image;}
+    function applySnapshot(match){const battle=match?.game_state?.battle,meta=ids();if(!battle||!meta)return;V3.applyingRemote=true;try{applyBattleUi(meta,battle);V3.lastAppliedSeq=Math.max(V3.lastAppliedSeq,Number(battle.seq||0));}finally{V3.applyingRemote=false;}}
+
+    window.launchOnlineBattleFromMatch=function(match){if(!match?.game_state?.battle)return;currentOnlineMatch=match;if(V3.launchedMatchId===match.id&&document.getElementById("battlePage")?.classList.contains("active")){applySnapshot(match);return;}V3.launchedMatchId=match.id;V3.finishing=false;const meta=ids(),battle=match.game_state.battle,mine=battle[meta.myKey],enemy=battle[meta.oppKey];renderBattle(mine.name,enemy.name);battleState.enemyPseudo=enemy.username||"ADVERSAIRE";battleState.enemyPower=Number(enemy.power||1);showBattle();document.getElementById("battlePage")?.classList.add("online-network-battle");snapshotBattleQuestState();registerQuestBattleStarted();applySnapshot(match);const transition=document.getElementById("battleStartTransition"),ann=document.getElementById("battleStarterAnnouncement"),versus=document.getElementById("battleStartVersus");if(versus)versus.textContent=(mine.username||"MOI")+"  VS  "+(enemy.username||"ADVERSAIRE");if(ann){ann.textContent=(battle.turn_user_id===meta.me?mine.username:enemy.username)+" COMMENCE LA PARTIE !";ann.className="battle-starter-announcement "+(battle.turn_user_id===meta.me?"player-start":"enemy-start");}if(transition){transition.classList.add("active","starter-mode");setTimeout(()=>transition.classList.remove("active","starter-mode"),1500);}setTimeout(()=>applySnapshot(currentOnlineMatch),1550);};
+
+    const originalStartDistanceRound=startDistanceRound;
+    startDistanceRound=function(chooser){if(!isOnlineBattleActive())return originalStartDistanceRound(chooser);if(battleState.playerHealth<=0||battleState.enemyHealth<=0)return;battleState.distanceRoundChooser=chooser;battleState.distanceRoundAttackIndex=0;battleState.distanceChosen=false;battleState.currentDistance=null;const meta=ids();const chooserId=chooser==="player"?meta.me:meta.opp;const choices=getBattleDistanceChoices();battleState.distanceChoices=chooser==="player"?choices:[];battleState.enemyTurn=chooser!=="player";updateBattleDistanceUI();updateBattleSuperUI();syncBattleActionAvailability();pushSnapshot({phase:"choose_distance",turn_user_id:chooserId,chooser_id:chooserId,distance_choices:choices,current_distance:null,last_action:(chooser==="player"?"À toi de choisir la distance.":"Ton adversaire choisit la distance.")});};
+    const originalBeginEnemy=beginEnemyActionSameDistance;
+    beginEnemyActionSameDistance=function(){if(!isOnlineBattleActive())return originalBeginEnemy();const meta=ids();battleState.enemyTurn=true;battleState.distanceChosen=true;battleState.distanceChoices=[];updateBattleDistanceUI();updateBattleSuperUI();syncBattleActionAvailability();pushSnapshot({phase:"action",turn_user_id:meta.opp,chooser_id:battleState.distanceRoundChooser==="player"?meta.me:meta.opp,distance_choices:[],last_action:"Action terminée."});};
+    const originalChoose=chooseBattleDistance;
+    chooseBattleDistance=function(distance){if(!isOnlineBattleActive())return originalChoose(distance);const meta=ids(),battle=currentOnlineMatch.game_state.battle;if(battle.turn_user_id!==meta.me||battle.phase!=="choose_distance")return;originalChoose(distance);setTimeout(()=>pushSnapshot({phase:"action",turn_user_id:meta.me,chooser_id:meta.me,distance_choices:[],current_distance:distance,last_action:"Distance "+distance+" choisie."}),30);};
+
+    /* Les actions existantes sont conservées : elles modifient battleState, puis advanceDistanceRoundAfterAttack pousse le tour via nos wrappers ci-dessus. */
+    const originalAttack=attackEnemy; attackEnemy=function(){if(isOnlineBattleActive()){const b=currentOnlineMatch.game_state.battle,m=ids();if(b.turn_user_id!==m.me||b.phase!=="action")return;}return originalAttack();};
+    const originalSuper=useBattleSuper; useBattleSuper=function(){if(isOnlineBattleActive()){const b=currentOnlineMatch.game_state.battle,m=ids();if(b.turn_user_id!==m.me||b.phase!=="action")return;}return originalSuper();};
+    const originalAbility=useBattleAbility; useBattleAbility=function(slotNumber){if(isOnlineBattleActive()){const b=currentOnlineMatch.game_state.battle,m=ids();if(b.turn_user_id!==m.me||b.phase!=="action")return;}return originalAbility(slotNumber);};
+    const originalPass=passBattleTurn; passBattleTurn=function(){if(isOnlineBattleActive()){const b=currentOnlineMatch.game_state.battle,m=ids();if(b.turn_user_id!==m.me||b.phase!=="action")return;}return originalPass();};
+
+    const originalGrantVictory=grantBattleVictoryRewards;
+    grantBattleVictoryRewards=function(){if(!isOnlineBattleActive())return originalGrantVictory();if(V3.finishing)return;V3.finishing=true;originalGrantVictory();finishOnlineDuel(true);};
+    async function finishOnlineDuel(victory){const client=getBrawlCloudClient(),meta=ids();if(!client||!meta||!currentOnlineMatch?.id)return;const battle=captureSnapshot({phase:"finished",turn_user_id:meta.me,last_action:victory?"VICTOIRE":"DÉFAITE"});const gs=structuredCloneSafe(currentOnlineMatch.game_state||{});gs.battle=battle;const winner=victory?meta.me:meta.opp;const {data:updated}=await client.from("matches").update({status:"finished",winner_id:winner,game_state:gs,updated_at:new Date().toISOString()}).eq("id",currentOnlineMatch.id).select().single();if(updated)currentOnlineMatch=updated;try{registerElAmigoFriendMatch(victory?"victory":"defeat",currentOnlineMatch.id);}catch(_){};}
+    const originalLoss=showBattleLossMessage;
+    function receiveOnlineFinished(match){const meta=ids();if(!meta||match.winner_id===meta.me)return;applySnapshot(match);if(!battleState.rewardsGranted){grantBattleDefeatRewards();try{registerElAmigoFriendMatch("defeat",match.id);}catch(_){};setTimeout(originalLoss,350);}V3.finishing=true;}
+
+    const originalQuit=quitBattleMatch;
+    quitBattleMatch=function(){if(!isOnlineBattleActive())return originalQuit();const meta=ids();if(meta){finishOnlineDuel(false);}setTimeout(()=>{currentOnlineMatch=null;V3.launchedMatchId=null;document.getElementById("battlePage")?.classList.remove("online-network-battle");originalQuit();},250);};
+
+    /* Override callback de la subscription matches */
+    onOnlineMatchUpdated=function(match){currentOnlineMatch=match;if(match.status==="waiting"){renderOnlineHomeLobby();maybeStartReadyOnlineMatch(match);return;}if(match.status==="playing"){if(V3.launchedMatchId!==match.id)launchOnlineBattleFromMatch(match);else applySnapshot(match);return;}if(match.status==="finished"){if(V3.launchedMatchId===match.id)receiveOnlineFinished(match);return;}if(match.status==="cancelled"){const was=currentOnlineMatch;currentOnlineMatch=null;V3.pendingInvite=null;renderOnlineHomeLobby();if(was) setFriendFeedback("Le salon Duel a été fermé.","error");}};
+
+    /* Quand l'invitation envoyée est refusée/annulée, enlève l'attente visuelle. */
+    const originalSubscribeDuelsV3=subscribeToOnlineDuels;
+    subscribeToOnlineDuels=async function(){await originalSubscribeDuelsV3();};
+
+
+    /* Reprise automatique d'un salon/duel après rechargement. */
+    async function resumeActiveOnlineMatch() {
+        const client=getBrawlCloudClient(); if(!client)return;
+        const {data:{session}}=await client.auth.getSession(); if(!session?.user)return;
+        const uid=session.user.id;
+        const {data,error}=await client.from("matches").select("*").or(`player1_id.eq.${uid},player2_id.eq.${uid}`).in("status",["waiting","playing"]).order("created_at",{ascending:false}).limit(1);
+        if(error){console.warn("Reprise du salon impossible",error);return;}
+        if(data?.[0]) await startOnlineMatch(data[0].id);
+    }
+    const originalInitOnlineV3=initOnlineMultiplayer;
+    initOnlineMultiplayer=async function(){await originalInitOnlineV3();setTimeout(resumeActiveOnlineMatch,250);};
+    try {
+        const clientForResume=getBrawlCloudClient();
+        clientForResume?.auth?.onAuthStateChange((event)=>{if(event==="SIGNED_IN")setTimeout(resumeActiveOnlineMatch,450);});
+    } catch(_) {}
+
+    /* Le message de refus enlève aussi l'écran « invitation envoyée ». */
+    const originalFriendFeedbackV3=setFriendFeedback;
+    setFriendFeedback=function(message,type=""){
+        if(String(message||"").includes("Invitation Duel refusée")){V3.pendingInvite=null;setTimeout(renderOnlineHomeLobby,0);}
+        return originalFriendFeedbackV3(message,type);
+    };
+
+    /* Synchronise présence quand profil/skin/ressources changent. */
+    const originalSaveGameV3=saveGame;
+    let presenceSaveTimer=null;
+    saveGame=function(...args){const result=originalSaveGameV3(...args);clearTimeout(presenceSaveTimer);presenceSaveTimer=setTimeout(()=>{try{syncOnlinePresence();}catch(_){}},250);return result;};
+
+    /* Nettoyage du lobby si la partie est terminée et retour accueil. */
+    document.addEventListener("DOMContentLoaded",()=>{setTimeout(()=>{renderOnlineLobbyPlayers();renderOnlineHomeLobby();},350);});
+})();
+</script>
 </body>
 </html>
