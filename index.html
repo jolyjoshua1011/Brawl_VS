@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="theme-color" content="#080d16">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BRAWL VS</title>
 <!-- =====================================================
      BRAWL VS · PWA / INSTALLATION MOBILE
@@ -930,6 +930,164 @@
         width:53px !important;
         height:53px !important;
         min-height:53px !important;
+    }
+}
+</style>
+
+
+<style id="brawl-fixed-app-shell-v1">
+/* =====================================================
+   BRAWL VS · APP SHELL FIXE
+   Header toujours visible + navigation toujours visible.
+   Seul le contenu central peut défiler.
+===================================================== */
+:root{
+    --brawl-visible-height: 100dvh;
+    --brawl-header-height: 78px;
+    --brawl-footer-height: 78px;
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+    min-height:0 !important;
+    margin:0;
+    overflow:hidden !important;
+    overscroll-behavior:none;
+}
+
+body{
+    height:var(--brawl-visible-height, 100dvh) !important;
+    min-height:var(--brawl-visible-height, 100dvh) !important;
+    max-height:var(--brawl-visible-height, 100dvh) !important;
+}
+
+.phone{
+    height:min(844px, var(--brawl-visible-height, 100dvh)) !important;
+    max-height:var(--brawl-visible-height, 100dvh) !important;
+    overflow:hidden !important;
+}
+
+/* HEADER FIXE */
+.phone > header.arena-header{
+    position:absolute !important;
+    z-index:1000 !important;
+    top:0;
+    left:0;
+    right:0;
+    width:100%;
+    height:calc(
+        var(--brawl-header-height) +
+        env(safe-area-inset-top, 0px)
+    ) !important;
+    padding-top:calc(
+        10px +
+        env(safe-area-inset-top, 0px)
+    ) !important;
+}
+
+/* FOOTER / NAVIGATION FIXE */
+.phone > .bottom-nav{
+    position:absolute !important;
+    z-index:1000 !important;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:calc(
+        var(--brawl-footer-height) +
+        env(safe-area-inset-bottom, 0px)
+    ) !important;
+    padding-bottom:calc(
+        9px +
+        env(safe-area-inset-bottom, 0px)
+    ) !important;
+}
+
+/* Pages normales : entre header et footer. */
+.phone > .page:not(#battlePage){
+    position:absolute !important;
+    top:calc(
+        var(--brawl-header-height) +
+        env(safe-area-inset-top, 0px)
+    ) !important;
+    right:0;
+    bottom:calc(
+        var(--brawl-footer-height) +
+        env(safe-area-inset-bottom, 0px)
+    ) !important;
+    left:0;
+    width:100%;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+}
+
+/* Seul le centre de la page défile. */
+.phone > .page:not(#homePage):not(#battlePage){
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+}
+
+/* Accueil entièrement contenu entre le header et le footer. */
+.phone > #homePage.page{
+    overflow:hidden !important;
+}
+
+/* Combat = plein écran, car le JS masque header + footer. */
+.phone > #battlePage.page{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:100% !important;
+    max-height:100% !important;
+}
+
+/* Sur téléphone : prend exactement la hauteur réellement visible. */
+@media (max-width:430px){
+    body{
+        width:100vw;
+        height:var(--brawl-visible-height, 100dvh) !important;
+        min-height:var(--brawl-visible-height, 100dvh) !important;
+        max-height:var(--brawl-visible-height, 100dvh) !important;
+        align-items:stretch !important;
+    }
+
+    .phone{
+        width:100vw !important;
+        height:var(--brawl-visible-height, 100dvh) !important;
+        min-height:0 !important;
+        max-height:var(--brawl-visible-height, 100dvh) !important;
+        border:0 !important;
+        border-radius:0 !important;
+    }
+}
+
+/* Écrans bas : header/footer légèrement compactés. */
+@media (max-height:700px){
+    :root{
+        --brawl-header-height:70px;
+        --brawl-footer-height:70px;
+    }
+
+    .phone > header.arena-header{
+        padding-top:calc(
+            6px +
+            env(safe-area-inset-top, 0px)
+        ) !important;
+        padding-bottom:6px !important;
+    }
+
+    .phone > .bottom-nav{
+        padding-top:4px !important;
+        padding-bottom:calc(
+            5px +
+            env(safe-area-inset-bottom, 0px)
+        ) !important;
     }
 }
 </style>
@@ -42886,6 +43044,71 @@ if ("serviceWorker" in navigator) {
             });
     });
 }
+</script>
+
+
+<script id="brawl-visible-viewport-v1">
+(() => {
+    let lastHeight = 0;
+
+    function updateBrawlVisibleHeight() {
+        const viewportHeight =
+            window.visualViewport &&
+            Number.isFinite(window.visualViewport.height)
+                ? window.visualViewport.height
+                : window.innerHeight;
+
+        const height = Math.max(
+            320,
+            Math.round(viewportHeight || window.innerHeight || 844)
+        );
+
+        if (height === lastHeight) return;
+        lastHeight = height;
+
+        document.documentElement.style.setProperty(
+            "--brawl-visible-height",
+            height + "px"
+        );
+    }
+
+    updateBrawlVisibleHeight();
+
+    window.addEventListener(
+        "resize",
+        updateBrawlVisibleHeight,
+        { passive: true }
+    );
+
+    window.addEventListener(
+        "orientationchange",
+        () => {
+            setTimeout(updateBrawlVisibleHeight, 60);
+            setTimeout(updateBrawlVisibleHeight, 300);
+        },
+        { passive: true }
+    );
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener(
+            "resize",
+            updateBrawlVisibleHeight,
+            { passive: true }
+        );
+
+        window.visualViewport.addEventListener(
+            "scroll",
+            updateBrawlVisibleHeight,
+            { passive: true }
+        );
+    }
+
+    window.addEventListener(
+        "pageshow",
+        updateBrawlVisibleHeight,
+        { passive: true }
+    );
+})();
 </script>
 
 </body>
