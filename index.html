@@ -3121,6 +3121,38 @@
         </div>
     </section>
 
+    <section class="cloud-add-friend-panel" aria-labelledby="cloudAddFriendTitle">
+        <div class="cloud-add-friend-head">
+            <div>
+                <span class="cloud-add-friend-kicker">AJOUTER UN JOUEUR</span>
+                <strong id="cloudAddFriendTitle">CODE AMI OU PSEUDO</strong>
+            </div>
+            <span class="cloud-add-friend-icon">＋</span>
+        </div>
+        <p class="cloud-add-friend-help">
+            Entre un code du type <b>BVS-1234-ABCD-5678</b> ou le pseudo exact du joueur.
+        </p>
+        <div class="cloud-add-friend-row">
+            <input
+                id="friendSearchInput"
+                class="friend-search-input cloud-friend-search-input"
+                type="text"
+                maxlength="32"
+                placeholder="Code ami ou pseudo..."
+                autocomplete="off"
+                spellcheck="false"
+            >
+            <button
+                id="cloudSendFriendButton"
+                class="friend-send-button cloud-send-friend-button"
+                type="button"
+                onclick="sendFriendRequest()"
+            >
+                AJOUTER
+            </button>
+        </div>
+    </section>
+
     <section class="online-arena-panel" aria-labelledby="onlineArenaTitle">
         <div class="online-arena-heading">
             <div>
@@ -7892,6 +7924,7 @@ const CURRENT_SAVE_VERSION = 22;
 ===================================================== */
 const BRAWLVS_SUPABASE_URL = "https://oubtffbfpydxoiupazoo.supabase.co";
 const BRAWLVS_SUPABASE_KEY = "sb_publishable_r6bLLIF9HOs2Lcsu9Js-nw_glQbtMxc";
+const BRAWLVS_APP_URL = "https://jolyjoshua1011.github.io/Brawl_VS/";
 const BRAWLVS_CLOUD_TABLE = "game_saves";
 const BRAWLVS_CLOUD_META_KEY = "brawlvs_cloud_sync_meta";
 let brawlCloudClient = null;
@@ -25980,7 +26013,7 @@ async function submitCloudAuth() {
                 password,
                 options: {
                     data: { player_name: nickname },
-                    emailRedirectTo: window.location.href.split("#")[0]
+                    emailRedirectTo: BRAWLVS_APP_URL
                 }
             });
         }
@@ -42370,6 +42403,472 @@ function updateBattleActionHitChanceUI() {
 })();
 </script>
 
+
+
+<style id="brawl-v5-cloud-friends-style">
+/* =====================================================
+   BRAWL VS V5 · AMIS CLOUD + RETOUR AUTH EMAIL
+===================================================== */
+#friendsPage .cloud-add-friend-panel{
+    position:relative;
+    overflow:hidden;
+    margin:11px 0 12px;
+    padding:13px;
+    border:1px solid rgba(100,216,255,.28);
+    border-radius:18px 6px 18px 6px;
+    background:
+        radial-gradient(circle at 100% 0,rgba(255,61,220,.13),transparent 38%),
+        linear-gradient(145deg,rgba(18,39,62,.98),rgba(8,14,26,.98));
+    box-shadow:0 11px 25px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.06);
+}
+#friendsPage .cloud-add-friend-panel::before{
+    content:"";
+    position:absolute;
+    left:0;top:0;bottom:0;width:4px;
+    background:linear-gradient(180deg,#4edcff,#ff68c9);
+    box-shadow:0 0 15px rgba(78,220,255,.28);
+}
+#friendsPage .cloud-add-friend-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#friendsPage .cloud-add-friend-kicker{display:block;color:#82e8ff;font-size:7px;font-weight:1000;letter-spacing:2px}
+#friendsPage .cloud-add-friend-head strong{display:block;margin-top:3px;color:#fff;font-size:14px;font-weight:1000;font-style:italic}
+#friendsPage .cloud-add-friend-icon{width:32px;height:32px;display:grid;place-items:center;border:1px solid rgba(116,225,255,.30);border-radius:10px 3px 10px 3px;color:#d9f8ff;background:linear-gradient(145deg,rgba(53,191,255,.18),rgba(255,61,220,.12));font-size:21px;font-weight:1000}
+#friendsPage .cloud-add-friend-help{margin:8px 0 10px;color:#879bb1;font-size:8px;line-height:1.45;font-weight:800}
+#friendsPage .cloud-add-friend-help b{color:#c5efff}
+#friendsPage .cloud-add-friend-row{display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:7px}
+#friendsPage .cloud-friend-search-input{width:100%;min-width:0;height:42px;padding:0 11px;border:1px solid rgba(100,209,255,.24)!important;border-radius:12px 4px 12px 4px!important;color:#fff!important;background:rgba(4,10,19,.78)!important;font-size:11px!important;font-weight:900;outline:none;text-transform:none}
+#friendsPage .cloud-friend-search-input::placeholder{color:#65798f}
+#friendsPage .cloud-friend-search-input:focus{border-color:rgba(91,218,255,.72)!important;box-shadow:0 0 0 2px rgba(53,191,255,.08),0 0 18px rgba(53,191,255,.09)!important}
+#friendsPage .cloud-send-friend-button{height:42px!important;min-width:0!important;padding:0 8px!important;border-radius:12px 4px 12px 4px!important;color:#061e2d!important;background:linear-gradient(115deg,#8feeff,#47d5ff 58%,#ff7bc9 145%)!important;border:0!important;border-bottom:3px solid #176a90!important;font-size:9px!important;font-weight:1000!important;cursor:pointer!important}
+#friendsPage .cloud-send-friend-button:disabled{opacity:.48;cursor:not-allowed!important;filter:saturate(.5)}
+#friendsPage .friend-card .friend-avatar.has-online-profile img{width:100%;height:100%;object-fit:cover;display:block}
+#friendsPage .friend-card .friend-avatar{overflow:hidden}
+.auth-return-toast{
+    position:fixed;z-index:2147483647;left:50%;top:18px;transform:translateX(-50%);
+    width:min(350px,calc(100vw - 28px));padding:12px 14px;
+    border:1px solid rgba(91,231,155,.45);border-radius:14px 5px 14px 5px;
+    color:#d9ffe8;background:linear-gradient(145deg,rgba(19,65,48,.97),rgba(8,25,27,.98));
+    box-shadow:0 18px 45px rgba(0,0,0,.42),0 0 22px rgba(80,255,135,.10);
+    text-align:center;font-size:11px;font-weight:1000;letter-spacing:.2px;
+    animation:bvAuthToastIn .22s ease both;
+}
+@keyframes bvAuthToastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media(max-width:350px){#friendsPage .cloud-add-friend-row{grid-template-columns:1fr 76px}#friendsPage .cloud-send-friend-button{font-size:8px!important}}
+</style>
+
+<script id="brawl-v5-cloud-friends-script">
+(() => {
+    "use strict";
+
+    const FRIEND_TABLE = "friend_requests";
+    let friendRealtimeChannel = null;
+    let friendCloudLoadInProgress = false;
+
+    function currentCloudUserId() {
+        return brawlCloudSession?.user?.id || "";
+    }
+
+    function normalizedFriendQuery(value) {
+        return String(value || "").trim();
+    }
+
+    function isFriendCode(value) {
+        return /^BVS-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/i.test(String(value || "").trim());
+    }
+
+    async function findCloudFriendTarget(query) {
+        const client = getBrawlCloudClient();
+        if (!client) return null;
+        const raw = normalizedFriendQuery(query);
+        if (!raw) return null;
+
+        if (!isFriendCode(raw)) {
+            const { data, error } = await client
+                .from("profiles")
+                .select("id,username")
+                .eq("username_lower", raw.toLowerCase())
+                .maybeSingle();
+            if (error) throw error;
+            return data || null;
+        }
+
+        /*
+           Le code ami est dérivé de l'UUID du compte.
+           Pour ce petit jeu privé, on récupère les profils puis
+           on compare leur code calculé côté client.
+        */
+        const wanted = raw.toUpperCase();
+        const { data, error } = await client
+            .from("profiles")
+            .select("id,username");
+        if (error) throw error;
+        return (data || []).find(profile => getPersonalFriendCode(profile.id) === wanted) || null;
+    }
+
+    async function getRelationshipBetween(me, otherId) {
+        const client = getBrawlCloudClient();
+        if (!client || !me || !otherId) return null;
+        const { data, error } = await client
+            .from(FRIEND_TABLE)
+            .select("id,sender_id,receiver_id,status,created_at,updated_at")
+            .or(`and(sender_id.eq.${me},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${me})`)
+            .in("status", ["pending", "accepted"])
+            .order("created_at", { ascending: false })
+            .limit(1);
+        if (error) throw error;
+        return data?.[0] || null;
+    }
+
+    async function loadCloudFriends() {
+        if (friendCloudLoadInProgress) return;
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        const { data: { session }, error: sessionError } = await client.auth.getSession();
+        if (sessionError || !session?.user) return;
+
+        friendCloudLoadInProgress = true;
+        try {
+            brawlCloudSession = session;
+            const me = session.user.id;
+            const { data: rows, error } = await client
+                .from(FRIEND_TABLE)
+                .select("id,sender_id,receiver_id,status,created_at,updated_at")
+                .or(`sender_id.eq.${me},receiver_id.eq.${me}`)
+                .order("created_at", { ascending: true });
+            if (error) throw error;
+
+            const otherIds = [...new Set((rows || []).map(row => row.sender_id === me ? row.receiver_id : row.sender_id).filter(Boolean))];
+            let profiles = [];
+            if (otherIds.length) {
+                const profileResult = await client.from("profiles").select("id,username").in("id", otherIds);
+                if (profileResult.error) throw profileResult.error;
+                profiles = profileResult.data || [];
+            }
+            const names = new Map(profiles.map(profile => [profile.id, profile.username || "JOUEUR"]));
+            const onlineIds = new Set([...onlineLobbyPlayers.keys()].map(String));
+
+            const accepted = [];
+            const incoming = [];
+            const outgoing = [];
+
+            for (const row of rows || []) {
+                const otherId = row.sender_id === me ? row.receiver_id : row.sender_id;
+                const name = names.get(otherId) || "JOUEUR";
+                const common = {
+                    id: row.id,
+                    relationId: row.id,
+                    user_id: otherId,
+                    name,
+                    online: onlineIds.has(String(otherId)),
+                    createdAt: row.created_at ? Date.parse(row.created_at) : Date.now(),
+                    cloud: true
+                };
+
+                if (row.status === "accepted") {
+                    accepted.push({ ...common, id: "cloud-" + otherId });
+                }
+                else if (row.status === "pending" && row.receiver_id === me) {
+                    incoming.push(common);
+                }
+                else if (row.status === "pending" && row.sender_id === me) {
+                    outgoing.push(common);
+                }
+            }
+
+            state.friends = accepted;
+            state.friendRequests.incoming = incoming;
+            state.friendRequests.outgoing = outgoing;
+            renderFriends();
+        }
+        catch (error) {
+            console.error("Chargement des amis Supabase impossible :", error);
+            setFriendFeedback("Impossible de charger tes amis en ligne.", "error");
+        }
+        finally {
+            friendCloudLoadInProgress = false;
+        }
+    }
+
+    async function subscribeCloudFriends() {
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        const { data: { session } } = await client.auth.getSession();
+        if (!session?.user) return;
+
+        if (friendRealtimeChannel) {
+            try { await client.removeChannel(friendRealtimeChannel); } catch (_) {}
+            friendRealtimeChannel = null;
+        }
+
+        friendRealtimeChannel = client
+            .channel("brawlvs-friends-" + session.user.id)
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: FRIEND_TABLE },
+                () => setTimeout(loadCloudFriends, 80)
+            )
+            .subscribe();
+    }
+
+    /* -----------------------------------------------------
+       AJOUTER PAR CODE AMI OU PSEUDO
+    ----------------------------------------------------- */
+    sendFriendRequest = async function() {
+        const input = document.getElementById("friendSearchInput");
+        const button = document.getElementById("cloudSendFriendButton");
+        const query = normalizedFriendQuery(input?.value);
+        if (!query) {
+            setFriendFeedback("Entre un code ami ou un pseudo.", "error");
+            input?.focus();
+            return;
+        }
+
+        const client = getBrawlCloudClient();
+        if (!client) {
+            setFriendFeedback("Le cloud n'est pas disponible.", "error");
+            return;
+        }
+
+        if (button) button.disabled = true;
+        setFriendFeedback("Recherche du joueur...", "");
+
+        try {
+            const { data: { session } } = await client.auth.getSession();
+            if (!session?.user) {
+                setFriendFeedback("Connecte-toi pour ajouter des amis.", "error");
+                openAccountPopup("login");
+                return;
+            }
+            brawlCloudSession = session;
+            await ensureOnlineProfile();
+
+            const target = await findCloudFriendTarget(query);
+            if (!target) {
+                setFriendFeedback("Aucun joueur trouvé avec ce code ou ce pseudo.", "error");
+                return;
+            }
+            if (target.id === session.user.id) {
+                setFriendFeedback("Tu ne peux pas t'ajouter toi-même.", "error");
+                return;
+            }
+
+            const existing = await getRelationshipBetween(session.user.id, target.id);
+            if (existing?.status === "accepted") {
+                setFriendFeedback(target.username + " est déjà dans tes amis.", "error");
+                return;
+            }
+            if (existing?.status === "pending") {
+                if (existing.receiver_id === session.user.id) {
+                    setFriendFeedback(target.username + " t'a déjà envoyé une demande. Va dans DEMANDES.", "error");
+                    switchFriendsTab("requests");
+                } else {
+                    setFriendFeedback("Demande déjà envoyée à " + target.username + ".", "error");
+                }
+                return;
+            }
+
+            const { error } = await client.from(FRIEND_TABLE).insert({
+                sender_id: session.user.id,
+                receiver_id: target.id,
+                status: "pending"
+            });
+            if (error) throw error;
+
+            if (input) input.value = "";
+            setFriendFeedback("Demande d'ami envoyée à " + target.username + " !", "success");
+            switchFriendsTab("requests");
+            await loadCloudFriends();
+        }
+        catch (error) {
+            console.error("Envoi de demande d'ami impossible :", error);
+            setFriendFeedback(
+                error?.code === "23505"
+                    ? "Une demande ou une amitié existe déjà avec ce joueur."
+                    : "Impossible d'envoyer la demande d'ami.",
+                "error"
+            );
+            await loadCloudFriends();
+        }
+        finally {
+            if (button) button.disabled = false;
+        }
+    };
+
+    acceptFriendRequest = async function(requestId) {
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        try {
+            const { error } = await client.rpc("accept_friend_request", { request_id: requestId });
+            if (error) throw error;
+            setFriendFeedback("Demande acceptée !", "success");
+            await loadCloudFriends();
+            switchFriendsTab("friends");
+        } catch (error) {
+            console.error(error);
+            setFriendFeedback("Impossible d'accepter cette demande.", "error");
+        }
+    };
+
+    rejectFriendRequest = async function(requestId) {
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        try {
+            const { error } = await client.rpc("reject_friend_request", { request_id: requestId });
+            if (error) throw error;
+            setFriendFeedback("Demande refusée.", "success");
+            await loadCloudFriends();
+        } catch (error) {
+            console.error(error);
+            setFriendFeedback("Impossible de refuser cette demande.", "error");
+        }
+    };
+
+    cancelFriendRequest = async function(requestId) {
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        try {
+            const { error } = await client.rpc("cancel_friend_request", { request_id: requestId });
+            if (error) throw error;
+            setFriendFeedback("Demande annulée.", "success");
+            await loadCloudFriends();
+        } catch (error) {
+            console.error(error);
+            setFriendFeedback("Impossible d'annuler cette demande.", "error");
+        }
+    };
+
+    removeFriend = async function(friendId) {
+        const friend = (state.friends || []).find(item => item.id === friendId);
+        if (!friend) return;
+        if (!confirm("Retirer " + friend.name + " de ta liste d'amis ?")) return;
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        try {
+            const { error } = await client.rpc("remove_friendship", { other_user_id: friend.user_id });
+            if (error) throw error;
+            setFriendFeedback(friend.name + " a été retiré de tes amis.", "success");
+            await loadCloudFriends();
+        } catch (error) {
+            console.error(error);
+            setFriendFeedback("Impossible de retirer cet ami.", "error");
+        }
+    };
+
+    /* -----------------------------------------------------
+       SYNCHRONISATION AUTOMATIQUE DES AMIS
+    ----------------------------------------------------- */
+    async function startCloudFriends() {
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        const { data: { session } } = await client.auth.getSession();
+        if (!session?.user) return;
+        brawlCloudSession = session;
+        await loadCloudFriends();
+        await subscribeCloudFriends();
+    }
+
+    /* La présence peut changer sans modifier friend_requests. */
+    const previousRefreshPresenceV5 = refreshOnlinePresenceFromChannel;
+    refreshOnlinePresenceFromChannel = function(...args) {
+        const result = previousRefreshPresenceV5(...args);
+        setTimeout(loadCloudFriends, 60);
+        return result;
+    };
+
+    /* -----------------------------------------------------
+       CONFIRMATION E-MAIL -> RETOUR SUR BRAWL VS
+    ----------------------------------------------------- */
+    function authReturnDetected() {
+        const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+        const query = new URLSearchParams(location.search);
+        return Boolean(
+            hash.get("access_token") ||
+            hash.get("refresh_token") ||
+            hash.get("type") ||
+            query.get("code") ||
+            query.get("token_hash") ||
+            query.get("type")
+        );
+    }
+
+    function showAuthReturnToast(message) {
+        document.querySelector(".auth-return-toast")?.remove();
+        const el = document.createElement("div");
+        el.className = "auth-return-toast";
+        el.textContent = message;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4200);
+    }
+
+    async function finishEmailAuthReturn() {
+        if (!authReturnDetected()) return false;
+        const client = getBrawlCloudClient();
+        if (!client) return false;
+        try {
+            const { data, error } = await client.auth.getSession();
+            if (error) throw error;
+            if (!data.session?.user) return false;
+            brawlCloudSession = data.session;
+
+            const metadataName = String(data.session.user.user_metadata?.player_name || "").trim();
+            if (metadataName && (!state.profile.name || state.profile.name === "JOUEUR")) {
+                state.profile.name = metadataName.slice(0, 16);
+                try { localStorage.setItem("brawlvs_username", state.profile.name); } catch (_) {}
+                const nameEl = document.getElementById("playerName");
+                if (nameEl) nameEl.textContent = state.profile.name;
+            }
+
+            await ensureOnlineProfile();
+            updateCloudAccountUI();
+            setCloudStatus("online", "E-mail confirmé · compte connecté.");
+            closePopup("loginPopup");
+            showAuthReturnToast("✓ E-mail confirmé · connexion BRAWL VS validée");
+
+            /* Nettoie les tokens/code de l'URL après récupération de la session. */
+            try { history.replaceState({}, document.title, BRAWLVS_APP_URL); } catch (_) {}
+            setTimeout(startCloudFriends, 80);
+            return true;
+        } catch (error) {
+            console.error("Retour de confirmation e-mail impossible :", error);
+            showAuthReturnToast("La confirmation a été reçue, mais la connexion n'a pas pu être finalisée.");
+            return false;
+        }
+    }
+
+    const previousInitCloudV5 = initBrawlCloud;
+    initBrawlCloud = async function(...args) {
+        const result = await previousInitCloudV5(...args);
+        await finishEmailAuthReturn();
+        setTimeout(startCloudFriends, 120);
+        return result;
+    };
+
+    try {
+        const client = getBrawlCloudClient();
+        client?.auth?.onAuthStateChange((event, session) => {
+            /* Ne pas faire de requêtes Supabase await directement dans ce callback. */
+            setTimeout(() => {
+                brawlCloudSession = session || null;
+                if (event === "SIGNED_IN" && session?.user) {
+                    updateCloudAccountUI();
+                    ensureOnlineProfile().then(startCloudFriends).catch(console.error);
+                }
+                if (event === "SIGNED_OUT") {
+                    state.friends = [];
+                    state.friendRequests.incoming = [];
+                    state.friendRequests.outgoing = [];
+                    renderFriends();
+                }
+            }, 0);
+        });
+    } catch (_) {}
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(startCloudFriends, 500);
+    });
+
+    window.loadCloudFriends = loadCloudFriends;
+})();
+</script>
 
 <!-- =====================================================
      BRAWL VS · SERVICE WORKER
