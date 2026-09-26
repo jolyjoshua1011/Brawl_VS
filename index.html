@@ -42213,6 +42213,7 @@ function updateBattleActionHitChanceUI() {
     "use strict";
 
     const V4 = {
+        distanceChooserFix: true,
         actionLocked: false,
         actionLockedAtSeq: -1,
         friendlyMatchId: null
@@ -42461,13 +42462,53 @@ function updateBattleActionHitChanceUI() {
             return;
         }
 
-        /* Deuxième action terminée : l'autre joueur obtient le prochain tour. */
+        /*
+           Deuxième action terminée :
+           le joueur qui N'A PAS choisi la distance précédente
+           devient le prochain joueur à choisir.
+
+           IMPORTANT EN ONLINE :
+           "player" et "bot" sont relatifs à chaque appareil.
+           On utilise donc chooser_id (ID Supabase global) pour
+           savoir qui avait réellement choisi la distance.
+        */
         battleState.distanceRoundAttackIndex = 0;
-        if (actor === "player") {
-            startDistanceRound("bot");
-        } else {
-            startDistanceRound("player");
+
+        const meta = getOnlineBattleMeta();
+        const serverBattle = currentOnlineMatch?.game_state?.battle;
+        const previousChooserId =
+            serverBattle?.chooser_id ||
+            (
+                battleState.distanceRoundChooser === "player"
+                    ? meta?.me
+                    : meta?.opponent
+            );
+
+        if (!meta || !previousChooserId) {
+            /*
+               Sécurité : si les IDs réseau ne sont pas encore disponibles,
+               on alterne simplement le chooser local.
+            */
+            const fallbackNextChooser =
+                battleState.distanceRoundChooser === "player"
+                    ? "bot"
+                    : "player";
+
+            startDistanceRound(fallbackNextChooser);
+            return;
         }
+
+        const nextChooserId =
+            previousChooserId === meta.me
+                ? meta.opponent
+                : meta.me;
+
+        const nextChooser =
+            nextChooserId === meta.me
+                ? "player"
+                : "bot";
+
+        startDistanceRound(nextChooser);
     };
 
     /* -----------------------------------------------------
