@@ -43063,27 +43063,13 @@ function updateBattleActionHitChanceUI() {
        Le marqueur est cloud-sync via trophyRoadClaimed.
     ----------------------------------------------------- */
     function grantConnectedMegaBoxOnce() {
-        if (!brawlCloudSession?.user?.id || !Array.isArray(state?.trophyRoadClaimed)) return false;
-        if (state.trophyRoadClaimed.includes(LOGIN_MEGA_SENTINEL)) return false;
-
-        state.trophyRoadClaimed.push(LOGIN_MEGA_SENTINEL);
-        saveGame();
-
-        let attempts = 0;
-        const openGift = () => {
-            attempts += 1;
-            if (boxOpeningActive) {
-                if (attempts < 30) setTimeout(openGift, 500);
-                return;
-            }
-            const opened = openFreeTrophyRoadBox("mega");
-            if (!opened && attempts < 30) {
-                setTimeout(openGift, 500);
-            }
-        };
-
-        setTimeout(openGift, 700);
-        return true;
+        /*
+           V18 : le cadeau de connexion n'est plus ouvert automatiquement.
+           Il est désormais présenté dans la Boîte de réception afin que
+           le joueur choisisse lui-même quand récupérer sa Mégaboîte.
+        */
+        try { window.BrawlVSInbox?.refresh?.(); } catch (_) {}
+        return false;
     }
 
     const v3InitOnlineMultiplayer = initOnlineMultiplayer;
@@ -54046,6 +54032,340 @@ if ("serviceWorker" in navigator) {
             }, 40);
         }
     });
+})();
+</script>
+
+
+
+<!-- =====================================================
+     BRAWL VS V18 · BOÎTE DE RÉCEPTION
+====================================================== -->
+<style id="brawl-v18-inbox-style">
+#homePage.online-duel-lobby-active .home-inbox-side-button{display:none!important}
+#homePage .home-inbox-side-button{
+    position:absolute;
+    z-index:26;
+    top:206px;
+    left:7px;
+    width:57px;
+    min-height:58px;
+    padding:5px 3px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    border:1px solid rgba(255,105,184,.52);
+    border-bottom:3px solid rgba(162,43,111,.9);
+    border-radius:13px 4px 13px 4px;
+    color:#ffe3f3;
+    background:
+        radial-gradient(circle at 50% 18%,rgba(255,105,184,.18),transparent 52%),
+        linear-gradient(145deg,rgba(77,33,69,.98),rgba(24,19,38,.99));
+    box-shadow:0 7px 14px rgba(0,0,0,.44),0 0 16px rgba(255,105,184,.12),inset 0 1px rgba(255,255,255,.12);
+    font-family:inherit;
+    font-size:7px;
+    line-height:1;
+    font-weight:1000;
+    letter-spacing:.42px;
+    cursor:pointer;
+    transition:transform .15s ease,filter .15s ease,border-color .15s ease;
+}
+#homePage .home-inbox-side-button:hover{transform:translateY(-2px);filter:brightness(1.08);border-color:rgba(255,151,208,.82)}
+#homePage .home-inbox-side-button:active{transform:translateY(1px) scale(.97)}
+#homePage .home-inbox-side-icon{
+    width:29px;height:26px;display:grid;place-items:center;border-radius:9px 3px 9px 3px;
+    color:#2d0c25;background:linear-gradient(145deg,#ffb3dc,#ff67b8);box-shadow:0 4px 10px rgba(255,105,184,.22),inset 0 1px rgba(255,255,255,.45)
+}
+#homePage .home-inbox-side-icon svg{width:19px;height:19px}
+#homePage .inbox-notification-dot{
+    position:absolute;right:-3px;top:-4px;width:13px;height:13px;border-radius:50%;display:none;
+    background:#ff355d;border:2px solid #0a111d;box-shadow:0 0 0 2px rgba(255,53,93,.16),0 0 12px rgba(255,53,93,.9);
+    animation:brawlInboxDotPulse 1.25s ease-in-out infinite;
+}
+#homePage .inbox-notification-dot.visible{display:block}
+@keyframes brawlInboxDotPulse{0%,100%{transform:scale(.9)}50%{transform:scale(1.15)}}
+
+.brawl-inbox-overlay{
+    position:absolute;inset:0;z-index:2600;display:none;align-items:center;justify-content:center;padding:14px;
+    background:rgba(2,6,13,.78);backdrop-filter:blur(9px);
+}
+.brawl-inbox-overlay.active{display:flex}
+.brawl-inbox-panel{
+    position:relative;width:100%;max-width:354px;max-height:760px;overflow:hidden;display:flex;flex-direction:column;
+    border:1px solid rgba(116,215,255,.48);border-radius:23px 7px 23px 7px;
+    background:radial-gradient(circle at 100% 0,rgba(255,83,181,.16),transparent 35%),linear-gradient(155deg,#17314c 0%,#0d1729 58%,#141225 100%);
+    box-shadow:0 28px 70px rgba(0,0,0,.72),0 0 30px rgba(53,191,255,.10),inset 0 1px rgba(255,255,255,.08);
+}
+.brawl-inbox-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 16px 13px;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(110deg,rgba(53,191,255,.10),rgba(255,105,184,.08))}
+.brawl-inbox-kicker{color:#82ddff;font-size:8px;font-weight:1000;letter-spacing:2px;text-transform:uppercase}
+.brawl-inbox-title{margin-top:3px;font-size:25px;line-height:1;font-style:italic;font-weight:1000;letter-spacing:-1px;text-transform:uppercase}
+.brawl-inbox-close{width:36px;height:36px;border:1px solid rgba(255,141,202,.38);border-radius:11px 4px 11px 4px;color:#ffe4f3;background:rgba(255,105,184,.10);font-size:25px;line-height:1;cursor:pointer}
+.brawl-inbox-summary{padding:9px 16px;color:#8fa6bd;font-size:8.5px;font-weight:900;letter-spacing:.65px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.05)}
+.brawl-inbox-list{min-height:0;overflow-y:auto;padding:11px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:#335576 transparent}
+.brawl-inbox-message{position:relative;overflow:hidden;padding:12px;border-radius:17px 5px 17px 5px;text-align:left;border:1px solid rgba(255,255,255,.08);background:linear-gradient(145deg,rgba(20,37,58,.98),rgba(10,18,31,.99));box-shadow:0 7px 18px rgba(0,0,0,.26)}
+.brawl-inbox-message.unread{border-color:rgba(80,205,255,.48);box-shadow:0 7px 18px rgba(0,0,0,.26),inset 3px 0 #45cfff}
+.brawl-inbox-message.gift{background:radial-gradient(circle at 100% 0,rgba(255,200,87,.15),transparent 42%),linear-gradient(145deg,rgba(42,39,42,.98),rgba(16,22,32,.99));border-color:rgba(255,200,87,.27)}
+.brawl-inbox-message.patch{background:radial-gradient(circle at 100% 0,rgba(255,105,184,.13),transparent 43%),linear-gradient(145deg,rgba(37,30,51,.98),rgba(14,19,34,.99))}
+.brawl-inbox-message-top{display:flex;align-items:flex-start;gap:10px}
+.brawl-inbox-message-icon{width:47px;height:47px;flex:0 0 47px;display:grid;place-items:center;border-radius:13px 4px 13px 4px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04)}
+.brawl-inbox-message-icon img{width:43px;height:43px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(0,0,0,.36))}
+.brawl-inbox-message-icon svg{width:27px;height:27px;color:#ff86c6}
+.brawl-inbox-copy{min-width:0;flex:1}
+.brawl-inbox-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:#7e91a7;font-size:7.5px;font-weight:1000;letter-spacing:.8px;text-transform:uppercase}
+.brawl-inbox-new{padding:3px 5px;border-radius:5px;color:white;background:#ff355d;box-shadow:0 0 10px rgba(255,53,93,.28)}
+.brawl-inbox-message h3{margin:4px 0 0;color:#fff;font-size:15px;line-height:1.08;font-weight:1000;text-transform:uppercase}
+.brawl-inbox-message p{margin:8px 0 0;color:#aebdcd;font-size:10px;line-height:1.48;font-weight:750}
+.brawl-inbox-message strong.nerf-highlight{color:#ff9bcf}
+.brawl-inbox-reward{margin-top:10px;padding:8px 9px;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,200,87,.20);border-radius:10px 3px 10px 3px;background:rgba(255,200,87,.07)}
+.brawl-inbox-reward img{width:34px;height:34px;object-fit:contain}.brawl-inbox-reward span{display:flex;flex-direction:column;gap:2px}.brawl-inbox-reward small{color:#9a8b64;font-size:7px;font-weight:1000;letter-spacing:.8px}.brawl-inbox-reward b{color:#ffe298;font-size:12px;font-weight:1000}
+.brawl-inbox-claim{width:100%;min-height:39px;margin-top:9px;border:none;border-bottom:4px solid #9e6a12;border-radius:11px 4px 11px 4px;color:#2b1b00;background:linear-gradient(135deg,#fff2a0,#ffc857);font-size:11px;font-weight:1000;letter-spacing:.6px;cursor:pointer;box-shadow:0 7px 16px rgba(255,200,87,.13)}
+.brawl-inbox-claim:disabled{color:#7e8793;background:#273140;border-bottom-color:#171d26;cursor:default;box-shadow:none}
+.brawl-inbox-claimed{margin-top:9px;padding:9px;text-align:center;border-radius:9px;color:#68ff99;background:rgba(80,255,135,.07);border:1px solid rgba(80,255,135,.18);font-size:9px;font-weight:1000;letter-spacing:.7px}
+.brawl-inbox-empty{padding:30px 15px;text-align:center;color:#718298;font-size:10px;font-weight:900}
+@media(max-height:760px){#homePage .home-inbox-side-button{top:226px}.brawl-inbox-panel{max-height:690px}}
+@media(max-height:650px){#homePage .home-inbox-side-button{top:214px;min-height:52px}.brawl-inbox-panel{max-height:600px}}
+</style>
+
+<script id="brawl-v18-inbox-script">
+(() => {
+    "use strict";
+
+    const LOGIN_MEGA_SENTINEL = 990001;
+    const INBOX_VERSION = 1;
+    const COLT_PATCH_ID = "patch-colt-distance1-nerf-v1";
+    const LOGIN_GIFT_ID = "login-megabox-gift-v1";
+
+    function currentInboxUserKey(){
+        return brawlCloudSession?.user?.id || "guest";
+    }
+
+    function inboxStorageKey(){
+        return "brawlvs_inbox_v" + INBOX_VERSION + "_" + currentInboxUserKey();
+    }
+
+    function loadInboxPrefs(){
+        try{
+            const parsed = JSON.parse(localStorage.getItem(inboxStorageKey()) || "{}");
+            return {
+                read: Array.isArray(parsed.read) ? [...new Set(parsed.read.filter(Boolean))] : []
+            };
+        }catch(_){
+            return {read:[]};
+        }
+    }
+
+    function saveInboxPrefs(prefs){
+        try{
+            localStorage.setItem(inboxStorageKey(), JSON.stringify({read:[...new Set(prefs.read || [])]}));
+        }catch(_){}
+    }
+
+    function isLoggedIn(){
+        return Boolean(brawlCloudSession?.user?.id);
+    }
+
+    function loginGiftClaimed(){
+        return Array.isArray(state?.trophyRoadClaimed) && state.trophyRoadClaimed.includes(LOGIN_MEGA_SENTINEL);
+    }
+
+    function getMessages(){
+        const messages = [];
+        if(isLoggedIn()){
+            messages.push({
+                id: LOGIN_GIFT_ID,
+                kind: "gift",
+                title: "CONNEXION RÉUSSIE !",
+                label: "CADEAU DE CONNEXION",
+                date: "BIENVENUE",
+                icon: "Icon/Mega_Box.webp",
+                body: "Ton compte BRAWL VS est bien connecté. Pour fêter ta connexion, on t'offre une Mégaboîte.",
+                reward: true
+            });
+        }
+        messages.push({
+            id: COLT_PATCH_ID,
+            kind: "patch",
+            title: "ÉQUILIBRAGE DE COLT",
+            label: "MISE À JOUR",
+            date: "27 SEPT. 2026",
+            icon: null,
+            body: "Colt a été nerf : à distance 1, il ne touche plus systématiquement ses 6 balles. Il touche désormais aléatoirement de 1 à 6 balles, ou de 1 à 7 avec son Pouvoir Star. Au moins une balle touche toujours."
+        });
+        return messages;
+    }
+
+    function ensureInboxDom(){
+        const home = document.getElementById("homePage");
+        const phone = document.querySelector(".phone");
+        if(!home || !phone) return false;
+
+        if(!document.getElementById("homeInboxButton")){
+            const button = document.createElement("button");
+            button.id = "homeInboxButton";
+            button.type = "button";
+            button.className = "home-inbox-side-button";
+            button.setAttribute("aria-label", "Ouvrir la boîte de réception");
+            button.innerHTML = `
+                <span class="home-inbox-side-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M4 6.5H20V18H4V6.5Z" stroke="currentColor" stroke-width="1.8"/><path d="M4.8 7.4L12 13L19.2 7.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span>RÉCEPTION</span>
+                <i id="inboxNotificationDot" class="inbox-notification-dot" aria-hidden="true"></i>
+            `;
+            button.addEventListener("click", openInbox);
+            home.appendChild(button);
+        }
+
+        if(!document.getElementById("brawlInboxOverlay")){
+            const overlay = document.createElement("div");
+            overlay.id = "brawlInboxOverlay";
+            overlay.className = "brawl-inbox-overlay";
+            overlay.setAttribute("aria-hidden", "true");
+            overlay.innerHTML = `
+                <section class="brawl-inbox-panel" role="dialog" aria-modal="true" aria-labelledby="brawlInboxTitle">
+                    <header class="brawl-inbox-header">
+                        <div><div class="brawl-inbox-kicker">BRAWL VS · MESSAGES</div><div id="brawlInboxTitle" class="brawl-inbox-title">BOÎTE DE RÉCEPTION</div></div>
+                        <button type="button" class="brawl-inbox-close" id="brawlInboxClose" aria-label="Fermer">×</button>
+                    </header>
+                    <div id="brawlInboxSummary" class="brawl-inbox-summary"></div>
+                    <div id="brawlInboxList" class="brawl-inbox-list"></div>
+                </section>
+            `;
+            overlay.addEventListener("click", e => { if(e.target === overlay) closeInbox(); });
+            phone.appendChild(overlay);
+            overlay.querySelector("#brawlInboxClose")?.addEventListener("click", closeInbox);
+        }
+        return true;
+    }
+
+    function unreadCount(){
+        const prefs = loadInboxPrefs();
+        return getMessages().filter(m => !prefs.read.includes(m.id)).length;
+    }
+
+    function updateInboxDot(){
+        if(!ensureInboxDom()) return;
+        const dot = document.getElementById("inboxNotificationDot");
+        dot?.classList.toggle("visible", unreadCount() > 0);
+    }
+
+    function renderInbox(){
+        if(!ensureInboxDom()) return;
+        const prefs = loadInboxPrefs();
+        const messages = getMessages();
+        const list = document.getElementById("brawlInboxList");
+        const summary = document.getElementById("brawlInboxSummary");
+        if(summary){
+            const unread = messages.filter(m => !prefs.read.includes(m.id)).length;
+            summary.textContent = unread > 0 ? `${unread} NOUVEAU${unread > 1 ? "X" : ""} MESSAGE${unread > 1 ? "S" : ""}` : `${messages.length} MESSAGE${messages.length > 1 ? "S" : ""} · TOUT EST LU`;
+        }
+        if(!list) return;
+        list.innerHTML = messages.map(message => {
+            const unread = !prefs.read.includes(message.id);
+            const icon = message.icon
+                ? `<img src="${message.icon}" alt="">`
+                : `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 18V8M9 18V11M13 18V5M17 18V9M21 18V13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 18H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+            let action = "";
+            if(message.reward){
+                action = loginGiftClaimed()
+                    ? `<div class="brawl-inbox-claimed">✓ MÉGABOÎTE DÉJÀ RÉCUPÉRÉE</div>`
+                    : `<div class="brawl-inbox-reward"><img src="Icon/Mega_Box.webp" alt="Mégaboîte"><span><small>CADEAU</small><b>1 MÉGABOÎTE</b></span></div><button type="button" class="brawl-inbox-claim" data-inbox-claim="mega">RÉCUPÉRER</button>`;
+            }
+            const body = message.kind === "patch"
+                ? `Colt a été nerf : à distance 1, il <strong class="nerf-highlight">ne touche plus systématiquement ses 6 balles</strong>. Il touche désormais aléatoirement de 1 à 6 balles, ou de 1 à 7 avec son Pouvoir Star. Au moins une balle touche toujours.`
+                : message.body;
+            return `
+                <article class="brawl-inbox-message ${message.kind} ${unread ? "unread" : ""}" data-message-id="${message.id}">
+                    <div class="brawl-inbox-message-top">
+                        <div class="brawl-inbox-message-icon">${icon}</div>
+                        <div class="brawl-inbox-copy">
+                            <div class="brawl-inbox-meta">${unread ? `<span class="brawl-inbox-new">NOUVEAU</span>` : ""}<span>${message.label}</span><span>·</span><span>${message.date}</span></div>
+                            <h3>${message.title}</h3>
+                        </div>
+                    </div>
+                    <p>${body}</p>
+                    ${action}
+                </article>
+            `;
+        }).join("");
+
+        list.querySelector('[data-inbox-claim="mega"]')?.addEventListener("click", claimLoginMegaBox);
+    }
+
+    function markVisibleMessagesRead(){
+        const prefs = loadInboxPrefs();
+        getMessages().forEach(m => { if(!prefs.read.includes(m.id)) prefs.read.push(m.id); });
+        saveInboxPrefs(prefs);
+        updateInboxDot();
+    }
+
+    function openInbox(){
+        if(!ensureInboxDom()) return;
+        renderInbox();
+        const overlay = document.getElementById("brawlInboxOverlay");
+        overlay?.classList.add("active");
+        overlay?.setAttribute("aria-hidden", "false");
+        markVisibleMessagesRead();
+        renderInbox();
+    }
+
+    function closeInbox(){
+        const overlay = document.getElementById("brawlInboxOverlay");
+        overlay?.classList.remove("active");
+        overlay?.setAttribute("aria-hidden", "true");
+    }
+
+    function claimLoginMegaBox(){
+        if(!isLoggedIn() || loginGiftClaimed()){
+            renderInbox();
+            return;
+        }
+        if(typeof boxOpeningActive !== "undefined" && boxOpeningActive) return;
+        if(!Array.isArray(state.trophyRoadClaimed)) state.trophyRoadClaimed = [];
+
+        /* Marque le cadeau AVANT l'ouverture pour empêcher tout double clic. */
+        state.trophyRoadClaimed.push(LOGIN_MEGA_SENTINEL);
+        saveGame();
+        renderInbox();
+        updateInboxDot();
+        closeInbox();
+
+        setTimeout(() => {
+            const opened = typeof openFreeTrophyRoadBox === "function" && openFreeTrophyRoadBox("mega");
+            if(!opened){
+                /* Si l'ouverture échoue réellement, on rend le cadeau récupérable. */
+                state.trophyRoadClaimed = state.trophyRoadClaimed.filter(v => v !== LOGIN_MEGA_SENTINEL);
+                saveGame();
+                renderInbox();
+            }
+        }, 220);
+    }
+
+    function refresh(){
+        ensureInboxDom();
+        renderInbox();
+        updateInboxDot();
+    }
+
+    window.BrawlVSInbox = {open:openInbox, close:closeInbox, refresh, updateDot:updateInboxDot};
+    window.openBrawlInbox = openInbox;
+    window.closeBrawlInbox = closeInbox;
+
+    function boot(){
+        refresh();
+        setTimeout(refresh, 500);
+        setTimeout(refresh, 1800);
+    }
+
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, {once:true});
+    else boot();
+
+    /* Une connexion/déconnexion peut ajouter ou retirer le message de bienvenue. */
+    try{
+        const client = getBrawlCloudClient();
+        client?.auth?.onAuthStateChange(() => setTimeout(refresh, 120));
+    }catch(_){}
 })();
 </script>
 
