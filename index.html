@@ -54034,3 +54034,311 @@ if ("serviceWorker" in navigator) {
     });
 })();
 </script>
+
+<!-- =========================================================
+     BRAWL VS ONLINE V17 · PRÉSENCE MOBILE RÉSILIENTE
+     - Une clé de présence distincte par appareil / onglet.
+     - Détecte un canal Realtime mort, fermé ou désabonné.
+     - Recrée automatiquement la présence après coupure réseau,
+       retour au premier plan, reprise PWA ou refresh de session.
+     - Republie profil + EN COMBAT après chaque reconnexion.
+========================================================= -->
+<script id="brawl-v17-mobile-presence-resilience">
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V17_MOBILE_PRESENCE_RESILIENCE__) return;
+    window.__BRAWL_V17_MOBILE_PRESENCE_RESILIENCE__ = true;
+
+    const CHECK_MS_V17 = 4000;
+    const RESTART_COOLDOWN_MS_V17 = 1200;
+    const SUBSCRIBE_TIMEOUT_MS_V17 = 7000;
+    const DEVICE_KEY_V17 = "brawlvs_presence_device_v17";
+
+    let reconnectPromiseV17 = null;
+    let lastRestartAtV17 = 0;
+    let lastGoodTrackAtV17 = 0;
+
+    function getDevicePresenceIdV17() {
+        try {
+            let id = sessionStorage.getItem(DEVICE_KEY_V17);
+            if (!id) {
+                id = (crypto?.randomUUID?.() || (
+                    Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+                )).replace(/[^a-zA-Z0-9-]/g, "").slice(0, 48);
+                sessionStorage.setItem(DEVICE_KEY_V17, id);
+            }
+            return id;
+        } catch (_) {
+            return "device-" + Math.random().toString(36).slice(2, 14);
+        }
+    }
+
+    const devicePresenceIdV17 = getDevicePresenceIdV17();
+
+    function channelStateV17(channel = onlinePresenceChannel) {
+        return String(channel?.state || channel?._state || "").toLowerCase();
+    }
+
+    function channelJoinedV17(channel = onlinePresenceChannel) {
+        const state = channelStateV17(channel);
+        return state === "joined" || state === "subscribed";
+    }
+
+    function realtimeConnectedV17(client) {
+        try {
+            if (typeof client?.realtime?.isConnected === "function") {
+                return Boolean(client.realtime.isConnected());
+            }
+        } catch (_) {}
+        return navigator.onLine !== false;
+    }
+
+    function trackSucceededV17(result) {
+        if (result == null) return true;
+        if (typeof result === "string") {
+            const value = result.toLowerCase();
+            return value === "ok" || value === "success";
+        }
+        if (typeof result === "object") {
+            const value = String(result.status || result.result || "").toLowerCase();
+            return !value || value === "ok" || value === "success";
+        }
+        return true;
+    }
+
+    /* Ajoute un identifiant local à la meta Presence sans modifier l'user_id. */
+    if (typeof getOnlinePresencePayload === "function") {
+        const payloadBeforeV17 = getOnlinePresencePayload;
+        getOnlinePresencePayload = function(session) {
+            return {
+                ...payloadBeforeV17(session),
+                presence_device_id: devicePresenceIdV17,
+                presence_ping_at: new Date().toISOString()
+            };
+        };
+    }
+
+    async function getSessionV17(client) {
+        try {
+            const { data, error } = await client.auth.getSession();
+            if (error || !data?.session?.user) return null;
+            brawlCloudSession = data.session;
+            return data.session;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    async function disposePresenceChannelV17(client) {
+        const oldChannel = onlinePresenceChannel;
+        onlinePresenceChannel = null;
+        if (!oldChannel) return;
+        try {
+            if (typeof oldChannel.untrack === "function") {
+                await oldChannel.untrack().catch?.(() => {});
+            }
+        } catch (_) {}
+        try {
+            await client.removeChannel(oldChannel);
+        } catch (_) {
+            try { await oldChannel.unsubscribe?.(); } catch (_) {}
+        }
+    }
+
+    async function createPresenceChannelV17(client, session) {
+        const userId = String(session.user.id || "");
+        if (!userId) return false;
+
+        try {
+            if (typeof client?.realtime?.connect === "function" && !realtimeConnectedV17(client)) {
+                client.realtime.connect();
+            }
+        } catch (_) {}
+
+        const channel = client.channel(
+            "brawlvs-online-lobby",
+            {
+                config: {
+                    presence: {
+                        // Une connexion mobile et une connexion PC du même compte
+                        // ne s'écrasent plus au niveau de la clé Realtime.
+                        key: `${userId}:${devicePresenceIdV17}`
+                    }
+                }
+            }
+        );
+
+        onlinePresenceChannel = channel;
+
+        channel
+            .on("presence", { event: "sync" }, () => {
+                try { refreshOnlinePresenceFromChannel(); } catch (_) {}
+            })
+            .on("presence", { event: "join" }, () => {
+                try { refreshOnlinePresenceFromChannel(); } catch (_) {}
+            })
+            .on("presence", { event: "leave" }, () => {
+                try { refreshOnlinePresenceFromChannel(); } catch (_) {}
+            });
+
+        const subscribed = await new Promise(resolve => {
+            let settled = false;
+            const finish = value => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(value);
+            };
+            const timer = setTimeout(() => finish(false), SUBSCRIBE_TIMEOUT_MS_V17);
+
+            try {
+                channel.subscribe(async status => {
+                    if (status === "SUBSCRIBED") {
+                        try {
+                            const result = await channel.track(getOnlinePresencePayload(session));
+                            if (trackSucceededV17(result)) {
+                                lastGoodTrackAtV17 = Date.now();
+                                try { refreshOnlinePresenceFromChannel(); } catch (_) {}
+                                finish(true);
+                            } else {
+                                finish(false);
+                            }
+                        } catch (_) {
+                            finish(false);
+                        }
+                        return;
+                    }
+
+                    if (
+                        status === "CHANNEL_ERROR" ||
+                        status === "TIMED_OUT" ||
+                        status === "CLOSED"
+                    ) {
+                        finish(false);
+                    }
+                });
+            } catch (_) {
+                finish(false);
+            }
+        });
+
+        return subscribed;
+    }
+
+    /* Remplace le démarrage Presence par une version capable de réparer un canal mort. */
+    startOnlineLobbyPresence = async function() {
+        if (reconnectPromiseV17) return reconnectPromiseV17;
+
+        reconnectPromiseV17 = (async () => {
+            const client = typeof getBrawlCloudClient === "function" ? getBrawlCloudClient() : null;
+            if (!client || navigator.onLine === false) return false;
+
+            const session = await getSessionV17(client);
+            if (!session?.user) {
+                try { onlineLobbyPlayers?.clear?.(); } catch (_) {}
+                try { renderOnlineLobbyPlayers(); } catch (_) {}
+                return false;
+            }
+
+            // Si le canal est réellement sain, on le republie sans le recréer.
+            if (onlinePresenceChannel && channelJoinedV17(onlinePresenceChannel) && realtimeConnectedV17(client)) {
+                try {
+                    const result = await onlinePresenceChannel.track(getOnlinePresencePayload(session));
+                    if (trackSucceededV17(result)) {
+                        lastGoodTrackAtV17 = Date.now();
+                        try { refreshOnlinePresenceFromChannel(); } catch (_) {}
+                        return true;
+                    }
+                } catch (_) {}
+            }
+
+            lastRestartAtV17 = Date.now();
+            await disposePresenceChannelV17(client);
+            const ok = await createPresenceChannelV17(client, session);
+
+            if (!ok) {
+                await disposePresenceChannelV17(client);
+            }
+
+            try { refreshPersonalFriendCode(); } catch (_) {}
+            return ok;
+        })().finally(() => {
+            reconnectPromiseV17 = null;
+        });
+
+        return reconnectPromiseV17;
+    };
+
+    async function ensurePresenceAliveV17(forceReconnect = false) {
+        if (navigator.onLine === false) return false;
+        const client = typeof getBrawlCloudClient === "function" ? getBrawlCloudClient() : null;
+        if (!client) return false;
+
+        const session = brawlCloudSession?.user ? brawlCloudSession : await getSessionV17(client);
+        if (!session?.user) return false;
+
+        const channel = onlinePresenceChannel;
+        const healthy = Boolean(
+            channel &&
+            channelJoinedV17(channel) &&
+            realtimeConnectedV17(client)
+        );
+
+        if (
+            forceReconnect ||
+            !healthy ||
+            (Date.now() - lastGoodTrackAtV17 > 12000)
+        ) {
+            // Évite les boucles de reconnexion en cas de réseau instable.
+            if (!forceReconnect && Date.now() - lastRestartAtV17 < RESTART_COOLDOWN_MS_V17) {
+                return false;
+            }
+
+            if (!healthy || forceReconnect) {
+                return startOnlineLobbyPresence();
+            }
+        }
+
+        try {
+            const result = await channel.track(getOnlinePresencePayload(session));
+            if (!trackSucceededV17(result)) throw new Error("presence track failed");
+            lastGoodTrackAtV17 = Date.now();
+            try { refreshOnlinePresenceFromChannel(); } catch (_) {}
+            return true;
+        } catch (_) {
+            return startOnlineLobbyPresence();
+        }
+    }
+
+    // Les appels existants vers syncOnlinePresence bénéficient eux aussi de l'auto-réparation.
+    syncOnlinePresence = async function() {
+        return ensurePresenceAliveV17(false);
+    };
+
+    function wakePresenceV17(force = true) {
+        setTimeout(() => ensurePresenceAliveV17(force), 30);
+        setTimeout(() => ensurePresenceAliveV17(false), 700);
+        setTimeout(() => ensurePresenceAliveV17(false), 2200);
+    }
+
+    window.addEventListener("online", () => wakePresenceV17(true), { passive: true });
+    window.addEventListener("focus", () => wakePresenceV17(false), { passive: true });
+    window.addEventListener("pageshow", () => wakePresenceV17(true), { passive: true });
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) wakePresenceV17(true);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => ensurePresenceAliveV17(true), 450);
+        setTimeout(() => ensurePresenceAliveV17(false), 1800);
+    });
+
+    setInterval(() => {
+        // En arrière-plan iOS/Android peut suspendre les timers : dès le retour
+        // au premier plan, visibilitychange/pageshow force une reconnexion.
+        ensurePresenceAliveV17(false);
+    }, CHECK_MS_V17);
+})();
+</script>
