@@ -44060,7 +44060,9 @@ if ("serviceWorker" in navigator) {
         actionStartSeq: -1,
         transitionSeq: -1,
         transitionBusy: false,
-        choiceInFlight: false
+        choiceInFlight: false,
+        activeMatchId: null,
+        actionStartedAt: 0
     };
 
     function cloneV6(value) {
@@ -44186,6 +44188,7 @@ if ("serviceWorker" in navigator) {
 
     function setV6ActionLock(locked) {
         V6.actionInFlight = Boolean(locked);
+        V6.actionStartedAt = V6.actionInFlight ? Date.now() : 0;
         document
             .getElementById("battlePage")
             ?.classList.toggle(
@@ -44691,13 +44694,31 @@ if ("serviceWorker" in navigator) {
         const result = previousOnlineMatchUpdatedV6(match);
 
         if (match?.status === "playing") {
+            const matchId = String(match.id || "");
             const seq = Number(match.game_state?.battle?.seq || 0);
-            if (seq > V6.actionStartSeq) {
+
+            /* Nouveau duel = aucun ancien verrou ne doit survivre. */
+            if (V6.activeMatchId !== matchId) {
+                V6.activeMatchId = matchId;
                 V6.actionInFlight = false;
+                V6.choiceInFlight = false;
+                V6.transitionBusy = false;
+                V6.actionStartSeq = -1;
+                V6.transitionSeq = -1;
+                V6.actionStartedAt = 0;
                 document
                     .getElementById("battlePage")
                     ?.classList.remove("v6-action-pending");
             }
+
+            if (seq > V6.actionStartSeq) {
+                V6.actionInFlight = false;
+                V6.actionStartedAt = 0;
+                document
+                    .getElementById("battlePage")
+                    ?.classList.remove("v6-action-pending");
+            }
+
             setTimeout(() => {
                 try { syncBattleActionAvailability(); } catch (_) {}
             }, 0);
@@ -46135,8 +46156,7 @@ if ("serviceWorker" in navigator) {
                     await syncOnlinePresence();
                 }
 
-                await sleepV8(180);
-
+                /* Pas d'attente artificielle : la présence courante suffit. */
                 refreshOnlinePresenceFromChannel();
             }
             catch (_) {}
@@ -46290,6 +46310,15 @@ if ("serviceWorker" in navigator) {
                 return;
             }
 
+            /*
+               Le joueur qui accepte entre immédiatement dans le lobby :
+               inutile d'attendre une seconde lecture du match.
+            */
+            currentOnlineMatch = match;
+            try { subscribeToOnlineMatch(match.id); } catch (_) {}
+            try { showHome(); } catch (_) {}
+            try { renderOnlineHomeLobby(); } catch (_) {}
+
             const {
                 error:
                     inviteError
@@ -46321,9 +46350,11 @@ if ("serviceWorker" in navigator) {
                 return;
             }
 
-            await startOnlineMatch(
-                match.id
-            );
+            /* Le salon est déjà affiché localement ; une seule synchro légère suffit. */
+            setTimeout(() => {
+                try { renderOnlineHomeLobby(); } catch (_) {}
+                try { syncOnlinePresence(); } catch (_) {}
+            }, 0);
         };
 
     /* =====================================================
@@ -53743,6 +53774,231 @@ if ("serviceWorker" in navigator) {
 
     /* V19 : boucles périodiques V15 désactivées.
        V17 maintient le canal Presence ; les événements Realtime + V19 mettent à jour l'UI. */
+})();
+</script>
+
+
+<!-- =========================================================
+     BRAWL VS ONLINE V21 · ACTIONS + LOBBY RAPIDE + PSEUDOS
+     - L'état serveur décide définitivement si les actions sont disponibles.
+     - Aucun vieux verrou visuel ne peut bloquer un nouveau Duel.
+     - Les textes de combat online utilisent le pseudo réel au lieu de BOT.
+========================================================= -->
+<script id="brawl-v21-online-action-lobby-label-fix">
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V21_ONLINE_ACTION_LOBBY_LABEL_FIX__) return;
+    window.__BRAWL_V21_ONLINE_ACTION_LOBBY_LABEL_FIX__ = true;
+
+    function onlineMetaV21(match = currentOnlineMatch) {
+        const me = brawlCloudSession?.user?.id;
+        if (!match || !me) return null;
+        const amP1 = String(match.player1_id || "") === String(me);
+        return {
+            me,
+            opponent: amP1 ? match.player2_id : match.player1_id,
+            myKey: amP1 ? "p1" : "p2",
+            opponentKey: amP1 ? "p2" : "p1"
+        };
+    }
+
+    function liveOnlineBattleV21() {
+        return Boolean(
+            currentOnlineMatch?.status === "playing" &&
+            currentOnlineMatch?.game_state?.battle &&
+            document.getElementById("battlePage")?.classList.contains("online-network-battle")
+        );
+    }
+
+    function opponentNameV21() {
+        if (!liveOnlineBattleV21()) return "BOT";
+        const meta = onlineMetaV21();
+        const battle = currentOnlineMatch?.game_state?.battle;
+        const serverName = meta && battle
+            ? battle[meta.opponentKey]?.username
+            : null;
+        return String(
+            serverName ||
+            battleState?.enemyPseudo ||
+            "ADVERSAIRE"
+        ).trim() || "ADVERSAIRE";
+    }
+
+    function replaceBotLabelV21(value) {
+        if (!liveOnlineBattleV21()) return String(value ?? "");
+        const pseudo = opponentNameV21();
+        return String(value ?? "")
+            .replace(/\bBOT\b/gi, pseudo);
+    }
+
+    /*
+       Source d'autorité unique pour les boutons :
+       serveur = notre tour + phase action + aucune paralysie/stun.
+       On ne réactive jamais pendant qu'une action locale a déjà placé
+       enemyTurn=true, ce qui conserve la protection anti double-clic.
+    */
+    function forceCorrectActionButtonsV21() {
+        if (!liveOnlineBattleV21()) return;
+
+        const meta = onlineMetaV21();
+        const battle = currentOnlineMatch?.game_state?.battle;
+        if (!meta || !battle) return;
+
+        const mine = battle[meta.myKey] || {};
+        const controlled =
+            Math.max(0, Number(mine.paralyzedTurns || 0)) > 0 ||
+            ["paralyzed", "stunned"].includes(String(mine.controlEffectType || "").toLowerCase());
+
+        const serverAllows =
+            String(currentOnlineMatch.turn_user_id || "") === String(meta.me) &&
+            String(battle.turn_user_id || "") === String(meta.me) &&
+            battle.phase === "action" &&
+            Boolean(battle.current_distance) &&
+            !controlled &&
+            battleState.playerHealth > 0 &&
+            battleState.enemyHealth > 0;
+
+        /*
+           Pendant le traitement local d'une attaque, enemyTurn devient true
+           avant l'envoi Supabase. On n'enlève donc PAS les verrous durant
+           cette courte fenêtre.
+        */
+        const localReady =
+            serverAllows &&
+            battleState.enemyTurn === false &&
+            battleState.distanceChosen === true &&
+            !battleEnemyAttackTimer;
+
+        if (!localReady) return;
+
+        const page = document.getElementById("battlePage");
+        page?.classList.remove("online-action-locked", "v6-action-pending");
+
+        const attack = document.getElementById("battleAttackButton");
+        const pass = document.getElementById("battlePassTurnButton");
+        const superButton = document.getElementById("battleSuperButton");
+
+        if (attack) attack.disabled = false;
+        if (pass) pass.disabled = false;
+        if (superButton) {
+            superButton.disabled = Number(battleState.superCharge || 0) < 100;
+        }
+
+        /*
+           Les capacités gardent leurs propres règles (Power, utilisée ou non),
+           mais on reconstruit leurs slots après suppression des verrous réseau.
+        */
+        try { updateBattleAbilitySlots(); } catch (_) {}
+        ["battleAbilitySlot1", "battleAbilitySlot2"].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (
+                el.getAttribute("aria-disabled") === "false" &&
+                el.getAttribute("role") === "button"
+            ) {
+                el.disabled = false;
+            }
+        });
+    }
+
+    const syncBeforeV21 = syncBattleActionAvailability;
+    syncBattleActionAvailability = function(...args) {
+        const result = syncBeforeV21(...args);
+        forceCorrectActionButtonsV21();
+        return result;
+    };
+
+    /*
+       Après chaque snapshot Realtime, on remet immédiatement les boutons
+       dans l'état correspondant au serveur.
+    */
+    if (typeof onOnlineMatchUpdated === "function") {
+        const updateBeforeV21 = onOnlineMatchUpdated;
+        onOnlineMatchUpdated = function(match) {
+            const result = updateBeforeV21(match);
+            if (match?.status === "playing") {
+                setTimeout(() => {
+                    try { forceCorrectActionButtonsV21(); } catch (_) {}
+                    try { normalizeVisibleBattleLabelsV21(); } catch (_) {}
+                }, 0);
+            }
+            return result;
+        };
+    }
+
+    /*
+       Tous les messages du moteur solo qui parlent de "BOT"
+       deviennent le pseudo réel uniquement en Duel online.
+    */
+    if (typeof showBattleDodgeMessage === "function") {
+        const dodgeBeforeV21 = showBattleDodgeMessage;
+        showBattleDodgeMessage = function(text, side, label) {
+            return dodgeBeforeV21(
+                replaceBotLabelV21(text),
+                side,
+                label
+            );
+        };
+    }
+
+    function normalizeVisibleBattleLabelsV21() {
+        if (!liveOnlineBattleV21()) return;
+
+        const ids = [
+            "battleActionMessage",
+            "battleDodgeText"
+        ];
+
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const next = replaceBotLabelV21(el.textContent);
+            if (next !== el.textContent) el.textContent = next;
+        });
+    }
+
+    const actionMessage = document.getElementById("battleActionMessage");
+    const dodgeMessage = document.getElementById("battleDodgeText");
+
+    const labelObserverV21 = new MutationObserver(() => {
+        normalizeVisibleBattleLabelsV21();
+    });
+
+    if (actionMessage) {
+        labelObserverV21.observe(actionMessage, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+    if (dodgeMessage) {
+        labelObserverV21.observe(dodgeMessage, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+
+    /*
+       Petit filet de sécurité uniquement pendant un Duel visible.
+       Il ne recharge rien depuis Supabase : il remet juste l'UI en phase
+       avec currentOnlineMatch déjà reçu par Realtime/watchdog.
+    */
+    setInterval(() => {
+        if (!liveOnlineBattleV21()) return;
+        forceCorrectActionButtonsV21();
+        normalizeVisibleBattleLabelsV21();
+    }, 350);
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            setTimeout(() => {
+                forceCorrectActionButtonsV21();
+                normalizeVisibleBattleLabelsV21();
+            }, 40);
+        }
+    });
 })();
 </script>
 
