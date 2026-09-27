@@ -53733,3 +53733,304 @@ if ("serviceWorker" in navigator) {
 
 </body>
 </html>
+<!-- =========================================================
+     BRAWL VS ONLINE V16 · VERROU INVITATIONS PENDANT COMBAT
+     - Statut EN COMBAT prioritaire sur EN LIGNE.
+     - Aucun bouton d'invitation actif si la cible combat.
+     - Vérification serveur juste avant l'envoi.
+     - Une invitation reçue pendant un combat n'est jamais affichée.
+========================================================= -->
+<style id="brawl-v16-busy-invite-lock-style">
+.friend-state.is-in-battle-v16,
+.online-duel-friend-main small.is-in-battle-v16,
+.online-profile-online.is-in-battle-v16 {
+    color:#ff7890!important;
+}
+.friend-status-dot.is-in-battle-v16 {
+    background:#ff3d5d!important;
+    box-shadow:0 0 9px rgba(255,61,93,.75)!important;
+}
+.friend-action.invite.is-in-battle-v16,
+.online-duel-invite-btn.is-in-battle-v16,
+.online-profile-duel.is-in-battle-v16 {
+    cursor:not-allowed!important;
+    color:#ff9aac!important;
+    background:rgba(255,61,93,.10)!important;
+    border-color:rgba(255,61,93,.28)!important;
+    opacity:.72!important;
+}
+</style>
+<script id="brawl-v16-busy-invite-lock-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V16_BUSY_INVITE_LOCK__) return;
+    window.__BRAWL_V16_BUSY_INVITE_LOCK__ = true;
+
+    let cancelIncomingBusyV16 = false;
+
+    function normV16(value) {
+        try { return normalizeFriendName(value || ""); }
+        catch (_) { return String(value || "").trim().toLowerCase(); }
+    }
+
+    function presenceByIdV16(playerId) {
+        const id = String(playerId || "");
+        if (!id || !(onlineLobbyPlayers instanceof Map)) return null;
+        return onlineLobbyPlayers.get(id) || null;
+    }
+
+    function presenceByNameV16(name) {
+        const wanted = normV16(name);
+        if (!wanted || !(onlineLobbyPlayers instanceof Map)) return null;
+        return [...onlineLobbyPlayers.values()].find(player => normV16(player?.username) === wanted) || null;
+    }
+
+    function selfInBattleV16() {
+        try {
+            return Boolean(
+                currentOnlineMatch?.status === "playing" ||
+                document.getElementById("battlePage")?.classList.contains("online-network-battle")
+            );
+        } catch (_) {
+            return false;
+        }
+    }
+
+    async function serverBusyV16(playerId) {
+        const id = String(playerId || "");
+        if (!id) return false;
+
+        // La présence donne une réponse instantanée à l'interface.
+        try {
+            if (onlinePresenceChannel?.presenceState) refreshOnlinePresenceFromChannel();
+        } catch (_) {}
+
+        const live = presenceByIdV16(id);
+        if (live?.in_battle) return true;
+
+        // Vérification serveur autoritaire juste avant la création de l'invitation.
+        const client = typeof getBrawlCloudClient === "function" ? getBrawlCloudClient() : null;
+        if (!client) return false;
+        try {
+            const { data, error } = await client
+                .from("matches")
+                .select("id,status")
+                .eq("status", "playing")
+                .or(`player1_id.eq.${id},player2_id.eq.${id}`)
+                .limit(1);
+
+            const busy = !error && Array.isArray(data) && data.length > 0;
+            if (busy && live) live.in_battle = true;
+            return busy;
+        } catch (_) {
+            return Boolean(live?.in_battle);
+        }
+    }
+
+    function setBusyButtonV16(button, busy, offline = false) {
+        if (!button) return;
+        button.disabled = Boolean(busy || offline);
+        button.classList.toggle("is-in-battle-v16", Boolean(busy));
+
+        if (button.classList.contains("friend-action")) {
+            button.textContent = busy ? "EN COMBAT" : (offline ? "HORS LIGNE" : "INVITER");
+        } else if (button.classList.contains("online-duel-invite-btn")) {
+            button.textContent = busy ? "EN COMBAT" : (offline ? "OFFLINE" : "INVITER");
+        } else if (button.classList.contains("online-profile-duel")) {
+            button.textContent = busy ? "⚔ EN COMBAT" : (offline ? "HORS LIGNE" : "⚔ INVITER EN DUEL");
+        }
+    }
+
+    function patchBusyInviteUiV16() {
+        // Liste d'amis principale.
+        document.querySelectorAll("#friendsList .friend-card").forEach(card => {
+            const name = card.querySelector(".friend-name")?.textContent?.trim() || "";
+            const presence = presenceByNameV16(name);
+            const online = Boolean(presence);
+            const busy = Boolean(presence?.in_battle);
+            const stateEl = card.querySelector(".friend-state");
+            const dot = card.querySelector(".friend-status-dot");
+            const invite = card.querySelector(".friend-action.invite");
+
+            if (stateEl) {
+                stateEl.textContent = busy ? "EN COMBAT" : (online ? "EN LIGNE" : "HORS LIGNE");
+                stateEl.classList.toggle("online", online && !busy);
+                stateEl.classList.toggle("is-in-battle-v16", busy);
+            }
+            if (dot) {
+                dot.classList.toggle("online", online && !busy);
+                dot.classList.toggle("is-in-battle-v16", busy);
+            }
+            setBusyButtonV16(invite, busy, !online);
+        });
+
+        // Fenêtre de choix Duel.
+        document.querySelectorAll(".online-duel-friend").forEach(card => {
+            const name = card.querySelector(".online-duel-friend-main strong")?.textContent?.trim() || "";
+            const presence = presenceByNameV16(name);
+            const online = Boolean(presence);
+            const busy = Boolean(presence?.in_battle);
+            const status = card.querySelector(".online-duel-friend-main small");
+            const invite = card.querySelector(".online-duel-invite-btn");
+
+            card.classList.toggle("offline", !online);
+            if (status) {
+                status.textContent = busy ? "EN COMBAT" : (online ? "EN LIGNE · DISPONIBLE" : "HORS LIGNE");
+                status.classList.toggle("online", online && !busy);
+                status.classList.toggle("is-in-battle-v16", busy);
+            }
+            setBusyButtonV16(invite, busy, !online);
+        });
+
+        // Profil ouvert.
+        const dialog = document.getElementById("onlineFriendProfileDialog");
+        if (dialog) {
+            const name = dialog.querySelector(".online-profile-name")?.textContent?.trim() || "";
+            const presence = presenceByNameV16(name);
+            const online = Boolean(presence);
+            const busy = Boolean(presence?.in_battle);
+            const status = dialog.querySelector(".online-profile-online");
+            const duel = dialog.querySelector(".online-profile-duel");
+
+            if (status) {
+                status.textContent = busy ? "EN COMBAT" : (online ? "EN LIGNE" : "HORS LIGNE");
+                status.classList.toggle("offline", !online);
+                status.classList.toggle("is-in-battle-v16", busy);
+            }
+            setBusyButtonV16(duel, busy, !online);
+            if (duel && (busy || !online)) duel.removeAttribute("onclick");
+        }
+    }
+
+    async function cancelPendingInvitesWhileBusyV16() {
+        if (!selfInBattleV16() || cancelIncomingBusyV16) return;
+        cancelIncomingBusyV16 = true;
+        try {
+            const client = typeof getBrawlCloudClient === "function" ? getBrawlCloudClient() : null;
+            if (!client) return;
+            const { data: { session } } = await client.auth.getSession();
+            if (!session?.user?.id) return;
+
+            // Même si une invitation a été créée dans une course réseau, elle est neutralisée
+            // côté destinataire avant de pouvoir être affichée.
+            await client
+                .from("duel_invites")
+                .update({ status: "refused" })
+                .eq("receiver_id", session.user.id)
+                .eq("status", "pending");
+        } catch (_) {
+        } finally {
+            cancelIncomingBusyV16 = false;
+        }
+    }
+
+    // Verrou central : tous les chemins d'envoi passent par cette fonction.
+    if (typeof sendOnlineDuelInviteToPlayer === "function") {
+        const sendBeforeV16 = sendOnlineDuelInviteToPlayer;
+        sendOnlineDuelInviteToPlayer = async function(opponent) {
+            if (selfInBattleV16()) {
+                setFriendFeedback("Tu es déjà en combat.", "error");
+                return false;
+            }
+
+            const id = String(opponent?.id || "");
+            if (!id) {
+                setFriendFeedback("Joueur introuvable.", "error");
+                return false;
+            }
+
+            if (await serverBusyV16(id)) {
+                const live = presenceByIdV16(id);
+                const name = opponent?.username || live?.username || "Ce joueur";
+                patchBusyInviteUiV16();
+                setFriendFeedback(name + " est EN COMBAT. Invitation bloquée.", "error");
+                return false;
+            }
+
+            // Deuxième lecture de présence au dernier instant avant l'ancien chemin d'insertion.
+            try { refreshOnlinePresenceFromChannel(); } catch (_) {}
+            if (presenceByIdV16(id)?.in_battle) {
+                patchBusyInviteUiV16();
+                setFriendFeedback((opponent?.username || "Ce joueur") + " est EN COMBAT. Invitation bloquée.", "error");
+                return false;
+            }
+
+            return sendBeforeV16(opponent);
+        };
+    }
+
+    // Ne plus afficher prématurément « Invitation envoyée... ».
+    window.inviteOnlinePlayerById = async function(playerId) {
+        const id = String(playerId || "");
+        const player = presenceByIdV16(id);
+        if (!player) {
+            setFriendFeedback("Ce joueur vient de se déconnecter.", "error");
+            patchBusyInviteUiV16();
+            return false;
+        }
+
+        if (await serverBusyV16(id)) {
+            patchBusyInviteUiV16();
+            setFriendFeedback((player.username || "Ce joueur") + " est EN COMBAT. Tu ne peux pas l'inviter.", "error");
+            return false;
+        }
+
+        const result = await sendOnlineDuelInviteToPlayer({
+            id: player.user_id,
+            username: player.username
+        });
+
+        if (result) {
+            const dialog = document.getElementById("onlineDuelPickerDialog");
+            if (dialog?.open) dialog.close();
+        }
+        return result;
+    };
+
+    // L'invitation ne doit jamais apparaître chez quelqu'un déjà en combat.
+    if (typeof showIncomingOnlineDuelInvite === "function") {
+        const showBeforeV16 = showIncomingOnlineDuelInvite;
+        showIncomingOnlineDuelInvite = async function(invite) {
+            if (selfInBattleV16()) {
+                await cancelPendingInvitesWhileBusyV16();
+                return false;
+            }
+            return showBeforeV16(invite);
+        };
+    }
+
+    // Après chaque synchronisation de présence, verrouille immédiatement les boutons.
+    if (typeof refreshOnlinePresenceFromChannel === "function") {
+        const refreshBeforeV16 = refreshOnlinePresenceFromChannel;
+        refreshOnlinePresenceFromChannel = function(...args) {
+            const result = refreshBeforeV16(...args);
+            setTimeout(patchBusyInviteUiV16, 0);
+            return result;
+        };
+    }
+
+    // À chaque changement de match, publie EN COMBAT puis neutralise les invitations entrantes.
+    if (typeof onOnlineMatchUpdated === "function") {
+        const matchUpdateBeforeV16 = onOnlineMatchUpdated;
+        onOnlineMatchUpdated = function(match) {
+            const result = matchUpdateBeforeV16(match);
+            setTimeout(() => {
+                try { syncOnlinePresence(); } catch (_) {}
+                patchBusyInviteUiV16();
+                cancelPendingInvitesWhileBusyV16();
+            }, 0);
+            return result;
+        };
+    }
+
+    setInterval(() => {
+        patchBusyInviteUiV16();
+        if (selfInBattleV16()) cancelPendingInvitesWhileBusyV16();
+    }, 700);
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(patchBusyInviteUiV16, 250);
+        setTimeout(patchBusyInviteUiV16, 900);
+    });
+})();
+</script>
