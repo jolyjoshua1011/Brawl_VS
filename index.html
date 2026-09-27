@@ -1200,6 +1200,273 @@ body{
 }
 </style>
 
+
+<style id="brawl-global-rare-shop-style">
+/* =====================================================
+   SHOP GLOBAL · BRAWLERS RARES
+   Section compacte ajoutée au shop principal.
+===================================================== */
+#shopPage .global-rare-market{
+    position:relative;
+    margin:15px 0 18px;
+    padding:12px;
+    overflow:hidden;
+    border-radius:18px;
+    border:1px solid rgba(80,255,135,.22);
+    background:
+        radial-gradient(circle at 88% 3%, rgba(80,255,135,.12), transparent 34%),
+        linear-gradient(145deg, rgba(16,32,27,.96), rgba(8,16,23,.98));
+    box-shadow:0 12px 26px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035);
+}
+#shopPage .global-rare-market::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:linear-gradient(115deg, transparent 0 46%, rgba(80,255,135,.035) 47% 49%, transparent 50% 100%);
+}
+#shopPage .global-rare-shop-title{
+    position:relative;
+    z-index:2;
+    margin:0 0 10px;
+}
+#shopPage .global-rare-market-head{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+}
+#shopPage .global-rare-market-kicker{
+    color:#50ff87;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1.7px;
+}
+#shopPage .global-rare-market-subtitle{
+    margin-top:3px;
+    color:#a8b7c7;
+    font-size:9px;
+    font-weight:850;
+}
+#shopPage .global-rare-market-wallet{
+    flex:0 0 auto;
+    min-width:72px;
+    height:34px;
+    padding:0 9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    border-radius:10px;
+    color:#ffe19a;
+    background:rgba(255,200,87,.08);
+    border:1px solid rgba(255,200,87,.24);
+    font-size:12px;
+    font-weight:1000;
+}
+#shopPage .global-rare-market-wallet img{
+    width:20px;
+    height:20px;
+    object-fit:contain;
+}
+#shopPage .global-rare-market-progress{
+    position:relative;
+    z-index:2;
+    margin-top:9px;
+    padding:7px 8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    border-radius:9px;
+    background:rgba(5,12,18,.64);
+    border:1px solid rgba(255,255,255,.055);
+    color:#8191a3;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:.45px;
+    text-transform:uppercase;
+}
+#shopPage .global-rare-market-progress strong{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    color:#c9d5df;
+    font-size:8px;
+    white-space:nowrap;
+}
+#shopPage .global-rare-market-progress strong img{
+    width:15px;
+    height:15px;
+    object-fit:contain;
+}
+#shopPage .global-rare-market-grid{
+    position:relative;
+    z-index:2;
+    margin-top:9px;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+}
+#shopPage .global-rare-card{
+    position:relative;
+    min-width:0;
+    min-height:171px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    border-radius:14px;
+    border:1px solid rgba(80,255,135,.25);
+    background:
+        radial-gradient(circle at 50% 42%, rgba(80,255,135,.13), transparent 52%),
+        linear-gradient(155deg,#123023,#08140e 78%);
+    box-shadow:0 8px 18px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035);
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+#shopPage .global-rare-card:hover{
+    transform:translateY(-2px);
+    border-color:rgba(80,255,135,.55);
+    box-shadow:0 11px 22px rgba(0,0,0,.34),0 0 15px rgba(80,255,135,.08);
+}
+#shopPage .global-rare-card:nth-child(5){
+    grid-column:1 / -1;
+    width:calc(50% - 4px);
+    justify-self:center;
+}
+#shopPage .global-rare-card.owned{
+    border-color:rgba(80,255,135,.16);
+    background:linear-gradient(155deg,#15241d,#0a120e 78%);
+}
+#shopPage .global-rare-card-top{
+    position:absolute;
+    top:7px;
+    left:7px;
+    right:7px;
+    z-index:4;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:5px;
+}
+#shopPage .global-rare-badge{
+    padding:4px 6px;
+    border-radius:6px;
+    color:#06140a;
+    background:#50ff87;
+    font-size:7px;
+    font-weight:1000;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    box-shadow:0 0 10px rgba(80,255,135,.14);
+}
+#shopPage .global-rare-owned-badge{
+    padding:4px 6px;
+    border-radius:6px;
+    color:#96a4b2;
+    background:rgba(8,15,20,.82);
+    border:1px solid rgba(255,255,255,.07);
+    font-size:7px;
+    font-weight:1000;
+    text-transform:uppercase;
+}
+#shopPage .global-rare-owned-badge.available{color:#a9ffd0;border-color:rgba(80,255,135,.18);}
+#shopPage .global-rare-image-wrap{
+    position:relative;
+    height:100px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    overflow:hidden;
+}
+#shopPage .global-rare-image-wrap::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:4px;
+    width:92px;
+    height:18px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse,rgba(80,255,135,.24),transparent 70%);
+}
+#shopPage .global-rare-image{
+    position:relative;
+    z-index:2;
+    width:112px;
+    height:103px;
+    object-fit:contain;
+    object-position:center bottom;
+    filter:drop-shadow(0 8px 7px rgba(0,0,0,.52));
+}
+#shopPage .global-rare-card.owned .global-rare-image{filter:grayscale(.12) drop-shadow(0 8px 7px rgba(0,0,0,.52));opacity:.82;}
+#shopPage .global-rare-card-body{
+    flex:1;
+    padding:0 8px 8px;
+    display:flex;
+    flex-direction:column;
+}
+#shopPage .global-rare-name{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#fff;
+    font-size:14px;
+    line-height:1;
+    font-weight:1000;
+    font-style:italic;
+    text-transform:uppercase;
+    text-align:center;
+    text-shadow:0 2px 5px rgba(0,0,0,.5);
+}
+#shopPage .global-rare-buy{
+    width:100%;
+    min-height:33px;
+    margin-top:7px;
+    padding:5px 7px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    border:0;
+    border-radius:9px;
+    color:#07130a;
+    background:linear-gradient(135deg,#9cffba,#50ff87);
+    border-bottom:3px solid #25984b;
+    font-size:10px;
+    font-weight:1000;
+    cursor:pointer;
+    box-shadow:0 5px 13px rgba(80,255,135,.12);
+}
+#shopPage .global-rare-buy img{
+    width:18px;
+    height:18px;
+    object-fit:contain;
+}
+#shopPage .global-rare-buy.low-coins{
+    color:#ffd3da;
+    background:linear-gradient(135deg,#52232d,#351720);
+    border-bottom-color:#1f0d13;
+    box-shadow:none;
+}
+#shopPage .global-rare-buy.owned{
+    color:#8c9aaa;
+    background:#18222d;
+    border-bottom-color:#0d141b;
+    cursor:not-allowed;
+    box-shadow:none;
+}
+@media(max-width:350px){
+    #shopPage .global-rare-market{padding:10px;}
+    #shopPage .global-rare-market-grid{gap:7px;}
+    #shopPage .global-rare-card{min-height:165px;}
+    #shopPage .global-rare-image-wrap{height:94px;}
+    #shopPage .global-rare-image{width:104px;height:97px;}
+    #shopPage .global-rare-name{font-size:13px;}
+}
+</style>
+
 </head>
 <body>
 <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none;overflow:hidden">
@@ -3256,6 +3523,28 @@ body{
             </span>
         </div>
     </button>
+    <section class="global-rare-market" aria-labelledby="globalRareMarketTitle">
+        <div class="shop-section-title global-rare-shop-title">
+            <span class="shop-section-dot"></span>
+            <span id="globalRareMarketTitle">Brawlers rares</span>
+        </div>
+        <div class="global-rare-market-head">
+            <div>
+                <div class="global-rare-market-kicker">RECRUTEMENT</div>
+                <div class="global-rare-market-subtitle">Débloque définitivement un Brawler rare</div>
+            </div>
+            <div class="global-rare-market-wallet" aria-label="Solde de pièces">
+                <img src="Icon/coin.png" alt="Pièces">
+                <span id="globalRareMarketCoins">0</span>
+            </div>
+        </div>
+        <div class="global-rare-market-progress">
+            <span id="globalRareMarketOwned">0/5 possédés</span>
+            <strong>3000 <img src="Icon/coin.png" alt="Pièces"> / Brawler</strong>
+        </div>
+        <div id="rareBrawlerGlobalShopGrid" class="global-rare-market-grid"></div>
+    </section>
+
     <div class="shop-section-title profile-shop-title">
         <span class="shop-section-dot"></span>
         Icônes de profil
@@ -3264,40 +3553,8 @@ body{
         id="profileIconShopGrid"
         class="profile-icon-shop-grid"
     ></div>
-    <div class="shop-section-title">
-        <span class="shop-section-dot"></span>
-        Brawlers rares
-    </div>
-    <div class="shop-carousel">
-        <button
-            class="shop-arrow"
-            type="button"
-            aria-label="Brawler précédent"
-            onclick="changeShopBrawler(-1)"
-        >
-            ‹
-        </button>
-        <div class="shop-slider-window">
-            <div
-                id="shopBrawlerGrid"
-                class="shop-grid"
-            ></div>
-            <div
-                id="shopSliderCounter"
-                class="shop-slider-dots"
-                aria-label="Position dans le carrousel"
-            ></div>
-        </div>
-        <button
-            class="shop-arrow"
-            type="button"
-            aria-label="Brawler suivant"
-            onclick="changeShopBrawler(1)"
-        >
-            ›
-        </button>
-    </div>
     <div class="shop-section-title ability-shop-title">
+
         <span class="shop-section-dot"></span>
         Capacités
     </div>
@@ -15734,7 +15991,7 @@ function useBattleAbility(
                 bullStompDamage,
                 { piercing: false }
             );
-        applyBattleParalysis(
+        applyBattleStun(
             "enemy",
             1
         );
@@ -15802,7 +16059,7 @@ function useBattleAbility(
                 30,
                 { piercing: false }
             );
-        applyBattleParalysis(
+        applyBattleStun(
             "enemy",
             1
         );
@@ -22778,7 +23035,7 @@ function tryEnemyBattleAbility() {
             result.brawlerDamage >
             0
         ) {
-            applyBattleParalysis(
+            applyBattleStun(
                 "player",
                 1
             );
@@ -22819,7 +23076,7 @@ function tryEnemyBattleAbility() {
             result.brawlerDamage >
             0
         ) {
-            applyBattleParalysis(
+            applyBattleStun(
                 "player",
                 1
             );
@@ -25742,8 +25999,13 @@ function renderProfileIconChoices() {
     const ownedCount = PROFILE_ICON_CHOICES.filter(choice => isProfileIconUnlocked(choice.icon)).length;
     const countLabel = document.getElementById("profileIconOwnedCount");
     if (countLabel) countLabel.textContent = `${ownedCount} / ${PROFILE_ICON_CHOICES.length}`;
+    const sortedProfileIconChoices = [...PROFILE_ICON_CHOICES].sort((a, b) => {
+        const aOwned = isProfileIconUnlocked(a.icon) ? 1 : 0;
+        const bOwned = isProfileIconUnlocked(b.icon) ? 1 : 0;
+        return bOwned - aOwned;
+    });
     container.innerHTML =
-        PROFILE_ICON_CHOICES.map(
+        sortedProfileIconChoices.map(
             choice => {
                 const selected =
                     pendingProfileIcon ===
@@ -28722,58 +28984,50 @@ function renderShop() {
         :
         "slide-from-left";
     grid.innerHTML = `
+        <article class="shop-card rare-showcase-card ${unlocked ? "is-owned" : "is-for-sale"}">
+            <div class="rare-showcase-grid"></div>
+            <div class="rare-showcase-glow"></div>
+            <div class="rare-showcase-scan"></div>
 
-        <div class="shop-card">
-
-            <div class="shop-card-rarity">
-                ${brawler.rarity}
+            <div class="rare-showcase-topbar">
+                <span class="rare-showcase-kicker">RECRUE RARE</span>
+                <span class="shop-card-rarity">${brawler.rarity}</span>
             </div>
 
-            <div class="shop-slide-content ${slideClass}">
-
+            <div class="shop-slide-content rare-showcase-stage ${slideClass}">
+                <div class="rare-showcase-platform"></div>
                 <img
                     class="shop-card-image"
                     src="${getDefaultSkinImage(name)}"
                     alt="${name}"
                 >
 
-                <div class="shop-card-name">
-                    ${name}
+                <div class="rare-showcase-nameplate">
+                    <div class="rare-showcase-label">BRAWLER</div>
+                    <div class="shop-card-name">${name}</div>
+                    <div class="shop-card-description">Ajoute ce combattant à ta collection</div>
                 </div>
-
-                <div class="shop-card-description">
-                    Brawler rare
-                </div>
-
             </div>
 
-            <button
-                class="
-                    shop-buy-button
-                    ${unlocked ? "locked-buy" : ""}
-                "
-                ${unlocked ? "disabled" : ""}
-                onclick="buyRareBrawler('${name}')"
-            >
+            <div class="rare-showcase-bottom">
+                <div class="rare-showcase-status ${unlocked ? "owned" : "available"}">
+                    <span class="rare-showcase-status-dot"></span>
+                    ${unlocked ? "DÉJÀ POSSÉDÉ" : "DISPONIBLE"}
+                </div>
 
-                ${
-                    unlocked
-                    ?
-                    "✓ DÉBLOQUÉ"
-                    :
-                    `
-                        <img
-                            src="Icon/coin.png"
-                            alt="Pièces"
-                        >
-                        ${SHOP_BRAWLER_PRICE}
-                    `
-                }
-
-            </button>
-
-        </div>
-
+                <button
+                    class="shop-buy-button rare-showcase-buy ${unlocked ? "locked-buy" : ""}"
+                    ${unlocked ? "disabled" : ""}
+                    onclick="buyRareBrawler('${name}')"
+                >
+                    ${
+                        unlocked
+                        ? `<span class="rare-showcase-owned-check">✓</span><span>DÉBLOQUÉ</span>`
+                        : `<span class="rare-showcase-buy-copy"><small>PRIX</small><strong><img src="Icon/coin.png" alt="Pièces">${SHOP_BRAWLER_PRICE}</strong></span><span class="rare-showcase-buy-arrow">›</span>`
+                    }
+                </button>
+            </div>
+        </article>
     `;
     if (counter) {
         counter.innerHTML =
@@ -42347,8 +42601,8 @@ function updateBattleActionHitChanceUI() {
     /* ---------- Réseau combat ---------- */
     function isOnlineBattleActive(){return Boolean(currentOnlineMatch?.status==="playing"&&currentOnlineMatch?.game_state?.battle&&V3.launchedMatchId===currentOnlineMatch.id);}
     function ids(){const m=currentOnlineMatch,me=brawlCloudSession?.user?.id; if(!m||!me)return null; const amP1=m.player1_id===me; return {me,opp:amP1?m.player2_id:m.player1_id,amP1,myKey:amP1?"p1":"p2",oppKey:amP1?"p2":"p1"};}
-    function captureSide(side){const player=side==="player"; const pre=player?"player":"enemy"; const name=battleState[pre+"Name"]; return {name,username:player?(state.profile.name||"JOUEUR"):(battleState.enemyPseudo||"ADVERSAIRE"),image:player?(brawlers[name]?.image||getDefaultSkinImage(name)):(currentOnlineMatch?.game_state?.battle?.[ids()?.oppKey]?.image||brawlers[name]?.image||getDefaultSkinImage(name)),power:player?Number(brawlers[name]?.power||1):Number(battleState.enemyPower||1),abilityIds:player?ownAbilityIds(name):[...(battleState.enemyAbilityIds||[])],hasStarPower:player?Boolean(isBrawlerStarPowerOwned(name)):Boolean(battleState.enemyHasStarPower),health:Number(battleState[pre+"Health"]||0),maxHealth:Number(battleState[pre+"MaxHealth"]||0),bearHealth:Number(battleState[pre+"BearHealth"]||0),bearMaxHealth:Number(battleState[pre+"BearMaxHealth"]||0),shieldTurns:Number(battleState[pre+"ShieldTurns"]||0),paralyzedTurns:Number(battleState[pre+"ParalyzedTurns"]||0),cowboyRollDodges:Number(battleState[pre+"CowboyRollDodges"]||0),burnTurns:Number(battleState[pre+"BurnTurns"]||0),poisonTurns:Number(battleState[pre+"PoisonTurns"]||0),slowTurns:Number(battleState[pre+"SlowTurns"]||0),slowAmount:Number(battleState[pre+"SlowAmount"]||0),pocoHealingTurns:Number(battleState[pre+"PocoHealingTurns"]||0),effectImmunityTurns:Number(battleState[pre+"EffectImmunityTurns"]||0),meteorPending:battleState[pre+"MeteorPending"]||null,superCharge:Number(player?battleState.superCharge:battleState.enemySuperCharge||0),usedAbilities:structuredCloneSafe(player?battleState.usedAbilities:battleState.enemyUsedAbilities||{})};}
-    function applySide(data,side){if(!data)return;const player=side==="player",pre=player?"player":"enemy";battleState[pre+"Name"]=data.name;battleState[pre+"Health"]=Number(data.health||0);battleState[pre+"MaxHealth"]=Number(data.maxHealth||0);battleState[pre+"BearHealth"]=Number(data.bearHealth||0);battleState[pre+"BearMaxHealth"]=Number(data.bearMaxHealth||0);battleState[pre+"ShieldTurns"]=Number(data.shieldTurns||0);battleState[pre+"ParalyzedTurns"]=Number(data.paralyzedTurns||0);battleState[pre+"CowboyRollDodges"]=Number(data.cowboyRollDodges||0);battleState[pre+"BurnTurns"]=Number(data.burnTurns||0);battleState[pre+"PoisonTurns"]=Number(data.poisonTurns||0);battleState[pre+"SlowTurns"]=Number(data.slowTurns||0);battleState[pre+"SlowAmount"]=Number(data.slowAmount||0);battleState[pre+"PocoHealingTurns"]=Number(data.pocoHealingTurns||0);battleState[pre+"EffectImmunityTurns"]=Number(data.effectImmunityTurns||0);battleState[pre+"MeteorPending"]=data.meteorPending||null;if(player){battleState.superCharge=Number(data.superCharge||0);battleState.usedAbilities=structuredCloneSafe(data.usedAbilities||{});}else{battleState.enemySuperCharge=Number(data.superCharge||0);battleState.enemyUsedAbilities=structuredCloneSafe(data.usedAbilities||{});battleState.enemyPower=Number(data.power||1);battleState.enemyAbilityIds=[...(data.abilityIds||[])];battleState.enemyHasStarPower=Boolean(data.hasStarPower);battleState.enemyPseudo=data.username||"ADVERSAIRE";}}
+    function captureSide(side){const player=side==="player"; const pre=player?"player":"enemy"; const name=battleState[pre+"Name"]; return {name,username:player?(state.profile.name||"JOUEUR"):(battleState.enemyPseudo||"ADVERSAIRE"),image:player?(brawlers[name]?.image||getDefaultSkinImage(name)):(currentOnlineMatch?.game_state?.battle?.[ids()?.oppKey]?.image||brawlers[name]?.image||getDefaultSkinImage(name)),power:player?Number(brawlers[name]?.power||1):Number(battleState.enemyPower||1),abilityIds:player?ownAbilityIds(name):[...(battleState.enemyAbilityIds||[])],hasStarPower:player?Boolean(isBrawlerStarPowerOwned(name)):Boolean(battleState.enemyHasStarPower),health:Number(battleState[pre+"Health"]||0),maxHealth:Number(battleState[pre+"MaxHealth"]||0),bearHealth:Number(battleState[pre+"BearHealth"]||0),bearMaxHealth:Number(battleState[pre+"BearMaxHealth"]||0),shieldTurns:Number(battleState[pre+"ShieldTurns"]||0),paralyzedTurns:Number(battleState[pre+"ParalyzedTurns"]||0),controlEffectType:battleState[pre+"ControlEffectType"]||null,cowboyRollDodges:Number(battleState[pre+"CowboyRollDodges"]||0),burnTurns:Number(battleState[pre+"BurnTurns"]||0),poisonTurns:Number(battleState[pre+"PoisonTurns"]||0),slowTurns:Number(battleState[pre+"SlowTurns"]||0),slowAmount:Number(battleState[pre+"SlowAmount"]||0),pocoHealingTurns:Number(battleState[pre+"PocoHealingTurns"]||0),effectImmunityTurns:Number(battleState[pre+"EffectImmunityTurns"]||0),meteorPending:battleState[pre+"MeteorPending"]||null,superCharge:Number(player?battleState.superCharge:battleState.enemySuperCharge||0),usedAbilities:structuredCloneSafe(player?battleState.usedAbilities:battleState.enemyUsedAbilities||{})};}
+    function applySide(data,side){if(!data)return;const player=side==="player",pre=player?"player":"enemy";battleState[pre+"Name"]=data.name;battleState[pre+"Health"]=Number(data.health||0);battleState[pre+"MaxHealth"]=Number(data.maxHealth||0);battleState[pre+"BearHealth"]=Number(data.bearHealth||0);battleState[pre+"BearMaxHealth"]=Number(data.bearMaxHealth||0);battleState[pre+"ShieldTurns"]=Number(data.shieldTurns||0);battleState[pre+"ParalyzedTurns"]=Number(data.paralyzedTurns||0);battleState[pre+"ControlEffectType"]=data.controlEffectType||null;battleState[pre+"CowboyRollDodges"]=Number(data.cowboyRollDodges||0);battleState[pre+"BurnTurns"]=Number(data.burnTurns||0);battleState[pre+"PoisonTurns"]=Number(data.poisonTurns||0);battleState[pre+"SlowTurns"]=Number(data.slowTurns||0);battleState[pre+"SlowAmount"]=Number(data.slowAmount||0);battleState[pre+"PocoHealingTurns"]=Number(data.pocoHealingTurns||0);battleState[pre+"EffectImmunityTurns"]=Number(data.effectImmunityTurns||0);battleState[pre+"MeteorPending"]=data.meteorPending||null;if(player){battleState.superCharge=Number(data.superCharge||0);battleState.usedAbilities=structuredCloneSafe(data.usedAbilities||{});}else{battleState.enemySuperCharge=Number(data.superCharge||0);battleState.enemyUsedAbilities=structuredCloneSafe(data.usedAbilities||{});battleState.enemyPower=Number(data.power||1);battleState.enemyAbilityIds=[...(data.abilityIds||[])];battleState.enemyHasStarPower=Boolean(data.hasStarPower);battleState.enemyPseudo=data.username||"ADVERSAIRE";}}
     function captureSnapshot(overrides={}){const meta=ids();const old=currentOnlineMatch?.game_state?.battle||{};const mine=captureSide("player"),enemy=captureSide("enemy");const chooser=battleState.distanceRoundChooser==="player"?meta.me:meta.opp;const message=document.getElementById("battleActionMessage")?.textContent||old.last_action||"";return {...old,seq:Number(old.seq||0)+1,phase:overrides.phase||old.phase||"action",turn_user_id:overrides.turn_user_id||old.turn_user_id||meta.me,chooser_id:overrides.chooser_id||chooser,current_distance:battleState.currentDistance??old.current_distance??null,distance_choices:overrides.distance_choices!==undefined?overrides.distance_choices:[...(battleState.distanceChoices||[])],distance_round_attack_index:Number(battleState.distanceRoundAttackIndex||0),last_action:overrides.last_action||message,[meta.myKey]:mine,[meta.oppKey]:enemy,...overrides};}
     async function pushSnapshot(overrides={}){if(!isOnlineBattleActive()||V3.applyingRemote)return;const client=getBrawlCloudClient();if(!client)return;const battle=captureSnapshot(overrides);const gs=structuredCloneSafe(currentOnlineMatch.game_state||{});gs.battle=battle;const {data:updated,error}=await client.from("matches").update({game_state:gs,turn_user_id:battle.turn_user_id,updated_at:new Date().toISOString()}).eq("id",currentOnlineMatch.id).eq("status","playing").select().single();if(error){console.error("Sync combat impossible",error);return;}if(updated)currentOnlineMatch=updated;}
     function applyBattleUi(meta,battle){const mine=battle[meta.myKey],enemy=battle[meta.oppKey];applySide(mine,"player");applySide(enemy,"enemy");battleState.currentDistance=battle.current_distance??null;battleState.distanceRoundChooser=battle.chooser_id===meta.me?"player":"bot";battleState.distanceRoundAttackIndex=Number(battle.distance_round_attack_index||0);const myTurn=battle.turn_user_id===meta.me;if(battle.phase==="choose_distance"){battleState.distanceChosen=false;battleState.distanceChoices=myTurn?[...(battle.distance_choices||[])]:[];battleState.enemyTurn=!myTurn;}else{battleState.distanceChosen=Boolean(battle.current_distance);battleState.distanceChoices=[];battleState.enemyTurn=!myTurn;}if(battleState.currentDistance)applyBattleDistanceVisual(battleState.currentDistance);updateBattleHealthUI("player");updateBattleHealthUI("enemy");updateBattleDistanceUI();updateBattleShieldVisuals();updateBattleSuperUI();updateBattleAbilitySlots();syncBattleActionAvailability();const msg=document.getElementById("battleActionMessage");if(msg){if(myTurn&&battle.phase==="choose_distance")msg.textContent="À TOI · choisis la distance.";else if(myTurn)msg.textContent="À TOI DE JOUER · distance "+battle.current_distance+".";else msg.textContent=(enemy?.username||"Ton adversaire")+(battle.phase==="choose_distance"?" choisit la distance...":" joue...");}const ep=document.getElementById("battleEnemyPseudo");if(ep)ep.textContent=enemy?.username||"ADVERSAIRE";const en=document.getElementById("battleEnemyName");if(en)en.textContent=enemy?.name||"";const ePow=document.getElementById("battleEnemyPower");if(ePow)ePow.textContent="POWER "+Number(enemy?.power||1);const pPow=document.getElementById("battlePlayerPower");if(pPow)pPow.textContent="POWER "+Number(mine?.power||brawlers[mine?.name]?.power||1);const eImg=document.getElementById("battleEnemyImage");if(eImg&&enemy?.image)eImg.src=enemy.image;}
@@ -43873,6 +44127,7 @@ if ("serviceWorker" in navigator) {
             bearMaxHealth: Number(battleState[prefix + "BearMaxHealth"] || 0),
             shieldTurns: Number(battleState[prefix + "ShieldTurns"] || 0),
             paralyzedTurns: Number(battleState[prefix + "ParalyzedTurns"] || 0),
+            controlEffectType: battleState[prefix + "ControlEffectType"] || null,
             cowboyRollDodges: Number(battleState[prefix + "CowboyRollDodges"] || 0),
             burnTurns: Number(battleState[prefix + "BurnTurns"] || 0),
             poisonTurns: Number(battleState[prefix + "PoisonTurns"] || 0),
@@ -48687,6 +48942,4361 @@ if ("serviceWorker" in navigator) {
     }
 }
 </style>
+
+<!-- =========================================================
+     BRAWL VS ONLINE V13 + VISUEL V17
+     - invitations fantômes/stales filtrées
+     - statut EN COMBAT + invitations bloquées
+     - boutique Brawlers rares en vert
+     - Nita basique légèrement réduite
+========================================================= -->
+<style id="brawl-v13-requested-fixes-style">
+/* ---------- Statut EN COMBAT ---------- */
+#friendsList .friend-card.is-in-battle-v13{
+    border-color:rgba(255,200,87,.30) !important;
+    background:linear-gradient(135deg,rgba(49,40,18,.96),rgba(12,17,25,.99)) !important;
+}
+#friendsList .friend-card.is-in-battle-v13 .friend-state{
+    color:#ffc857 !important;
+}
+#friendsList .friend-card.is-in-battle-v13 .friend-status-dot{
+    background:#ffc857 !important;
+    box-shadow:0 0 8px rgba(255,200,87,.72) !important;
+}
+#friendsList .friend-card.is-in-battle-v13 .friend-action.invite,
+.online-duel-friend.is-in-battle-v13 .online-duel-invite-btn,
+.online-player-card.is-in-battle-v13 .online-player-invite,
+#onlineFriendProfileDialog .online-profile-duel.is-in-battle-v13{
+    color:#907b43 !important;
+    border-color:rgba(255,200,87,.18) !important;
+    background:#252418 !important;
+    box-shadow:none !important;
+    cursor:not-allowed !important;
+    opacity:.72 !important;
+}
+.online-duel-friend.is-in-battle-v13{
+    opacity:1 !important;
+    border-color:rgba(255,200,87,.30) !important;
+    background:linear-gradient(135deg,rgba(52,43,18,.96),rgba(10,16,25,.99)) !important;
+}
+.online-duel-friend.is-in-battle-v13 .online-duel-friend-main small,
+#onlineFriendProfileDialog .online-profile-online.is-in-battle-v13{
+    color:#ffc857 !important;
+}
+.online-duel-friend.is-in-battle-v13 .online-duel-friend-main small::before,
+#onlineFriendProfileDialog .online-profile-online.is-in-battle-v13::before{
+    background:#ffc857 !important;
+    box-shadow:0 0 8px rgba(255,200,87,.8) !important;
+}
+.online-player-card.is-in-battle-v13 .online-player-dot{
+    background:#ffc857 !important;
+    box-shadow:0 0 9px rgba(255,200,87,.8) !important;
+}
+
+/* ---------- Boutique Brawlers rares : thème VERT ---------- */
+#shopPage #shopBrawlerGrid .shop-card{
+    border-color:rgba(80,255,135,.72) !important;
+    background:
+        radial-gradient(ellipse at 50% 30%,rgba(80,255,135,.28),transparent 54%),
+        radial-gradient(circle at 92% 90%,rgba(113,255,172,.12),transparent 36%),
+        linear-gradient(150deg,#183e2a,#0b2116 70%,#07140d) !important;
+    box-shadow:0 12px 26px rgba(0,0,0,.42),0 0 20px rgba(80,255,135,.12),inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+#shopPage #shopBrawlerGrid .shop-card-rarity{
+    color:#062312 !important;
+    background:#50ff87 !important;
+    box-shadow:0 0 12px rgba(80,255,135,.30) !important;
+}
+#shopPage #shopBrawlerGrid .shop-card-image{
+    filter:drop-shadow(0 12px 10px rgba(0,0,0,.50)) drop-shadow(0 0 13px rgba(80,255,135,.18)) !important;
+}
+#shopPage #shopBrawlerGrid .shop-buy-button:not(.locked-buy):not(:disabled){
+    color:#062312 !important;
+    border-color:rgba(160,255,190,.72) !important;
+    border-bottom-color:#24984b !important;
+    background:linear-gradient(120deg,#a8f5ad,#50ff87 62%,#36d86d) !important;
+    box-shadow:0 8px 18px rgba(80,255,135,.18) !important;
+    text-shadow:none !important;
+}
+#shopPage .shop-carousel:has(#shopBrawlerGrid) .shop-arrow{
+    color:#dffff0 !important;
+    border-color:rgba(80,255,135,.35) !important;
+    background:linear-gradient(160deg,#173a27,#0b1d13) !important;
+    box-shadow:0 9px 20px rgba(0,0,0,.38),0 0 12px rgba(80,255,135,.10) !important;
+}
+#shopPage .shop-section-title:has(+ .shop-carousel #shopBrawlerGrid){
+    color:#b9ffd0 !important;
+}
+#shopPage .shop-section-title:has(+ .shop-carousel #shopBrawlerGrid) .shop-section-dot{
+    background:#50ff87 !important;
+    box-shadow:0 0 10px rgba(80,255,135,.75) !important;
+}
+
+/* ---------- Boutique rares V14 : showcase premium ---------- */
+#shopPage #shopBrawlerGrid .rare-showcase-card{
+    position:relative !important;
+    min-height:322px !important;
+    padding:0 !important;
+    overflow:hidden !important;
+    border:1px solid rgba(111,255,158,.62) !important;
+    border-radius:24px !important;
+    background:
+        radial-gradient(circle at 50% 28%,rgba(80,255,135,.24),transparent 38%),
+        linear-gradient(155deg,#102f20 0%,#081c12 54%,#06120c 100%) !important;
+    box-shadow:0 20px 42px rgba(0,0,0,.48),0 0 28px rgba(80,255,135,.12),inset 0 1px 0 rgba(255,255,255,.08) !important;
+    isolation:isolate;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-grid{
+    position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.17;
+    background-image:
+        linear-gradient(rgba(121,255,169,.18) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(121,255,169,.18) 1px,transparent 1px);
+    background-size:24px 24px;
+    mask-image:linear-gradient(to bottom,rgba(0,0,0,.85),transparent 80%);
+}
+#shopPage #shopBrawlerGrid .rare-showcase-glow{
+    position:absolute;z-index:0;left:50%;top:70px;width:230px;height:230px;transform:translateX(-50%);
+    border-radius:50%;background:radial-gradient(circle,rgba(80,255,135,.25),rgba(80,255,135,.08) 42%,transparent 70%);
+    filter:blur(3px);animation:rareShowcasePulse 2.8s ease-in-out infinite;pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-scan{
+    position:absolute;z-index:1;left:-35%;top:0;width:42%;height:100%;transform:skewX(-12deg);
+    background:linear-gradient(90deg,transparent,rgba(190,255,212,.08),transparent);pointer-events:none;
+    animation:rareShowcaseScan 4.2s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-topbar{
+    position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:12px 13px 0;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-kicker{
+    color:#bfffd2;font-size:8px;font-weight:1000;letter-spacing:2px;text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-card .shop-card-rarity{
+    position:static !important;margin:0 !important;padding:5px 9px !important;border-radius:999px !important;
+    font-size:8px !important;letter-spacing:1px !important;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-stage{
+    position:relative;z-index:3;height:214px !important;margin-top:0 !important;overflow:visible !important;
+    display:block !important;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-platform{
+    position:absolute;left:50%;bottom:25px;width:220px;height:54px;transform:translateX(-50%);
+    border-radius:50%;background:radial-gradient(ellipse,rgba(89,255,141,.34),rgba(42,151,79,.10) 50%,transparent 72%);
+    border-bottom:1px solid rgba(115,255,160,.30);box-shadow:0 8px 26px rgba(80,255,135,.08);
+}
+#shopPage #shopBrawlerGrid .rare-showcase-card .shop-card-image{
+    position:absolute !important;z-index:3 !important;left:50% !important;top:-1px !important;transform:translateX(-50%) scale(1.02) !important;
+    width:100% !important;height:190px !important;object-fit:contain !important;margin:0 !important;
+    filter:drop-shadow(0 15px 10px rgba(0,0,0,.55)) drop-shadow(0 0 16px rgba(80,255,135,.16)) !important;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-card .shop-card-image[src$="Nita_skin_def.webp"]{
+    transform:translateX(-50%) scale(.94) !important;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-nameplate{
+    position:absolute;z-index:6;left:13px;right:13px;bottom:4px;text-align:left;pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-label{
+    color:#70f99b;font-size:7px;font-weight:1000;letter-spacing:1.7px;text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-card .shop-card-name{
+    margin-top:1px !important;font-size:30px !important;line-height:.95 !important;letter-spacing:-1px !important;
+    text-shadow:0 3px 0 rgba(0,0,0,.65),0 0 16px rgba(80,255,135,.18);
+}
+#shopPage #shopBrawlerGrid .rare-showcase-card .shop-card-description{
+    margin-top:5px !important;color:#8fb6a0 !important;font-size:8px !important;letter-spacing:.4px !important;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-bottom{
+    position:relative;z-index:6;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;
+    padding:10px 11px 12px;border-top:1px solid rgba(121,255,164,.12);
+    background:linear-gradient(180deg,rgba(4,15,9,.18),rgba(4,14,9,.72));
+}
+#shopPage #shopBrawlerGrid .rare-showcase-status{
+    min-width:84px;display:flex;align-items:center;gap:6px;color:#8ca89a;font-size:7.5px;font-weight:1000;letter-spacing:.6px;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-status-dot{
+    width:7px;height:7px;border-radius:50%;background:#50ff87;box-shadow:0 0 8px rgba(80,255,135,.72);flex:0 0 7px;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-status.owned .rare-showcase-status-dot{background:#82908a;box-shadow:none}
+#shopPage #shopBrawlerGrid .rare-showcase-buy{
+    min-height:48px !important;margin:0 !important;padding:7px 10px 7px 12px !important;border-radius:13px !important;
+    display:flex !important;align-items:center !important;justify-content:space-between !important;gap:8px !important;
+}
+#shopPage #shopBrawlerGrid .rare-showcase-buy-copy{display:flex;flex-direction:column;align-items:flex-start;line-height:1}
+#shopPage #shopBrawlerGrid .rare-showcase-buy-copy small{font-size:6.5px;font-weight:1000;letter-spacing:1.1px;opacity:.72}
+#shopPage #shopBrawlerGrid .rare-showcase-buy-copy strong{margin-top:3px;display:flex;align-items:center;gap:5px;font-size:14px;font-weight:1000}
+#shopPage #shopBrawlerGrid .rare-showcase-buy-copy img{width:20px !important;height:20px !important}
+#shopPage #shopBrawlerGrid .rare-showcase-buy-arrow{font-size:27px;line-height:1;font-weight:900;transform:translateY(-1px)}
+#shopPage #shopBrawlerGrid .rare-showcase-owned-check{font-size:18px}
+#shopPage #shopBrawlerGrid .rare-showcase-card.is-owned{filter:saturate(.72)}
+#shopPage #shopBrawlerGrid .rare-showcase-card.is-owned .rare-showcase-glow{opacity:.38}
+#shopPage #shopBrawlerGrid .rare-showcase-card.is-owned .rare-showcase-buy{justify-content:center !important;color:#aebbb3 !important}
+#shopPage #shopBrawlerGrid .shop-slider-dots{margin-top:10px !important}
+#shopPage #shopBrawlerGrid .shop-slider-dot.active{background:#50ff87 !important;box-shadow:0 0 10px rgba(80,255,135,.65) !important}
+@keyframes rareShowcasePulse{0%,100%{transform:translateX(-50%) scale(.96);opacity:.68}50%{transform:translateX(-50%) scale(1.05);opacity:1}}
+@keyframes rareShowcaseScan{0%,58%{left:-45%;opacity:0}66%{opacity:1}86%{left:115%;opacity:.45}100%{left:115%;opacity:0}}
+
+/* ---------- Nita basique : légèrement plus petite ---------- */
+#homePage #selectedImage[src$="Nita_skin_def.webp"]{
+    width:208px !important;
+    height:262px !important;
+}
+#brawlerDetailPage #detailBrawlerSkin[src$="Nita_skin_def.webp"]{
+    width:238px !important;
+    right:0 !important;
+}
+#shopBrawlerGrid .shop-card-image[src$="Nita_skin_def.webp"],
+#skinCatalogDialog .skin-catalog-preview img[src$="Nita_skin_def.webp"]{
+    transform:scale(.94) !important;
+}
+</style>
+
+<script id="brawl-v13-requested-fixes-script">
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V13_REQUESTED_FIXES__) return;
+    window.__BRAWL_V13_REQUESTED_FIXES__ = true;
+
+    const INVITE_MAX_AGE_MS_V13 = 2 * 60 * 1000;
+
+    function normV13(value) {
+        try {
+            if (typeof normalizeFriendName === "function") {
+                return normalizeFriendName(value || "");
+            }
+        } catch (_) {}
+        return String(value || "").trim().toLowerCase();
+    }
+
+    function selfInBattleV13() {
+        return Boolean(currentOnlineMatch?.status === "playing");
+    }
+
+    function presenceByIdV13(userId) {
+        const id = String(userId || "");
+        return id && onlineLobbyPlayers instanceof Map
+            ? onlineLobbyPlayers.get(id) || null
+            : null;
+    }
+
+    function presenceByNameV13(name) {
+        if (!(onlineLobbyPlayers instanceof Map)) return null;
+        const wanted = normV13(name);
+        if (!wanted) return null;
+        return [...onlineLobbyPlayers.values()].find(player =>
+            normV13(player?.username) === wanted
+        ) || null;
+    }
+
+    function mergeBusyPresenceV13() {
+        if (!onlinePresenceChannel || !(onlineLobbyPlayers instanceof Map)) return;
+        const raw = onlinePresenceChannel.presenceState?.() || {};
+        Object.values(raw).flat().forEach(entry => {
+            const id = String(entry?.user_id || "");
+            const player = id ? onlineLobbyPlayers.get(id) : null;
+            if (!player) return;
+            player.in_battle = Boolean(entry?.in_battle);
+        });
+    }
+
+    /* Presence : le statut combat ne dépend plus de la page actuellement visible. */
+    if (typeof getOnlinePresencePayload === "function") {
+        const presencePayloadBeforeV13 = getOnlinePresencePayload;
+        getOnlinePresencePayload = function(session) {
+            return {
+                ...presencePayloadBeforeV13(session),
+                in_battle: selfInBattleV13()
+            };
+        };
+    }
+
+    function patchFriendsBusyV13() {
+        mergeBusyPresenceV13();
+        document.querySelectorAll("#friendsList .friend-card").forEach(card => {
+            const name = card.querySelector(".friend-name")?.textContent?.trim() || "";
+            const presence = presenceByNameV13(name);
+            const busy = Boolean(presence?.in_battle);
+            const stateEl = card.querySelector(".friend-state");
+            const invite = card.querySelector(".friend-action.invite");
+
+            card.classList.toggle("is-in-battle-v13", busy);
+
+            if (stateEl && presence) {
+                stateEl.textContent = busy ? "EN COMBAT" : "EN LIGNE";
+                stateEl.classList.add("online");
+            }
+
+            if (invite) {
+                if (busy) {
+                    invite.disabled = true;
+                    invite.textContent = "EN COMBAT";
+                    invite.dataset.busyV13 = "1";
+                } else if (invite.dataset.busyV13 === "1") {
+                    invite.disabled = false;
+                    invite.textContent = "INVITER";
+                    delete invite.dataset.busyV13;
+                }
+            }
+        });
+    }
+
+    function patchDuelPickerBusyV13() {
+        mergeBusyPresenceV13();
+        const dialog = document.getElementById("onlineDuelPickerDialog");
+        if (!dialog) return;
+
+        dialog.querySelectorAll(".online-duel-friend").forEach(card => {
+            const name = card.querySelector(".online-duel-friend-main strong")?.textContent?.trim() || "";
+            const presence = presenceByNameV13(name);
+            const busy = Boolean(presence?.in_battle);
+            const status = card.querySelector(".online-duel-friend-main small");
+            const invite = card.querySelector(".online-duel-invite-btn");
+
+            card.classList.toggle("is-in-battle-v13", busy);
+
+            if (status && presence) {
+                const selected = presence?.profile?.selected_brawler || presence?.brawler || "Brawler";
+                status.textContent = busy ? "EN COMBAT" : `EN LIGNE · ${selected}`;
+                status.classList.add("online");
+            }
+
+            if (invite) {
+                if (busy) {
+                    invite.disabled = true;
+                    invite.textContent = "EN COMBAT";
+                    invite.dataset.busyV13 = "1";
+                } else if (invite.dataset.busyV13 === "1") {
+                    invite.disabled = false;
+                    invite.textContent = "INVITER";
+                    delete invite.dataset.busyV13;
+                }
+            }
+        });
+    }
+
+    function patchOnlineCardsBusyV13() {
+        mergeBusyPresenceV13();
+        document.querySelectorAll(".online-player-card").forEach(card => {
+            const name = card.querySelector(".online-player-info strong")?.textContent?.trim() || "";
+            const presence = presenceByNameV13(name);
+            const busy = Boolean(presence?.in_battle);
+            const invite = card.querySelector(".online-player-invite");
+            const info = card.querySelector(".online-player-info small");
+
+            card.classList.toggle("is-in-battle-v13", busy);
+            if (busy && info && !info.textContent.includes("EN COMBAT")) {
+                info.textContent = "EN COMBAT";
+            }
+            if (invite) {
+                invite.disabled = busy;
+                if (busy) {
+                    invite.innerHTML = "<span>DUEL</span><b>EN COMBAT</b><i>×</i>";
+                    invite.dataset.busyV13 = "1";
+                } else if (invite.dataset.busyV13 === "1") {
+                    invite.innerHTML = "<span>DUEL</span><b>INVITER</b><i>›</i>";
+                    delete invite.dataset.busyV13;
+                }
+            }
+        });
+    }
+
+    function patchAllBusyUiV13() {
+        patchFriendsBusyV13();
+        patchDuelPickerBusyV13();
+        patchOnlineCardsBusyV13();
+    }
+
+    if (typeof refreshOnlinePresenceFromChannel === "function") {
+        const refreshPresenceBeforeV13 = refreshOnlinePresenceFromChannel;
+        refreshOnlinePresenceFromChannel = function(...args) {
+            const result = refreshPresenceBeforeV13(...args);
+            mergeBusyPresenceV13();
+            setTimeout(patchAllBusyUiV13, 0);
+            return result;
+        };
+    }
+
+    if (typeof renderFriends === "function") {
+        const renderFriendsBeforeV13 = renderFriends;
+        renderFriends = function(...args) {
+            const result = renderFriendsBeforeV13(...args);
+            setTimeout(patchFriendsBusyV13, 0);
+            return result;
+        };
+    }
+
+    if (typeof renderOnlineLobbyPlayers === "function") {
+        const renderOnlineLobbyBeforeV13 = renderOnlineLobbyPlayers;
+        renderOnlineLobbyPlayers = function(...args) {
+            const result = renderOnlineLobbyBeforeV13(...args);
+            setTimeout(patchOnlineCardsBusyV13, 0);
+            return result;
+        };
+    }
+
+    if (typeof openOnlineDuelPicker === "function") {
+        const openPickerBeforeV13 = openOnlineDuelPicker;
+        openOnlineDuelPicker = async function(...args) {
+            const result = await openPickerBeforeV13(...args);
+            mergeBusyPresenceV13();
+            patchDuelPickerBusyV13();
+            setTimeout(patchDuelPickerBusyV13, 120);
+            return result;
+        };
+    }
+
+    if (typeof window.openOnlinePlayerProfile === "function") {
+        const openProfileBeforeV13 = window.openOnlinePlayerProfile;
+        window.openOnlinePlayerProfile = function(playerId) {
+            const result = openProfileBeforeV13(playerId);
+            const player = presenceByIdV13(playerId);
+            if (!player?.in_battle) return result;
+
+            const dialog = document.getElementById("onlineFriendProfileDialog");
+            const status = dialog?.querySelector(".online-profile-online");
+            const duel = dialog?.querySelector(".online-profile-duel");
+
+            if (status) {
+                status.textContent = "EN COMBAT";
+                status.classList.add("is-in-battle-v13");
+            }
+            if (duel) {
+                duel.disabled = true;
+                duel.textContent = "⚔ EN COMBAT";
+                duel.classList.add("is-in-battle-v13");
+                duel.removeAttribute("onclick");
+            }
+            return result;
+        };
+    }
+
+    async function serverSaysPlayerBusyV13(playerId) {
+        const id = String(playerId || "");
+        if (!id) return false;
+        const player = presenceByIdV13(id);
+        if (player?.in_battle) return true;
+
+        const client = getBrawlCloudClient();
+        if (!client) return false;
+
+        try {
+            const { data, error } = await client
+                .from("matches")
+                .select("id,status")
+                .eq("status", "playing")
+                .or(`player1_id.eq.${id},player2_id.eq.${id}`)
+                .limit(1);
+
+            if (!error && data?.length) {
+                if (player) player.in_battle = true;
+                patchAllBusyUiV13();
+                return true;
+            }
+        } catch (_) {}
+        return false;
+    }
+
+    /* Tous les chemins d'invitation passent ici : blocage centralisé. */
+    if (typeof sendOnlineDuelInviteToPlayer === "function") {
+        const sendInviteBeforeV13 = sendOnlineDuelInviteToPlayer;
+        sendOnlineDuelInviteToPlayer = async function(opponent) {
+            if (selfInBattleV13()) {
+                setFriendFeedback("Tu es déjà en combat.", "error");
+                return false;
+            }
+
+            if (await serverSaysPlayerBusyV13(opponent?.id)) {
+                const player = presenceByIdV13(opponent?.id);
+                const name = opponent?.username || player?.username || "Ce joueur";
+                setFriendFeedback(name + " est en combat. Tu ne peux pas l'inviter pour le moment.", "error");
+                return false;
+            }
+
+            return sendInviteBeforeV13(opponent);
+        };
+    }
+
+    function inviteAgeV13(invite) {
+        const created = Date.parse(invite?.created_at || "");
+        return Number.isFinite(created) ? Date.now() - created : 0;
+    }
+
+    async function closeGhostInviteV13(invite, status = "cancelled") {
+        if (!invite?.id) return;
+        onlineHandledInviteIds.add(invite.id);
+        const client = getBrawlCloudClient();
+        if (!client) return;
+        try {
+            await client
+                .from("duel_invites")
+                .update({ status })
+                .eq("id", invite.id)
+                .eq("status", "pending");
+        } catch (_) {}
+    }
+
+    /*
+       Une invitation n'est affichée que si elle existe ENCORE côté Supabase,
+       vise réellement ce compte, est récente et que le joueur n'est pas déjà en combat.
+       Cela supprime le cas des vieilles invitations pending qui réapparaissaient au lancement.
+    */
+    if (typeof showIncomingOnlineDuelInvite === "function") {
+        const showInviteBeforeV13 = showIncomingOnlineDuelInvite;
+        showIncomingOnlineDuelInvite = async function(invite) {
+            if (!invite?.id) return false;
+
+            const client = getBrawlCloudClient();
+            if (!client) return false;
+
+            const { data: { session } } = await client.auth.getSession();
+            if (!session?.user) return false;
+
+            let fresh = null;
+            try {
+                const { data, error } = await client
+                    .from("duel_invites")
+                    .select("*")
+                    .eq("id", invite.id)
+                    .maybeSingle();
+                if (error || !data) return false;
+                fresh = data;
+            } catch (_) {
+                return false;
+            }
+
+            if (
+                fresh.status !== "pending" ||
+                String(fresh.receiver_id || "") !== String(session.user.id)
+            ) {
+                return false;
+            }
+
+            if (inviteAgeV13(fresh) > INVITE_MAX_AGE_MS_V13) {
+                await closeGhostInviteV13(fresh, "cancelled");
+                return false;
+            }
+
+            if (selfInBattleV13()) {
+                await closeGhostInviteV13(fresh, "refused");
+                return false;
+            }
+
+            return showInviteBeforeV13(fresh);
+        };
+    }
+
+    /* Au lancement, ignorer/canceller les anciennes invitations pending. */
+    if (typeof checkPendingOnlineInvites === "function") {
+        checkPendingOnlineInvites = async function() {
+            const client = getBrawlCloudClient();
+            if (!client) return;
+
+            const { data: { session }, error: sessionError } = await client.auth.getSession();
+            if (sessionError || !session?.user) return;
+
+            const { data: invites, error } = await client
+                .from("duel_invites")
+                .select("*")
+                .eq("receiver_id", session.user.id)
+                .eq("status", "pending")
+                .order("created_at", { ascending: false })
+                .limit(20);
+
+            if (error) {
+                console.error("Lecture des invitations impossible :", error);
+                return;
+            }
+
+            const all = Array.isArray(invites) ? invites : [];
+            const recent = [];
+
+            for (const invite of all) {
+                if (inviteAgeV13(invite) > INVITE_MAX_AGE_MS_V13) {
+                    await closeGhostInviteV13(invite, "cancelled");
+                } else {
+                    recent.push(invite);
+                }
+            }
+
+            if (!selfInBattleV13() && recent[0]) {
+                await showIncomingOnlineDuelInvite(recent[0]);
+            }
+        };
+    }
+
+    /* Le statut est republié dès que la partie passe playing/finished/cancelled. */
+    if (typeof onOnlineMatchUpdated === "function") {
+        const matchUpdatedBeforeV13 = onOnlineMatchUpdated;
+        onOnlineMatchUpdated = function(match) {
+            const result = matchUpdatedBeforeV13(match);
+            setTimeout(() => {
+                try { syncOnlinePresence(); } catch (_) {}
+                patchAllBusyUiV13();
+            }, 60);
+            return result;
+        };
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            try { syncOnlinePresence(); } catch (_) {}
+            patchAllBusyUiV13();
+        }, 500);
+    });
+})();
+</script>
+
+
+
+<style id="brawl-v14-ultra-rare-shop-style">
+/* ===== Ultra rework boutique Brawlers rares ===== */
+#shopPage .shop-carousel{
+    grid-template-columns: 42px minmax(0,1fr) 42px !important;
+    gap: 10px !important;
+    align-items: center !important;
+}
+#shopPage .shop-slider-window{
+    padding: 0 !important;
+}
+#shopPage .shop-section-title{
+    margin-bottom: 10px !important;
+}
+#shopPage .shop-arrow{
+    width: 42px !important;
+    height: 72px !important;
+    padding: 0 !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(94,255,147,.32) !important;
+    color: #dbffe9 !important;
+    background: linear-gradient(180deg, rgba(23,52,34,.96), rgba(7,18,12,.98)) !important;
+    box-shadow: 0 12px 22px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+#shopPage .shop-arrow:hover{
+    transform: translateY(-3px) scale(1.03) !important;
+    border-color: rgba(94,255,147,.56) !important;
+    box-shadow: 0 16px 26px rgba(0,0,0,.40), 0 0 16px rgba(80,255,135,.14) !important;
+}
+#shopPage .shop-arrow:active{
+    transform: translateY(1px) scale(.98) !important;
+}
+#shopPage #shopSliderCounter{
+    margin-top: 10px !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 7px !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot{
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 50% !important;
+    background: rgba(174,201,186,.42) !important;
+    box-shadow: none !important;
+    transition: transform .18s ease, background .18s ease, box-shadow .18s ease !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot.active{
+    width: 11px !important;
+    height: 11px !important;
+    background: #50ff87 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 0 10px rgba(80,255,135,.62) !important;
+}
+
+#shopPage #shopBrawlerGrid .rare-shop-v2-card{
+    position: relative !important;
+    min-height: 360px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-radius: 26px !important;
+    border: 1px solid rgba(100,255,152,.42) !important;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(132,255,184,.12), transparent 34%),
+        radial-gradient(circle at 100% 100%, rgba(54,190,109,.12), transparent 36%),
+        linear-gradient(180deg, #112b1b 0%, #0a1a11 57%, #07120b 100%) !important;
+    box-shadow:
+        0 24px 44px rgba(0,0,0,.44),
+        0 0 0 1px rgba(255,255,255,.03) inset,
+        0 0 24px rgba(80,255,135,.09) !important;
+    isolation: isolate;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-card::before{
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: 25px;
+    border: 1px solid rgba(255,255,255,.04);
+    pointer-events: none;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-grid,
+#shopPage #shopBrawlerGrid .rare-shop-v2-noise,
+#shopPage #shopBrawlerGrid .rare-shop-v2-glow,
+#shopPage #shopBrawlerGrid .rare-shop-v2-shine{
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-grid{
+    opacity: .16;
+    background-image:
+        linear-gradient(rgba(122,255,171,.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,255,171,.18) 1px, transparent 1px);
+    background-size: 20px 20px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.92), transparent 86%);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-noise{
+    opacity: .22;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(255,255,255,.06) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 70% 35%, rgba(255,255,255,.05) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 35% 65%, rgba(255,255,255,.04) 0 1px, transparent 1.5px);
+    background-size: 70px 70px, 90px 90px, 110px 110px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-glow{
+    z-index: 0;
+    left: 50%;
+    top: 66px;
+    width: 230px;
+    height: 190px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(80,255,135,.27), rgba(80,255,135,.11) 42%, transparent 72%);
+    filter: blur(4px);
+    animation: rareShopV2Pulse 3s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-shine{
+    left: -36%;
+    width: 44%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+    transform: skewX(-18deg);
+    animation: rareShopV2Shine 5s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-header{
+    position: relative;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 14px 0;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-kicker{
+    display: inline-block;
+    color: #a8d6b8;
+    font-size: 8px;
+    font-weight: 1000;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-subkicker{
+    display: block;
+    margin-top: 5px;
+    color: #effff4;
+    font-size: 17px;
+    line-height: 1;
+    font-weight: 1000;
+    font-style: italic;
+    letter-spacing: -.6px;
+    text-transform: uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-badges{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-rarity,
+#shopPage #shopBrawlerGrid .rare-shop-v2-state{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 1000;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-rarity{
+    color: #092012;
+    background: linear-gradient(135deg, #7bffab, #47ec7c);
+    box-shadow: 0 6px 14px rgba(80,255,135,.18);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-state{
+    color: #c9dfd1;
+    border: 1px solid rgba(132,255,184,.16);
+    background: rgba(9,22,14,.60);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-state.owned{
+    color: #eaf1ed;
+    background: rgba(100,112,107,.24);
+    border-color: rgba(172,188,178,.16);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-hero{
+    position: relative;
+    z-index: 3;
+    height: 182px;
+    margin-top: 10px;
+    overflow: visible;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-ring{
+    position: absolute;
+    left: 50%;
+    bottom: 52px;
+    width: 176px;
+    height: 176px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    border: 1px solid rgba(113,255,161,.15);
+    box-shadow: 0 0 0 18px rgba(80,255,135,.03), 0 0 0 38px rgba(80,255,135,.02);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-floor{
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    width: 210px;
+    height: 52px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(92,255,146,.34), rgba(54,186,106,.10) 50%, transparent 74%);
+    border-bottom: 1px solid rgba(125,255,169,.28);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-image{
+    position: absolute !important;
+    z-index: 4 !important;
+    left: 50% !important;
+    bottom: 8px !important;
+    transform: translateX(-50%) scale(1.14) !important;
+    width: 100% !important;
+    height: 198px !important;
+    margin: 0 !important;
+    object-fit: contain !important;
+    filter: drop-shadow(0 18px 14px rgba(0,0,0,.56)) drop-shadow(0 0 18px rgba(80,255,135,.18)) !important;
+    animation: rareShopV2Float 3.4s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-image[src$="Nita_skin_def.webp"]{
+    transform: translateX(-50%) scale(1.04) !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-panel{
+    position: relative;
+    z-index: 6;
+    margin: 0 12px 12px;
+    padding: 14px 14px 13px;
+    border-radius: 20px;
+    border: 1px solid rgba(132,255,184,.14);
+    background: linear-gradient(180deg, rgba(11,26,17,.84), rgba(7,16,11,.96));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-panel.simple-name-only{
+    padding-top: 16px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-panel.simple-name-only .shop-card-name{
+    margin-top: 0 !important;
+    margin-bottom: 12px !important;
+    text-align: left;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-label{
+    color: #73f49b;
+    font-size: 8px;
+    font-weight: 1000;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-card .shop-card-name{
+    margin-top: 4px !important;
+    font-size: 33px !important;
+    line-height: .92 !important;
+    font-style: italic !important;
+    text-transform: uppercase !important;
+    letter-spacing: -1.3px !important;
+    color: #ffffff !important;
+    text-shadow: 0 4px 0 rgba(0,0,0,.56), 0 0 18px rgba(80,255,135,.15) !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-desc{
+    margin-top: 6px;
+    color: #95b19f;
+    font-size: 9px;
+    line-height: 1.45;
+    font-weight: 900;
+    letter-spacing: .15px;
+    text-transform: uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-meta{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 11px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-meta span{
+    min-height: 22px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: #d7f7e3;
+    font-size: 8px;
+    font-weight: 1000;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    border: 1px solid rgba(132,255,184,.14);
+    background: rgba(24,46,33,.72);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-buy{
+    width: 100% !important;
+    min-height: 54px !important;
+    margin-top: 13px !important;
+    padding: 8px 10px 8px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    border-radius: 15px !important;
+    border: 1px solid rgba(85,235,132,.16) !important;
+    color: #08210f !important;
+    background: linear-gradient(135deg, #8bffb3, #50ff87) !important;
+    border-bottom: 4px solid #2db45a !important;
+    box-shadow: 0 12px 24px rgba(80,255,135,.18) !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-buy:not(.locked-buy):hover{
+    transform: translateY(-2px) !important;
+    box-shadow: 0 14px 28px rgba(80,255,135,.24) !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-buy .rare-shop-v2-buy-main{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-buy .rare-shop-v2-buy-main small{
+    font-size: 7px;
+    font-weight: 1000;
+    letter-spacing: 1px;
+    opacity: .72;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-buy .rare-shop-v2-buy-main strong{
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    font-size: 16px;
+    font-weight: 1000;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-buy .rare-shop-v2-buy-main img{
+    width: 21px !important;
+    height: 21px !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-buy .rare-shop-v2-buy-cta{
+    min-width: 86px;
+    height: 34px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    color: #f4fff7;
+    background: rgba(6,31,13,.22);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+    font-size: 10px;
+    font-weight: 1000;
+    letter-spacing: .8px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-buy.locked-buy{
+    border-bottom-color: #4d5951 !important;
+    color: #dce7e0 !important;
+    background: linear-gradient(135deg, #49574f, #68786f) !important;
+    box-shadow: none !important;
+    justify-content: center !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-card.is-owned{
+    filter: saturate(.82);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v2-card.is-owned .rare-shop-v2-glow{
+    opacity: .55;
+}
+@keyframes rareShopV2Pulse{
+    0%,100%{transform:translateX(-50%) scale(.96);opacity:.70}
+    50%{transform:translateX(-50%) scale(1.05);opacity:1}
+}
+@keyframes rareShopV2Shine{
+    0%,55%{left:-40%;opacity:0}
+    65%{opacity:1}
+    88%{left:120%;opacity:.55}
+    100%{left:120%;opacity:0}
+}
+@keyframes rareShopV2Float{
+    0%,100%{transform:translateX(-50%) translateY(0) scale(1.14)}
+    50%{transform:translateX(-50%) translateY(-4px) scale(1.14)}
+}
+</style>
+
+<script id="brawl-v14-ultra-rare-shop-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V14_ULTRA_RARE_SHOP__) return;
+    window.__BRAWL_V14_ULTRA_RARE_SHOP__ = true;
+
+    const renderShopOriginalV14 = typeof renderShop === "function" ? renderShop : null;
+
+    renderShop = function renderShopV14Ultra() {
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+        const grid = document.getElementById("shopBrawlerGrid");
+        const counter = document.getElementById("shopSliderCounter");
+        if (!grid) return;
+        if (shopBrawlerIndex < 0 || shopBrawlerIndex >= shopBrawlers.length) shopBrawlerIndex = 0;
+        const name = shopBrawlers[shopBrawlerIndex];
+        const brawler = brawlers[name];
+        if (!brawler) return;
+        const unlocked = isBrawlerUnlocked(name);
+        const slideClass = shopSlideDirection >= 0 ? "slide-from-right" : "slide-from-left";
+        const skin = getDefaultSkinImage(name);
+
+        grid.innerHTML = `
+            <article class="shop-card rare-shop-v2-card ${unlocked ? "is-owned" : "is-for-sale"}">
+                <div class="rare-shop-v2-grid"></div>
+                <div class="rare-shop-v2-noise"></div>
+                <div class="rare-shop-v2-glow"></div>
+                <div class="rare-shop-v2-shine"></div>
+
+                <div class="rare-shop-v2-header">
+                    <div class="rare-shop-v2-copy">
+                        <span class="rare-shop-v2-kicker">BRAWLERS RARES</span>
+                        <span class="rare-shop-v2-subkicker">SHOWCASE</span>
+                    </div>
+                    <div class="rare-shop-v2-badges">
+                        <span class="rare-shop-v2-rarity">${brawler.rarity}</span>
+                        <span class="rare-shop-v2-state ${unlocked ? "owned" : ""}">${unlocked ? "Possédé" : "Disponible"}</span>
+                    </div>
+                </div>
+
+                <div class="shop-slide-content rare-shop-v2-hero ${slideClass}">
+                    <div class="rare-shop-v2-ring"></div>
+                    <div class="rare-shop-v2-floor"></div>
+                    <img class="shop-card-image rare-shop-v2-image" src="${skin}" alt="${name}">
+                </div>
+
+                <div class="rare-shop-v2-panel simple-name-only">
+                    <div class="shop-card-name">${name}</div>
+                    <button
+                        class="shop-buy-button rare-shop-v2-buy ${unlocked ? "locked-buy" : ""}"
+                        ${unlocked ? "disabled" : ""}
+                        onclick="buyRareBrawler('${name}')"
+                    >
+                        ${unlocked
+                            ? `<span>✓ DÉJÀ DÉBLOQUÉ</span>`
+                            : `<span class="rare-shop-v2-buy-main"><small>PRIX</small><strong><img src="Icon/coin.png" alt="Pièces">${SHOP_BRAWLER_PRICE}</strong></span><span class="rare-shop-v2-buy-cta">ACHETER</span>`}
+                    </button>
+                </div>
+            </article>
+        `;
+
+        if (counter) {
+            counter.innerHTML = shopBrawlers.map((brawlerName, index) => `
+                <span class="shop-slider-dot ${index === shopBrawlerIndex ? "active" : ""}" aria-label="${index === shopBrawlerIndex ? "Brawler affiché" : "Brawler " + (index + 1)}"></span>
+            `).join("");
+        }
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            try { renderShop(); } catch (_) {}
+        }, 0);
+    });
+})();
+</script>
+
+
+<style id="brawl-v15-rare-shop-rework-style">
+/* ===== Rare shop V15 : full rework ===== */
+#shopPage .shop-carousel{
+    grid-template-columns: 42px minmax(0,1fr) 42px !important;
+    gap: 10px !important;
+    align-items: center !important;
+}
+#shopPage .shop-slider-window{padding:0 !important;}
+#shopPage .shop-arrow{
+    width:42px !important;
+    height:78px !important;
+    border-radius:16px !important;
+    border:1px solid rgba(91,255,150,.25) !important;
+    color:#ecfff3 !important;
+    background:linear-gradient(180deg,rgba(13,39,24,.96),rgba(6,19,12,.98)) !important;
+    box-shadow:0 12px 22px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+#shopPage .shop-arrow:hover{
+    transform:translateY(-2px) scale(1.03) !important;
+    border-color:rgba(91,255,150,.44) !important;
+    box-shadow:0 16px 28px rgba(0,0,0,.42), 0 0 15px rgba(80,255,135,.14) !important;
+}
+#shopPage #shopSliderCounter{
+    margin-top:10px !important;
+    display:flex !important;
+    justify-content:center !important;
+    gap:7px !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot{
+    width:7px !important;
+    height:7px !important;
+    border-radius:50% !important;
+    background:rgba(189,214,197,.34) !important;
+    transition:all .18s ease !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot.active{
+    width:12px !important;
+    height:12px !important;
+    background:#50ff87 !important;
+    transform:translateY(-1px) !important;
+    box-shadow:0 0 12px rgba(80,255,135,.7) !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-card{
+    position:relative !important;
+    min-height:366px !important;
+    overflow:hidden !important;
+    padding:0 !important;
+    border-radius:26px !important;
+    border:1px solid rgba(92,255,146,.38) !important;
+    background:
+        radial-gradient(circle at 50% 22%, rgba(93,255,144,.16), transparent 28%),
+        radial-gradient(circle at 100% 0%, rgba(65,209,118,.10), transparent 34%),
+        linear-gradient(180deg,#122d1c 0%,#09160f 62%,#07110c 100%) !important;
+    box-shadow:
+        0 24px 44px rgba(0,0,0,.46),
+        inset 0 1px 0 rgba(255,255,255,.05),
+        0 0 26px rgba(80,255,135,.08) !important;
+    isolation:isolate;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-card::before{
+    content:"";
+    position:absolute;
+    inset:1px;
+    border-radius:25px;
+    border:1px solid rgba(255,255,255,.035);
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-grid,
+#shopPage #shopBrawlerGrid .rare-shop-v3-glow,
+#shopPage #shopBrawlerGrid .rare-shop-v3-shine{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-grid{
+    opacity:.12;
+    background-image:
+        linear-gradient(rgba(124,255,172,.16) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,255,172,.16) 1px, transparent 1px);
+    background-size:22px 22px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.9), transparent 82%);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-glow{
+    left:50%;
+    top:36px;
+    width:250px;
+    height:250px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(80,255,135,.25), rgba(80,255,135,.08) 42%, transparent 72%);
+    filter:blur(5px);
+    animation:rareV3Pulse 3s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-shine{
+    left:-42%;
+    width:40%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.11), transparent);
+    transform:skewX(-18deg);
+    animation:rareV3Shine 5.8s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-top{
+    position:relative;
+    z-index:5;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    padding:14px 14px 0;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-kicker{
+    color:#d9ffe6;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1.6px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-sub{
+    display:block;
+    margin-top:4px;
+    color:#87d4a2;
+    font-size:10px;
+    font-weight:1000;
+    letter-spacing:1.1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-badges{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:6px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-pill{
+    min-height:24px;
+    padding:0 11px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-pill.rarity{
+    color:#092111;
+    background:linear-gradient(135deg,#92ffb9,#50ff87);
+    box-shadow:0 7px 14px rgba(80,255,135,.16);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-pill.state{
+    color:#d7e5dc;
+    background:rgba(18,31,23,.72);
+    border:1px solid rgba(125,255,169,.12);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-pill.state.owned{
+    color:#f0f5f2;
+    background:rgba(116,125,120,.28);
+    border-color:rgba(255,255,255,.08);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-hero{
+    position:relative;
+    z-index:3;
+    height:214px;
+    margin-top:6px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-orbit{
+    position:absolute;
+    left:50%;
+    bottom:52px;
+    width:188px;
+    height:188px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    border:1px solid rgba(110,255,160,.12);
+    box-shadow:0 0 0 16px rgba(80,255,135,.03), 0 0 0 34px rgba(80,255,135,.02);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-floor{
+    position:absolute;
+    left:50%;
+    bottom:14px;
+    width:220px;
+    height:56px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse, rgba(92,255,146,.32), rgba(44,150,83,.10) 52%, transparent 74%);
+    border-bottom:1px solid rgba(122,255,168,.25);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-image{
+    position:absolute !important;
+    z-index:4 !important;
+    left:50% !important;
+    bottom:12px !important;
+    width:100% !important;
+    height:214px !important;
+    margin:0 !important;
+    object-fit:contain !important;
+    transform:translateX(-50%) scale(1.12) !important;
+    filter:drop-shadow(0 20px 16px rgba(0,0,0,.54)) drop-shadow(0 0 16px rgba(80,255,135,.14)) !important;
+    animation:rareV3Float 3.5s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-image[src$="Nita_skin_def.webp"]{
+    transform:translateX(-50%) scale(1.03) !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-bottom{
+    position:relative;
+    z-index:6;
+    margin:0 12px 12px;
+    padding:14px 14px 13px;
+    border-radius:22px;
+    border:1px solid rgba(126,255,170,.12);
+    background:linear-gradient(180deg, rgba(11,24,16,.92), rgba(7,15,10,.98));
+    box-shadow:0 8px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-name{
+    text-align:center;
+    font-size:44px;
+    line-height:.88;
+    font-weight:1000;
+    font-style:italic;
+    letter-spacing:-1.8px;
+    text-transform:uppercase;
+    color:#fff;
+    text-shadow:0 4px 0 rgba(0,0,0,.58), 0 0 16px rgba(80,255,135,.10);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy{
+    width:100% !important;
+    min-height:56px !important;
+    margin-top:14px !important;
+    padding:8px 10px 8px 12px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+    border-radius:16px !important;
+    border:1px solid rgba(97,237,140,.16) !important;
+    color:#08220f !important;
+    background:linear-gradient(135deg,#95ffba,#50ff87) !important;
+    border-bottom:4px solid #28b355 !important;
+    box-shadow:0 12px 24px rgba(80,255,135,.18) !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy:not(.locked-buy):hover{
+    transform:translateY(-2px) !important;
+    box-shadow:0 14px 28px rgba(80,255,135,.24) !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy-main{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    line-height:1;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy-main small{
+    font-size:7px;
+    font-weight:1000;
+    letter-spacing:1px;
+    opacity:.72;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy-main strong{
+    margin-top:4px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:17px;
+    font-weight:1000;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy-main img{
+    width:22px !important;
+    height:22px !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy-cta{
+    min-width:98px;
+    height:36px;
+    padding:0 13px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    color:#f5fff8;
+    background:rgba(6,31,13,.22);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+    font-size:10px;
+    font-weight:1000;
+    letter-spacing:.9px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy.locked-buy{
+    justify-content:center !important;
+    color:#edf4ef !important;
+    background:linear-gradient(135deg,#526159,#66766d) !important;
+    border-bottom-color:#45524c !important;
+    box-shadow:none !important;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-buy.locked-buy span{
+    font-size:12px;
+    font-weight:1000;
+    letter-spacing:.4px;
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-card.is-owned{
+    filter:saturate(.88);
+}
+#shopPage #shopBrawlerGrid .rare-shop-v3-card.is-owned .rare-shop-v3-glow{opacity:.54;}
+@keyframes rareV3Pulse{
+    0%,100%{transform:translateX(-50%) scale(.96);opacity:.72}
+    50%{transform:translateX(-50%) scale(1.05);opacity:1}
+}
+@keyframes rareV3Shine{
+    0%,58%{left:-44%;opacity:0}
+    68%{opacity:1}
+    90%{left:118%;opacity:.5}
+    100%{left:118%;opacity:0}
+}
+@keyframes rareV3Float{
+    0%,100%{transform:translateX(-50%) translateY(0) scale(1.12)}
+    50%{transform:translateX(-50%) translateY(-4px) scale(1.12)}
+}
+</style>
+<script id="brawl-v15-rare-shop-rework-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V15_RARE_SHOP_REWORK__) return;
+    window.__BRAWL_V15_RARE_SHOP_REWORK__ = true;
+
+    renderShop = function renderShopV15Rework() {
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+        const grid = document.getElementById("shopBrawlerGrid");
+        const counter = document.getElementById("shopSliderCounter");
+        if (!grid) return;
+        if (shopBrawlerIndex < 0 || shopBrawlerIndex >= shopBrawlers.length) shopBrawlerIndex = 0;
+        const name = shopBrawlers[shopBrawlerIndex];
+        const brawler = brawlers[name];
+        if (!brawler) return;
+        const unlocked = isBrawlerUnlocked(name);
+        const slideClass = shopSlideDirection >= 0 ? "slide-from-right" : "slide-from-left";
+        const skin = getDefaultSkinImage(name);
+
+        grid.innerHTML = `
+            <article class="shop-card rare-shop-v3-card ${unlocked ? "is-owned" : "is-for-sale"}">
+                <div class="rare-shop-v3-grid"></div>
+                <div class="rare-shop-v3-glow"></div>
+                <div class="rare-shop-v3-shine"></div>
+
+                <div class="rare-shop-v3-top">
+                    <div>
+                        <div class="rare-shop-v3-kicker">BRAWLERS RARES</div>
+                        <span class="rare-shop-v3-sub">Recrutement premium</span>
+                    </div>
+                    <div class="rare-shop-v3-badges">
+                        <span class="rare-shop-v3-pill rarity">${brawler.rarity}</span>
+                        <span class="rare-shop-v3-pill state ${unlocked ? "owned" : ""}">${unlocked ? "Possédé" : "Disponible"}</span>
+                    </div>
+                </div>
+
+                <div class="shop-slide-content rare-shop-v3-hero ${slideClass}">
+                    <div class="rare-shop-v3-orbit"></div>
+                    <div class="rare-shop-v3-floor"></div>
+                    <img class="shop-card-image rare-shop-v3-image" src="${skin}" alt="${name}">
+                </div>
+
+                <div class="rare-shop-v3-bottom">
+                    <div class="rare-shop-v3-name">${name}</div>
+                    <button class="shop-buy-button rare-shop-v3-buy ${unlocked ? "locked-buy" : ""}" ${unlocked ? "disabled" : ""} onclick="buyRareBrawler('${name}')">
+                        ${unlocked
+                            ? `<span>✓ DÉJÀ DÉBLOQUÉ</span>`
+                            : `<span class="rare-shop-v3-buy-main"><small>PRIX</small><strong><img src="Icon/coin.png" alt="Pièces">${SHOP_BRAWLER_PRICE}</strong></span><span class="rare-shop-v3-buy-cta">ACHETER</span>`}
+                    </button>
+                </div>
+            </article>
+        `;
+
+        if (counter) {
+            counter.innerHTML = shopBrawlers.map((brawlerName, index) => `
+                <span class="shop-slider-dot ${index === shopBrawlerIndex ? "active" : ""}" aria-label="${index === shopBrawlerIndex ? "Brawler affiché" : "Brawler " + (index + 1)}"></span>
+            `).join("");
+        }
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            try { renderShop(); } catch (_) {}
+        }, 0);
+    });
+})();
+</script>
+
+
+<style id="brawl-v16-combat-vfx-style">
+/* =====================================================
+   BRAWL VS · COMBAT STATUS VFX
+===================================================== */
+#battlePlayerStage,
+#battleEnemyStage{overflow:visible !important;}
+.battle-status-vfx{
+    position:absolute;
+    inset:-22px -26px -14px;
+    z-index:12;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .14s ease;
+}
+.battle-stage.status-paralyzed .battle-status-vfx,
+.battle-stage.status-stunned .battle-status-vfx,
+.battle-stage.status-burning .battle-status-vfx{opacity:1;}
+.battle-status-vfx .status-tag{
+    position:absolute;
+    left:50%;
+    top:-7px;
+    z-index:20;
+    transform:translateX(-50%) scale(.9);
+    min-width:74px;
+    height:23px;
+    padding:0 9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    color:white;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    opacity:0;
+    transition:.16s ease;
+    backdrop-filter:blur(5px);
+}
+.battle-stage.status-paralyzed .status-tag.paralyze,
+.battle-stage.status-stunned .status-tag.stun,
+.battle-stage.status-burning .status-tag.burn{opacity:1;transform:translateX(-50%) scale(1);}
+.status-tag.paralyze{background:linear-gradient(135deg,rgba(61,113,255,.94),rgba(155,67,255,.94));box-shadow:0 0 16px rgba(92,103,255,.45);}
+.status-tag.stun{color:#2b1b00;background:linear-gradient(135deg,#fff2a6,#ffc94e);box-shadow:0 0 16px rgba(255,202,75,.44);}
+.status-tag.burn{background:linear-gradient(135deg,#ff9f2d,#ff3f25);box-shadow:0 0 17px rgba(255,83,35,.46);}
+
+/* PARALYSIE */
+.battle-vfx-electric{
+    position:absolute;
+    inset:13px 16px 12px;
+    border-radius:46%;
+    opacity:0;
+    filter:drop-shadow(0 0 7px rgba(104,138,255,.8));
+}
+.battle-stage.status-paralyzed .battle-vfx-electric{opacity:1;animation:bvElectricField .46s steps(2,end) infinite;}
+.battle-vfx-electric::before,
+.battle-vfx-electric::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:48%;
+    border:2px solid rgba(104,151,255,.0);
+    background:
+      linear-gradient(112deg,transparent 0 18%,#8bbcff 19% 21%,transparent 22% 42%,#c182ff 43% 46%,transparent 47% 100%),
+      linear-gradient(72deg,transparent 0 31%,#fff 32% 33%,transparent 34% 64%,#6d8cff 65% 67%,transparent 68% 100%);
+    clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+    mix-blend-mode:screen;
+}
+.battle-vfx-electric::after{transform:scale(.82) rotate(38deg);animation:bvElectricRotate .8s linear infinite reverse;}
+.battle-stage.status-paralyzed{animation:bvParalyzedStage .16s steps(2,end) infinite;}
+.battle-stage.status-paralyzed .battle-fighter-image{
+    filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) drop-shadow(0 0 12px rgba(98,139,255,.72)) saturate(1.12) !important;
+}
+.battle-vfx-spark{
+    position:absolute;
+    width:5px;height:5px;border-radius:50%;
+    background:#e9f3ff;
+    box-shadow:0 0 8px #7aa7ff,0 0 14px #925dff;
+    opacity:0;
+}
+.battle-stage.status-paralyzed .battle-vfx-spark{opacity:1;animation:bvSpark 1s ease-in-out infinite;}
+.battle-vfx-spark.s1{left:15%;top:37%;animation-delay:.05s !important}.battle-vfx-spark.s2{right:13%;top:25%;animation-delay:.28s !important}.battle-vfx-spark.s3{left:30%;bottom:12%;animation-delay:.52s !important}.battle-vfx-spark.s4{right:27%;bottom:20%;animation-delay:.76s !important}
+
+/* ASSOMMEMENT */
+.battle-vfx-stun-orbit{
+    position:absolute;
+    left:50%;top:-3px;
+    width:104px;height:36px;
+    transform:translateX(-50%);
+    opacity:0;
+}
+.battle-stage.status-stunned .battle-vfx-stun-orbit{opacity:1;animation:bvStunOrbit 1.2s linear infinite;}
+.battle-vfx-star{
+    position:absolute;
+    color:#ffd84a;
+    font-size:20px;
+    line-height:1;
+    text-shadow:0 0 7px rgba(255,223,85,.75),0 2px 2px rgba(0,0,0,.45);
+}
+.battle-vfx-star.a{left:0;top:8px}.battle-vfx-star.b{left:39px;top:-6px;font-size:16px}.battle-vfx-star.c{right:0;top:9px;font-size:18px}
+.battle-stage.status-stunned{animation:bvStunnedStage .7s ease-in-out infinite;}
+.battle-stage.status-stunned .battle-fighter-image{
+    filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) saturate(.82) brightness(.95) !important;
+}
+.battle-vfx-stun-ring{
+    position:absolute;left:50%;top:4px;width:114px;height:35px;transform:translateX(-50%);
+    border:2px solid rgba(255,215,73,.38);border-radius:50%;opacity:0;
+    box-shadow:0 0 10px rgba(255,214,61,.18);
+}
+.battle-stage.status-stunned .battle-vfx-stun-ring{opacity:1;animation:bvStunRing 1.1s ease-in-out infinite;}
+
+/* BRÛLURE */
+.battle-vfx-fire{
+    position:absolute;
+    left:8%;right:8%;bottom:2px;height:64%;
+    opacity:0;
+    filter:drop-shadow(0 0 9px rgba(255,81,26,.42));
+}
+.battle-stage.status-burning .battle-vfx-fire{opacity:1;}
+.battle-vfx-flame{
+    position:absolute;
+    bottom:0;
+    width:28px;height:58px;
+    border-radius:70% 30% 65% 35% / 75% 45% 55% 25%;
+    background:linear-gradient(to top,#ff2f16 0%,#ff8d1c 48%,#ffe761 73%,rgba(255,255,255,.85) 100%);
+    transform-origin:50% 100%;
+    opacity:.86;
+    mix-blend-mode:screen;
+    animation:bvFlame .62s ease-in-out infinite alternate;
+}
+.battle-vfx-flame.f1{left:8%;height:48px;animation-delay:-.18s}.battle-vfx-flame.f2{left:32%;height:69px;animation-delay:-.42s}.battle-vfx-flame.f3{right:29%;height:54px;animation-delay:-.08s}.battle-vfx-flame.f4{right:5%;height:66px;animation-delay:-.31s}
+.battle-vfx-heat{
+    position:absolute;inset:16px 10px 4px;border-radius:50%;opacity:0;
+    background:radial-gradient(circle at 50% 72%,rgba(255,117,30,.28),rgba(255,56,20,.09) 45%,transparent 72%);
+}
+.battle-stage.status-burning .battle-vfx-heat{opacity:1;animation:bvHeat 1.1s ease-in-out infinite;}
+.battle-stage.status-burning .battle-fighter-image{
+    filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) drop-shadow(0 0 13px rgba(255,75,25,.48)) saturate(1.18) !important;
+}
+
+@keyframes bvElectricField{0%,100%{transform:scale(.98) rotate(-2deg);filter:hue-rotate(0deg)}50%{transform:scale(1.03) rotate(2deg);filter:hue-rotate(22deg)}}
+@keyframes bvElectricRotate{to{transform:scale(.82) rotate(398deg)}}
+@keyframes bvParalyzedStage{0%{transform:translate(-2px,0) rotate(-.35deg)}50%{transform:translate(2px,-1px) rotate(.35deg)}100%{transform:translate(-1px,1px) rotate(-.25deg)}}
+@keyframes bvSpark{0%,100%{transform:scale(.3);opacity:.1}35%{transform:scale(1.6);opacity:1}60%{transform:scale(.7);opacity:.3}}
+@keyframes bvStunOrbit{to{transform:translateX(-50%) rotateY(360deg)}}
+@keyframes bvStunRing{0%,100%{transform:translateX(-50%) scale(.84);opacity:.28}50%{transform:translateX(-50%) scale(1.04);opacity:.8}}
+@keyframes bvStunnedStage{0%,100%{transform:rotate(-1.3deg) translateY(0)}50%{transform:rotate(1.3deg) translateY(1px)}}
+@keyframes bvFlame{0%{transform:scaleX(.78) scaleY(.88) rotate(-7deg);opacity:.62}100%{transform:scaleX(1.06) scaleY(1.13) rotate(7deg);opacity:.96}}
+@keyframes bvHeat{0%,100%{transform:scale(.95);opacity:.42}50%{transform:scale(1.06);opacity:.82}}
+</style>
+
+<style id="brawl-v16-rare-shop-style">
+/* =====================================================
+   BRAWL VS · RARE SHOP — REBUILT FROM ZERO
+===================================================== */
+#shopPage .shop-carousel{
+    position:relative !important;
+    display:block !important;
+    width:100% !important;
+    margin-top:3px !important;
+}
+#shopPage .shop-slider-window{
+    width:100% !important;
+    overflow:visible !important;
+    padding:0 !important;
+}
+#shopPage .shop-carousel>.shop-arrow{
+    position:absolute !important;
+    z-index:40 !important;
+    top:150px !important;
+    width:42px !important;
+    height:78px !important;
+    margin:0 !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:15px !important;
+    border:1px solid rgba(124,255,174,.24) !important;
+    color:#f3fff7 !important;
+    background:rgba(7,19,12,.82) !important;
+    backdrop-filter:blur(9px) !important;
+    box-shadow:0 12px 26px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.05) !important;
+    font-size:31px !important;
+}
+#shopPage .shop-carousel>.shop-arrow:first-child{left:10px !important;}
+#shopPage .shop-carousel>.shop-arrow:last-child{right:10px !important;}
+#shopPage .shop-carousel>.shop-arrow:hover{
+    transform:scale(1.06) !important;
+    border-color:rgba(111,255,164,.52) !important;
+    background:rgba(12,35,21,.94) !important;
+    box-shadow:0 14px 30px rgba(0,0,0,.46),0 0 16px rgba(80,255,135,.12) !important;
+}
+#shopPage #shopBrawlerGrid{
+    width:100% !important;
+    overflow:visible !important;
+}
+#shopPage #shopBrawlerGrid .rare-zero-card{
+    position:relative !important;
+    width:100% !important;
+    height:404px !important;
+    min-height:404px !important;
+    overflow:hidden !important;
+    padding:0 !important;
+    border-radius:28px !important;
+    border:1px solid rgba(103,255,158,.38) !important;
+    background:
+      radial-gradient(circle at 50% 34%,rgba(80,255,135,.18),transparent 34%),
+      linear-gradient(180deg,#122a1c 0%,#09160f 62%,#06100a 100%) !important;
+    box-shadow:0 25px 48px rgba(0,0,0,.48),0 0 30px rgba(80,255,135,.08),inset 0 1px 0 rgba(255,255,255,.05) !important;
+    isolation:isolate !important;
+}
+#shopPage #shopBrawlerGrid .rare-zero-card::before{
+    content:"";
+    position:absolute;inset:0;z-index:0;
+    background:
+      linear-gradient(rgba(117,255,166,.075) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(117,255,166,.075) 1px,transparent 1px);
+    background-size:23px 23px;
+    mask-image:linear-gradient(to bottom,black,transparent 88%);
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-zero-card::after{
+    content:"";
+    position:absolute;z-index:1;left:-38%;top:0;width:34%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);
+    transform:skewX(-18deg);
+    animation:rareZeroSweep 5.4s ease-in-out infinite;
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-zero-topbar{
+    position:absolute;z-index:8;left:14px;right:14px;top:13px;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+#shopPage #shopBrawlerGrid .rare-zero-brand{
+    display:flex;align-items:center;gap:7px;
+    color:#c9f8d9;font-size:8px;font-weight:1000;letter-spacing:1.6px;text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-zero-brand::before{
+    content:"";width:7px;height:7px;border-radius:50%;background:#50ff87;box-shadow:0 0 10px rgba(80,255,135,.8);
+}
+#shopPage #shopBrawlerGrid .rare-zero-rarity{
+    min-width:56px;height:25px;padding:0 11px;display:flex;align-items:center;justify-content:center;
+    border-radius:999px;color:#082112;background:linear-gradient(135deg,#9effbf,#50ff87);
+    font-size:8px;font-weight:1000;letter-spacing:1px;text-transform:uppercase;
+    box-shadow:0 7px 16px rgba(80,255,135,.16);
+}
+#shopPage #shopBrawlerGrid .rare-zero-stage{
+    position:absolute;z-index:3;left:0;right:0;top:36px;height:276px;overflow:hidden;
+}
+#shopPage #shopBrawlerGrid .rare-zero-portal{
+    position:absolute;left:50%;top:34px;width:246px;height:246px;transform:translateX(-50%);border-radius:50%;
+    background:
+      radial-gradient(circle,rgba(90,255,144,.18) 0 30%,rgba(58,184,104,.08) 49%,transparent 68%);
+    border:1px solid rgba(111,255,161,.12);
+    box-shadow:0 0 0 22px rgba(80,255,135,.025),0 0 0 44px rgba(80,255,135,.015);
+    animation:rareZeroPortal 3.2s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-zero-floor{
+    position:absolute;left:50%;bottom:13px;width:250px;height:58px;transform:translateX(-50%);border-radius:50%;
+    background:radial-gradient(ellipse,rgba(86,255,140,.34),rgba(52,165,94,.10) 51%,transparent 74%);
+    border-bottom:1px solid rgba(119,255,166,.24);
+}
+#shopPage #shopBrawlerGrid .rare-zero-image{
+    position:absolute !important;z-index:5 !important;left:50% !important;bottom:7px !important;
+    width:100% !important;height:268px !important;margin:0 !important;object-fit:contain !important;
+    transform:translateX(-50%) scale(1.13) !important;
+    filter:drop-shadow(0 20px 15px rgba(0,0,0,.60)) drop-shadow(0 0 18px rgba(80,255,135,.13)) !important;
+    animation:rareZeroFloat 3.6s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-zero-image[src$="Nita_skin_def.webp"]{
+    transform:translateX(-50%) scale(1.03) !important;
+}
+#shopPage #shopBrawlerGrid .rare-zero-name{
+    position:absolute;z-index:10;left:0;right:0;bottom:90px;
+    text-align:center;color:white;font-size:47px;line-height:.88;font-weight:1000;font-style:italic;
+    letter-spacing:-2px;text-transform:uppercase;
+    text-shadow:0 5px 0 rgba(0,0,0,.62),0 0 18px rgba(80,255,135,.12);
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-zero-owned{
+    position:absolute;z-index:11;left:50%;bottom:59px;transform:translateX(-50%);
+    min-width:100px;height:24px;padding:0 10px;display:flex;align-items:center;justify-content:center;
+    border-radius:999px;color:#eef5f0;background:rgba(88,102,94,.66);border:1px solid rgba(255,255,255,.08);
+    font-size:8px;font-weight:1000;letter-spacing:.7px;text-transform:uppercase;backdrop-filter:blur(6px);
+}
+#shopPage #shopBrawlerGrid .rare-zero-buybar{
+    position:absolute;z-index:12;left:12px;right:12px;bottom:12px;height:66px;
+    display:flex;align-items:center;gap:10px;padding:8px 8px 8px 13px;
+    border-radius:18px;border:1px solid rgba(119,255,167,.13);
+    background:linear-gradient(180deg,rgba(8,22,13,.92),rgba(5,14,9,.98));
+    box-shadow:0 10px 24px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.04);
+}
+#shopPage #shopBrawlerGrid .rare-zero-price{
+    flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;line-height:1;
+}
+#shopPage #shopBrawlerGrid .rare-zero-price small{
+    color:#789285;font-size:7px;font-weight:1000;letter-spacing:1.1px;text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-zero-price strong{
+    margin-top:5px;display:flex;align-items:center;gap:6px;color:#f6fff9;font-size:18px;font-weight:1000;
+}
+#shopPage #shopBrawlerGrid .rare-zero-price img{width:23px;height:23px;object-fit:contain;}
+#shopPage #shopBrawlerGrid .rare-zero-button{
+    width:142px !important;height:48px !important;min-height:48px !important;margin:0 !important;padding:0 12px !important;
+    display:flex !important;align-items:center !important;justify-content:center !important;
+    border-radius:14px !important;border:1px solid rgba(255,255,255,.12) !important;border-bottom:4px solid #25a94e !important;
+    color:#071f0e !important;background:linear-gradient(135deg,#9dffc1,#50ff87) !important;
+    box-shadow:0 10px 22px rgba(80,255,135,.18),inset 0 1px 0 rgba(255,255,255,.35) !important;
+    font-size:11px !important;font-weight:1000 !important;letter-spacing:.7px !important;text-transform:uppercase !important;
+}
+#shopPage #shopBrawlerGrid .rare-zero-button:not(:disabled):hover{
+    transform:translateY(-2px) scale(1.02) !important;
+    box-shadow:0 13px 27px rgba(80,255,135,.24),0 0 15px rgba(80,255,135,.10) !important;
+}
+#shopPage #shopBrawlerGrid .rare-zero-button:disabled{
+    color:#e5ece8 !important;background:linear-gradient(135deg,#4b5a52,#65756c) !important;border-bottom-color:#404d46 !important;
+    opacity:1 !important;filter:none !important;box-shadow:none !important;
+}
+#shopPage #shopSliderCounter{
+    margin-top:10px !important;display:flex !important;justify-content:center !important;gap:7px !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot{
+    width:7px !important;height:7px !important;border-radius:50% !important;background:rgba(182,210,192,.34) !important;box-shadow:none !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot.active{
+    width:12px !important;height:12px !important;background:#50ff87 !important;box-shadow:0 0 12px rgba(80,255,135,.65) !important;transform:translateY(-2px) !important;
+}
+@keyframes rareZeroPortal{0%,100%{transform:translateX(-50%) scale(.96);opacity:.72}50%{transform:translateX(-50%) scale(1.035);opacity:1}}
+@keyframes rareZeroFloat{0%,100%{transform:translateX(-50%) translateY(0) scale(1.13)}50%{transform:translateX(-50%) translateY(-5px) scale(1.13)}}
+@keyframes rareZeroSweep{0%,60%{left:-40%;opacity:0}69%{opacity:1}89%{left:118%;opacity:.48}100%{left:118%;opacity:0}}
+</style>
+
+<script id="brawl-v16-combat-vfx-and-rare-shop">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V16_COMBAT_VFX_AND_RARE_SHOP__) return;
+    window.__BRAWL_V16_COMBAT_VFX_AND_RARE_SHOP__ = true;
+
+    function controlKey(side){ return side === "enemy" ? "enemyControlEffectType" : "playerControlEffectType"; }
+
+    /* Keep the original game mechanic, but remember what kind of control effect it is. */
+    if (typeof applyBattleParalysis === "function") {
+        const originalApplyBattleParalysisV16 = applyBattleParalysis;
+        applyBattleParalysis = function(side, turns){
+            const result = originalApplyBattleParalysisV16(side, turns);
+            if (result) battleState[controlKey(side)] = "paralyzed";
+            return result;
+        };
+    }
+
+    window.applyBattleStun = function(side, turns){
+        if (typeof applyBattleParalysis !== "function") return false;
+        const result = applyBattleParalysis(side, turns);
+        if (result) battleState[controlKey(side)] = "stunned";
+        return result;
+    };
+
+    function ensureStatusVfx(side){
+        const stage = document.getElementById(side === "enemy" ? "battleEnemyStage" : "battlePlayerStage");
+        if (!stage) return null;
+        let root = stage.querySelector(".battle-status-vfx");
+        if (root) return root;
+        root = document.createElement("div");
+        root.className = "battle-status-vfx";
+        root.setAttribute("aria-hidden", "true");
+        root.innerHTML = `
+            <div class="status-tag paralyze">⚡ PARALYSÉ</div>
+            <div class="status-tag stun">★ ASSOMMÉ</div>
+            <div class="status-tag burn">🔥 BRÛLÉ</div>
+            <div class="battle-vfx-electric"></div>
+            <i class="battle-vfx-spark s1"></i><i class="battle-vfx-spark s2"></i><i class="battle-vfx-spark s3"></i><i class="battle-vfx-spark s4"></i>
+            <div class="battle-vfx-stun-ring"></div>
+            <div class="battle-vfx-stun-orbit"><i class="battle-vfx-star a">★</i><i class="battle-vfx-star b">★</i><i class="battle-vfx-star c">★</i></div>
+            <div class="battle-vfx-heat"></div>
+            <div class="battle-vfx-fire"><i class="battle-vfx-flame f1"></i><i class="battle-vfx-flame f2"></i><i class="battle-vfx-flame f3"></i><i class="battle-vfx-flame f4"></i></div>
+        `;
+        stage.appendChild(root);
+        return root;
+    }
+
+    function syncStatusSide(side){
+        if (typeof battleState !== "object" || !battleState) return;
+        const stage = document.getElementById(side === "enemy" ? "battleEnemyStage" : "battlePlayerStage");
+        if (!stage) return;
+        ensureStatusVfx(side);
+        const prefix = side === "enemy" ? "enemy" : "player";
+        const controlTurns = Math.max(0, Number(battleState[prefix + "ParalyzedTurns"] || 0));
+        const burnTurns = Math.max(0, Number(battleState[prefix + "BurnTurns"] || 0));
+        let controlType = battleState[controlKey(side)] || "paralyzed";
+        if (controlTurns <= 0) {
+            battleState[controlKey(side)] = null;
+            controlType = null;
+        }
+        stage.classList.toggle("status-paralyzed", controlTurns > 0 && controlType !== "stunned");
+        stage.classList.toggle("status-stunned", controlTurns > 0 && controlType === "stunned");
+        stage.classList.toggle("status-burning", burnTurns > 0);
+    }
+
+    function syncBattleStatusVfx(){
+        const battlePage = document.getElementById("battlePage");
+        if (!battlePage || !battlePage.classList.contains("active")) return;
+        syncStatusSide("player");
+        syncStatusSide("enemy");
+    }
+    window.syncBattleStatusVfx = syncBattleStatusVfx;
+    setInterval(syncBattleStatusVfx, 120);
+    document.addEventListener("DOMContentLoaded", () => setTimeout(syncBattleStatusVfx, 50));
+
+    /* New rare shop: only the brawler, its name, rarity, and the actual purchase action. */
+    renderShop = function renderShopV16Zero(){
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+        const grid = document.getElementById("shopBrawlerGrid");
+        const counter = document.getElementById("shopSliderCounter");
+        if (!grid) return;
+        if (shopBrawlerIndex < 0 || shopBrawlerIndex >= shopBrawlers.length) shopBrawlerIndex = 0;
+        const name = shopBrawlers[shopBrawlerIndex];
+        const brawler = brawlers[name];
+        if (!brawler) return;
+        const unlocked = isBrawlerUnlocked(name);
+        const skin = getDefaultSkinImage(name);
+        const slideClass = shopSlideDirection >= 0 ? "slide-from-right" : "slide-from-left";
+
+        grid.innerHTML = `
+            <article class="shop-card rare-zero-card ${unlocked ? "is-owned" : "is-for-sale"}">
+                <div class="rare-zero-topbar">
+                    <span class="rare-zero-brand">BRAWLER RARE</span>
+                    <span class="rare-zero-rarity">${brawler.rarity}</span>
+                </div>
+                <div class="shop-slide-content rare-zero-stage ${slideClass}">
+                    <div class="rare-zero-portal"></div>
+                    <div class="rare-zero-floor"></div>
+                    <img class="shop-card-image rare-zero-image" src="${skin}" alt="${name}">
+                </div>
+                <div class="rare-zero-name">${name}</div>
+                ${unlocked ? `<div class="rare-zero-owned">✓ POSSÉDÉ</div>` : ``}
+                <div class="rare-zero-buybar">
+                    <div class="rare-zero-price">
+                        <small>${unlocked ? "COLLECTION" : "PRIX"}</small>
+                        <strong>${unlocked ? `DÉBLOQUÉ` : `<img src="Icon/coin.png" alt="Pièces">${SHOP_BRAWLER_PRICE}`}</strong>
+                    </div>
+                    <button class="shop-buy-button rare-zero-button" ${unlocked ? "disabled" : ""} onclick="buyRareBrawler('${name}')">
+                        ${unlocked ? "DÉJÀ OBTENU" : "ACHETER"}
+                    </button>
+                </div>
+            </article>
+        `;
+
+        if (counter) {
+            counter.innerHTML = shopBrawlers.map((_, index) => `<span class="shop-slider-dot ${index === shopBrawlerIndex ? "active" : ""}" aria-label="Brawler ${index + 1}"></span>`).join("");
+        }
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => setTimeout(() => {
+        try { renderShop(); } catch (_) {}
+    }, 0));
+})();
+</script>
+
+
+<style id="brawl-v16-rare-shop-ultimate-style">
+/* ===== Rare shop V16 : clean rebuild ===== */
+#shopPage .shop-carousel{
+    display:block !important;
+}
+#shopPage .shop-carousel > .shop-arrow{
+    display:none !important;
+}
+#shopPage .shop-slider-window{
+    padding:0 !important;
+}
+#shopPage #shopSliderCounter{
+    margin-top:10px !important;
+    display:flex !important;
+    justify-content:center !important;
+    gap:7px !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot{
+    width:8px !important;
+    height:8px !important;
+    border-radius:50% !important;
+    background:rgba(186,209,194,.28) !important;
+    box-shadow:none !important;
+    transition:all .18s ease !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot.active{
+    width:18px !important;
+    border-radius:999px !important;
+    background:#50ff87 !important;
+    box-shadow:0 0 14px rgba(80,255,135,.55) !important;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-card{
+    position:relative !important;
+    min-height:378px !important;
+    overflow:hidden !important;
+    padding:0 !important;
+    border-radius:28px !important;
+    border:1px solid rgba(101,255,151,.34) !important;
+    background:
+        radial-gradient(circle at 50% 12%, rgba(115,255,167,.16), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(42,101,64,.36), transparent 42%),
+        linear-gradient(180deg, #123120 0%, #091611 62%, #07100b 100%) !important;
+    box-shadow:
+        0 24px 44px rgba(0,0,0,.46),
+        0 0 0 1px rgba(255,255,255,.03) inset,
+        0 0 28px rgba(80,255,135,.08) !important;
+    isolation:isolate;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-card::before{
+    content:"";
+    position:absolute;
+    inset:1px;
+    border-radius:27px;
+    border:1px solid rgba(255,255,255,.035);
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-grid,
+#shopPage #shopBrawlerGrid .rare-ultra-glow,
+#shopPage #shopBrawlerGrid .rare-ultra-spot,
+#shopPage #shopBrawlerGrid .rare-ultra-shine{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-grid{
+    opacity:.13;
+    background-image:
+        linear-gradient(rgba(140,255,183,.16) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(140,255,183,.16) 1px, transparent 1px);
+    background-size:22px 22px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.86), transparent 84%);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-glow{
+    left:50%;
+    top:56px;
+    width:260px;
+    height:260px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(80,255,135,.22), rgba(80,255,135,.08) 44%, transparent 74%);
+    filter:blur(7px);
+    animation:rareUltraPulse 3.2s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-spot{
+    left:50%;
+    top:-36px;
+    width:180px;
+    height:220px;
+    transform:translateX(-50%);
+    background:radial-gradient(ellipse at top, rgba(163,255,197,.13), transparent 70%);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-shine{
+    left:-40%;
+    width:36%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.10), transparent);
+    transform:skewX(-18deg);
+    animation:rareUltraShine 6s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-header{
+    position:relative;
+    z-index:5;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    padding:15px 16px 0;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-kicker{
+    color:#e8fff0;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1.7px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-sub{
+    margin-top:5px;
+    color:#84dca0;
+    font-size:10px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-badges{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    max-width:145px;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-pill{
+    min-height:24px;
+    padding:0 10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-pill.rarity{
+    color:#08210f;
+    background:linear-gradient(135deg, #8effb6, #50ff87);
+    box-shadow:0 8px 14px rgba(80,255,135,.15);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-pill.state{
+    color:#ebfff1;
+    background:rgba(16,32,22,.70);
+    border:1px solid rgba(125,255,169,.12);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-pill.state.owned{
+    color:#f0f5f1;
+    background:rgba(98,112,104,.28);
+    border-color:rgba(255,255,255,.08);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-nav{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:8;
+    width:44px;
+    height:82px;
+    border-radius:16px;
+    border:1px solid rgba(90,255,149,.24);
+    color:#f1fff5;
+    background:linear-gradient(180deg, rgba(11,30,19,.90), rgba(7,18,12,.96));
+    box-shadow:0 12px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
+    font-size:28px;
+    font-weight:900;
+    cursor:pointer;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-nav.left{left:12px;}
+#shopPage #shopBrawlerGrid .rare-ultra-nav.right{right:12px;}
+#shopPage #shopBrawlerGrid .rare-ultra-nav:hover{
+    transform:translateY(calc(-50% - 2px)) scale(1.03);
+    border-color:rgba(90,255,149,.44);
+    box-shadow:0 15px 28px rgba(0,0,0,.34), 0 0 14px rgba(80,255,135,.12);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-nav:active{
+    transform:translateY(calc(-50% + 1px)) scale(.98);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-stage{
+    position:relative;
+    z-index:3;
+    height:226px;
+    margin-top:2px;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-ring{
+    position:absolute;
+    left:50%;
+    bottom:58px;
+    width:194px;
+    height:194px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    border:1px solid rgba(116,255,163,.14);
+    box-shadow:0 0 0 18px rgba(80,255,135,.03), 0 0 0 36px rgba(80,255,135,.02);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-floor{
+    position:absolute;
+    left:50%;
+    bottom:18px;
+    width:238px;
+    height:60px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse, rgba(92,255,146,.32), rgba(44,150,83,.10) 52%, transparent 74%);
+    border-bottom:1px solid rgba(122,255,168,.24);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-image{
+    position:absolute !important;
+    z-index:4 !important;
+    left:50% !important;
+    bottom:18px !important;
+    width:100% !important;
+    height:222px !important;
+    margin:0 !important;
+    object-fit:contain !important;
+    transform:translateX(-50%) scale(1.10) !important;
+    filter:drop-shadow(0 22px 16px rgba(0,0,0,.56)) drop-shadow(0 0 16px rgba(80,255,135,.12)) !important;
+    animation:rareUltraFloat 3.5s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-image[src$="Nita_skin_def.webp"]{
+    transform:translateX(-50%) scale(1.02) !important;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-bottom{
+    position:relative;
+    z-index:6;
+    margin:0 12px 12px;
+    padding:16px 14px 14px;
+    border-radius:22px;
+    border:1px solid rgba(128,255,170,.10);
+    background:linear-gradient(180deg, rgba(10,24,15,.94), rgba(7,16,11,.98));
+    box-shadow:0 10px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-name{
+    text-align:center;
+    color:#fff;
+    font-size:42px;
+    line-height:.88;
+    font-weight:1000;
+    font-style:italic;
+    letter-spacing:-1.6px;
+    text-transform:uppercase;
+    text-shadow:0 4px 0 rgba(0,0,0,.58), 0 0 12px rgba(80,255,135,.10);
+}
+#shopPage #shopBrawlerGrid .rare-ultra-cta{
+    width:100% !important;
+    min-height:58px !important;
+    margin-top:15px !important;
+    padding:8px 10px 8px 13px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+    border-radius:16px !important;
+    border:1px solid rgba(94,238,139,.16) !important;
+    color:#08210f !important;
+    background:linear-gradient(135deg, #93ffb9, #50ff87) !important;
+    border-bottom:4px solid #28b355 !important;
+    box-shadow:0 14px 24px rgba(80,255,135,.18) !important;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-cta:not(.locked-buy):hover{
+    transform:translateY(-2px) !important;
+    box-shadow:0 16px 28px rgba(80,255,135,.22) !important;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-price{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    line-height:1;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-price small{
+    font-size:7px;
+    font-weight:1000;
+    letter-spacing:1px;
+    opacity:.72;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-price strong{
+    margin-top:4px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:17px;
+    font-weight:1000;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-price img{
+    width:22px !important;
+    height:22px !important;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-cta-label{
+    min-width:104px;
+    height:38px;
+    padding:0 14px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    color:#f6fff9;
+    background:rgba(6,31,13,.20);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+    font-size:10px;
+    font-weight:1000;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-cta.locked-buy{
+    justify-content:center !important;
+    color:#f0f5f1 !important;
+    background:linear-gradient(135deg, #505f57, #6a7a71) !important;
+    border-bottom-color:#45524c !important;
+    box-shadow:none !important;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-cta.locked-buy span{
+    font-size:12px;
+    font-weight:1000;
+    letter-spacing:.4px;
+}
+#shopPage #shopBrawlerGrid .rare-ultra-card.is-owned{filter:saturate(.88);}
+#shopPage #shopBrawlerGrid .rare-ultra-card.is-owned .rare-ultra-glow{opacity:.50;}
+@keyframes rareUltraPulse{
+    0%,100%{transform:translateX(-50%) scale(.96);opacity:.74}
+    50%{transform:translateX(-50%) scale(1.05);opacity:1}
+}
+@keyframes rareUltraShine{
+    0%,58%{left:-42%;opacity:0}
+    68%{opacity:1}
+    90%{left:118%;opacity:.45}
+    100%{left:118%;opacity:0}
+}
+@keyframes rareUltraFloat{
+    0%,100%{transform:translateX(-50%) translateY(0) scale(1.10)}
+    50%{transform:translateX(-50%) translateY(-4px) scale(1.10)}
+}
+</style>
+<script id="brawl-v16-rare-shop-ultimate-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V16_RARE_SHOP_ULTIMATE__) return;
+    window.__BRAWL_V16_RARE_SHOP_ULTIMATE__ = true;
+
+    renderShop = function renderShopV16Ultimate() {
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+        const grid = document.getElementById("shopBrawlerGrid");
+        const counter = document.getElementById("shopSliderCounter");
+        if (!grid) return;
+        if (shopBrawlerIndex < 0 || shopBrawlerIndex >= shopBrawlers.length) shopBrawlerIndex = 0;
+        const name = shopBrawlers[shopBrawlerIndex];
+        const brawler = brawlers[name];
+        if (!brawler) return;
+        const unlocked = isBrawlerUnlocked(name);
+        const skin = getDefaultSkinImage(name);
+        const slideClass = shopSlideDirection >= 0 ? "slide-from-right" : "slide-from-left";
+
+        grid.innerHTML = `
+            <article class="shop-card rare-ultra-card ${unlocked ? "is-owned" : "is-for-sale"}">
+                <div class="rare-ultra-grid"></div>
+                <div class="rare-ultra-glow"></div>
+                <div class="rare-ultra-spot"></div>
+                <div class="rare-ultra-shine"></div>
+
+                <div class="rare-ultra-header">
+                    <div>
+                        <div class="rare-ultra-kicker">BRAWLERS RARES</div>
+                        <div class="rare-ultra-sub">Boutique premium</div>
+                    </div>
+                    <div class="rare-ultra-badges">
+                        <span class="rare-ultra-pill rarity">${brawler.rarity}</span>
+                        <span class="rare-ultra-pill state ${unlocked ? "owned" : ""}">${unlocked ? "Possédé" : "Disponible"}</span>
+                    </div>
+                </div>
+
+                <button class="rare-ultra-nav left" type="button" aria-label="Brawler précédent" onclick="changeShopBrawler(-1)">‹</button>
+                <button class="rare-ultra-nav right" type="button" aria-label="Brawler suivant" onclick="changeShopBrawler(1)">›</button>
+
+                <div class="shop-slide-content rare-ultra-stage ${slideClass}">
+                    <div class="rare-ultra-ring"></div>
+                    <div class="rare-ultra-floor"></div>
+                    <img class="shop-card-image rare-ultra-image" src="${skin}" alt="${name}">
+                </div>
+
+                <div class="rare-ultra-bottom">
+                    <div class="rare-ultra-name">${name}</div>
+                    <button class="shop-buy-button rare-ultra-cta ${unlocked ? "locked-buy" : ""}" ${unlocked ? "disabled" : ""} onclick="buyRareBrawler('${name}')">
+                        ${unlocked
+                            ? `<span>✓ DÉJÀ DÉBLOQUÉ</span>`
+                            : `<span class="rare-ultra-price"><small>PRIX</small><strong><img src="Icon/coin.png" alt="Pièces">${SHOP_BRAWLER_PRICE}</strong></span><span class="rare-ultra-cta-label">Acheter</span>`}
+                    </button>
+                </div>
+            </article>
+        `;
+
+        if (counter) {
+            counter.innerHTML = shopBrawlers.map((brawlerName, index) => `
+                <span class="shop-slider-dot ${index === shopBrawlerIndex ? "active" : ""}" aria-label="${index === shopBrawlerIndex ? "Brawler affiché" : "Brawler " + (index + 1)}"></span>
+            `).join("");
+        }
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            try { renderShop(); } catch (_) {}
+        }, 0);
+    });
+})();
+</script>
+
+
+<!-- =====================================================
+     BRAWL VS · RARE MARKET FINAL REWORK
+     Final override: replaces every previous rare-shop visual layer.
+====================================================== -->
+<style id="brawl-rare-market-final-style">
+#shopPage .shop-section-title:has(+ .shop-carousel #shopBrawlerGrid){
+    margin:22px 0 10px !important;
+    color:#f4fff7 !important;
+    font-size:12px !important;
+    letter-spacing:1.6px !important;
+}
+#shopPage .shop-section-title:has(+ .shop-carousel #shopBrawlerGrid)::after{
+    background:linear-gradient(90deg,rgba(80,255,135,.55),transparent) !important;
+}
+#shopPage .shop-section-title:has(+ .shop-carousel #shopBrawlerGrid) .shop-section-dot{
+    width:8px !important;
+    height:8px !important;
+    background:#50ff87 !important;
+    box-shadow:0 0 12px rgba(80,255,135,.85) !important;
+}
+#shopPage .shop-carousel{
+    display:block !important;
+    margin:0 !important;
+}
+#shopPage .shop-carousel > .shop-arrow{
+    display:none !important;
+}
+#shopPage .shop-slider-window{
+    overflow:visible !important;
+    padding:0 !important;
+}
+#shopPage #shopBrawlerGrid{
+    width:100% !important;
+}
+#shopPage #shopSliderCounter{
+    display:none !important;
+}
+
+/* Main market shell */
+#shopPage #shopBrawlerGrid .rare-market-card{
+    --rare:#50ff87;
+    --rare-soft:#a9ffc4;
+    position:relative !important;
+    min-height:430px !important;
+    overflow:hidden !important;
+    padding:0 !important;
+    border:1px solid rgba(105,255,154,.38) !important;
+    border-radius:24px 7px 24px 7px !important;
+    background:
+        radial-gradient(circle at 50% 20%,rgba(80,255,135,.15),transparent 29%),
+        linear-gradient(145deg,#173322 0%,#0b1710 56%,#07100b 100%) !important;
+    box-shadow:
+        0 12px 0 rgba(2,8,5,.42),
+        0 24px 42px rgba(0,0,0,.43),
+        inset 0 1px 0 rgba(255,255,255,.055),
+        0 0 30px rgba(80,255,135,.08) !important;
+    isolation:isolate;
+}
+#shopPage #shopBrawlerGrid .rare-market-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:.18;
+    background-image:
+        linear-gradient(120deg,transparent 0 46%,rgba(255,255,255,.05) 46% 47%,transparent 47% 100%),
+        linear-gradient(rgba(118,255,164,.08) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(118,255,164,.08) 1px,transparent 1px);
+    background-size:100% 100%,30px 30px,30px 30px;
+    mask-image:linear-gradient(to bottom,#000,transparent 72%);
+}
+#shopPage #shopBrawlerGrid .rare-market-card::after{
+    content:"";
+    position:absolute;
+    left:-20%;
+    top:-30%;
+    z-index:0;
+    width:55%;
+    height:170%;
+    pointer-events:none;
+    transform:rotate(18deg);
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.055),transparent);
+    animation:rareMarketSweep 6.5s ease-in-out infinite;
+}
+
+/* Top strip */
+#shopPage #shopBrawlerGrid .rare-market-top{
+    position:relative;
+    z-index:8;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:11px 13px 7px;
+}
+#shopPage #shopBrawlerGrid .rare-market-brand{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+#shopPage #shopBrawlerGrid .rare-market-mark{
+    width:32px;
+    height:32px;
+    flex:0 0 32px;
+    display:grid;
+    place-items:center;
+    border-radius:10px 3px 10px 3px;
+    color:#092413;
+    background:linear-gradient(145deg,#b5ffca,#50ff87);
+    box-shadow:0 6px 16px rgba(80,255,135,.19),inset 0 1px 0 rgba(255,255,255,.48);
+    font-size:16px;
+    font-weight:1000;
+}
+#shopPage #shopBrawlerGrid .rare-market-brand-copy{
+    min-width:0;
+}
+#shopPage #shopBrawlerGrid .rare-market-kicker{
+    color:#f2fff6;
+    font-size:10px;
+    line-height:1;
+    font-weight:1000;
+    letter-spacing:1.35px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-market-count{
+    margin-top:4px;
+    color:#72c98f;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-market-state{
+    min-height:27px;
+    padding:0 10px;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    border-radius:999px;
+    color:#07220f;
+    background:#50ff87;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    box-shadow:0 6px 14px rgba(80,255,135,.14);
+}
+#shopPage #shopBrawlerGrid .rare-market-state.owned{
+    color:#dbe7df;
+    background:rgba(109,126,115,.27);
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:none;
+}
+
+/* Character stage */
+#shopPage #shopBrawlerGrid .rare-market-stage{
+    position:relative;
+    z-index:3;
+    height:232px;
+    margin:0 8px;
+    overflow:hidden;
+    border-radius:20px 5px 20px 5px;
+    background:
+        radial-gradient(ellipse at 50% 86%,rgba(80,255,135,.17),transparent 42%),
+        linear-gradient(180deg,rgba(6,18,11,.04),rgba(5,13,8,.42));
+}
+#shopPage #shopBrawlerGrid .rare-market-halo{
+    position:absolute;
+    left:50%;
+    top:39%;
+    width:205px;
+    height:205px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:
+        radial-gradient(circle,rgba(120,255,166,.13) 0 33%,transparent 34% 47%,rgba(80,255,135,.10) 48% 49%,transparent 50%),
+        conic-gradient(from 0deg,transparent,rgba(80,255,135,.14),transparent 34%,rgba(80,255,135,.08),transparent 68%);
+    animation:rareMarketRotate 18s linear infinite;
+}
+#shopPage #shopBrawlerGrid .rare-market-floor{
+    position:absolute;
+    left:50%;
+    bottom:11px;
+    width:245px;
+    height:50px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse,rgba(80,255,135,.39),rgba(80,255,135,.09) 53%,transparent 73%);
+    filter:blur(.1px);
+}
+#shopPage #shopBrawlerGrid .rare-market-image{
+    position:absolute !important;
+    left:50% !important;
+    bottom:3px !important;
+    z-index:4 !important;
+    width:100% !important;
+    height:230px !important;
+    margin:0 !important;
+    object-fit:contain !important;
+    transform:translateX(-50%) scale(1.09) !important;
+    transform-origin:center bottom !important;
+    filter:drop-shadow(0 19px 13px rgba(0,0,0,.56)) drop-shadow(0 0 12px rgba(80,255,135,.10)) !important;
+    animation:rareMarketFloat 3.4s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-market-image[src$="Nita_skin_def.webp"]{
+    transform:translateX(-50%) scale(1.01) !important;
+}
+#shopPage #shopBrawlerGrid .rare-market-nav{
+    position:absolute;
+    z-index:12;
+    top:50%;
+    width:39px;
+    height:58px;
+    display:grid;
+    place-items:center;
+    transform:translateY(-50%);
+    border:1px solid rgba(116,255,163,.25);
+    border-radius:12px 4px 12px 4px;
+    color:#effff4;
+    background:linear-gradient(180deg,rgba(14,35,22,.92),rgba(6,16,10,.96));
+    box-shadow:0 9px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);
+    font-size:29px;
+    font-weight:900;
+    line-height:1;
+    cursor:pointer;
+    transition:transform .15s ease,border-color .15s ease,background .15s ease;
+}
+#shopPage #shopBrawlerGrid .rare-market-nav.left{left:7px;}
+#shopPage #shopBrawlerGrid .rare-market-nav.right{right:7px;}
+#shopPage #shopBrawlerGrid .rare-market-nav:hover{
+    transform:translateY(-50%) scale(1.05);
+    border-color:rgba(112,255,161,.58);
+    background:linear-gradient(180deg,rgba(28,67,42,.96),rgba(8,25,14,.98));
+}
+#shopPage #shopBrawlerGrid .rare-market-nav:active{
+    transform:translateY(-50%) scale(.96);
+}
+
+/* Name plate: intentionally clean */
+#shopPage #shopBrawlerGrid .rare-market-nameplate{
+    position:absolute;
+    z-index:7;
+    left:14px;
+    right:14px;
+    bottom:6px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:10px;
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-market-name{
+    min-width:0;
+    color:#fff;
+    font-size:37px;
+    line-height:.88;
+    font-weight:1000;
+    font-style:italic;
+    letter-spacing:-1.7px;
+    text-transform:uppercase;
+    text-shadow:0 4px 0 rgba(0,0,0,.63),0 0 14px rgba(0,0,0,.38);
+}
+#shopPage #shopBrawlerGrid .rare-market-rarity{
+    flex:0 0 auto;
+    margin-bottom:1px;
+    padding:6px 8px;
+    border-radius:8px 2px 8px 2px;
+    color:#07210f;
+    background:#50ff87;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+    box-shadow:0 5px 12px rgba(80,255,135,.16);
+}
+
+/* Mini roster selector */
+#shopPage #shopBrawlerGrid .rare-market-roster{
+    position:relative;
+    z-index:9;
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:5px;
+    padding:8px 11px 6px;
+}
+#shopPage #shopBrawlerGrid .rare-market-thumb{
+    position:relative;
+    min-width:0;
+    height:43px;
+    overflow:hidden;
+    padding:0;
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:10px 3px 10px 3px;
+    background:#0b1710;
+    cursor:pointer;
+    transition:transform .14s ease,border-color .14s ease,background .14s ease,opacity .14s ease;
+}
+#shopPage #shopBrawlerGrid .rare-market-thumb img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+    object-position:center 30%;
+    transform:scale(1.05);
+}
+#shopPage #shopBrawlerGrid .rare-market-thumb::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    box-shadow:inset 0 -15px 16px rgba(0,0,0,.37);
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-market-thumb.active{
+    transform:translateY(-2px);
+    border-color:#50ff87;
+    background:#153723;
+    box-shadow:0 0 0 1px rgba(80,255,135,.18),0 0 12px rgba(80,255,135,.18);
+}
+#shopPage #shopBrawlerGrid .rare-market-thumb.owned:not(.active){
+    opacity:.58;
+}
+#shopPage #shopBrawlerGrid .rare-market-thumb-check{
+    position:absolute;
+    right:3px;
+    top:3px;
+    z-index:3;
+    width:14px;
+    height:14px;
+    display:grid;
+    place-items:center;
+    border-radius:50%;
+    color:#092313;
+    background:#7dff9f;
+    font-size:8px;
+    font-weight:1000;
+}
+
+/* Purchase dock */
+#shopPage #shopBrawlerGrid .rare-market-buyzone{
+    position:relative;
+    z-index:10;
+    margin:5px 10px 10px;
+    padding:10px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 142px;
+    gap:8px;
+    align-items:stretch;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:16px 4px 16px 4px;
+    background:linear-gradient(135deg,rgba(12,28,18,.96),rgba(7,16,10,.99));
+    box-shadow:0 10px 18px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035);
+}
+#shopPage #shopBrawlerGrid .rare-market-pricebox{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:2px 4px;
+}
+#shopPage #shopBrawlerGrid .rare-market-price-label{
+    color:#729381;
+    font-size:7px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-market-price{
+    margin-top:3px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    color:#fff4c5;
+    font-size:21px;
+    line-height:1;
+    font-weight:1000;
+    letter-spacing:-.4px;
+}
+#shopPage #shopBrawlerGrid .rare-market-price img{
+    width:24px !important;
+    height:24px !important;
+    object-fit:contain;
+}
+#shopPage #shopBrawlerGrid .rare-market-wallet{
+    margin-top:4px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#72877a;
+    font-size:7.5px;
+    font-weight:900;
+}
+#shopPage #shopBrawlerGrid .rare-market-wallet strong{
+    color:#ffc857;
+}
+#shopPage #shopBrawlerGrid .rare-market-buy{
+    width:100% !important;
+    min-height:56px !important;
+    margin:0 !important;
+    padding:0 11px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:8px !important;
+    border:1px solid rgba(255,255,255,.16) !important;
+    border-radius:13px 4px 13px 4px !important;
+    color:#082111 !important;
+    background:linear-gradient(135deg,#b3ffc8,#50ff87) !important;
+    border-bottom:4px solid #27aa51 !important;
+    box-shadow:0 10px 20px rgba(80,255,135,.16),inset 0 1px 0 rgba(255,255,255,.45) !important;
+    font-size:12px !important;
+    font-weight:1000 !important;
+    letter-spacing:.6px !important;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .15s ease,filter .15s ease,box-shadow .15s ease !important;
+}
+#shopPage #shopBrawlerGrid .rare-market-buy:not(:disabled):hover{
+    transform:translateY(-2px) !important;
+    filter:brightness(1.05);
+    box-shadow:0 13px 24px rgba(80,255,135,.22),inset 0 1px 0 rgba(255,255,255,.5) !important;
+}
+#shopPage #shopBrawlerGrid .rare-market-buy:not(:disabled):active{
+    transform:translateY(1px) !important;
+}
+#shopPage #shopBrawlerGrid .rare-market-buy.low-coins{
+    color:#fff !important;
+    background:linear-gradient(135deg,#415149,#2b3730) !important;
+    border-bottom-color:#1b241f !important;
+    box-shadow:none !important;
+}
+#shopPage #shopBrawlerGrid .rare-market-buy.owned{
+    color:#dce7e0 !important;
+    background:linear-gradient(135deg,#46544c,#313d36) !important;
+    border-bottom-color:#222b26 !important;
+    box-shadow:none !important;
+    cursor:default;
+}
+#shopPage #shopBrawlerGrid .rare-market-buy-icon{
+    width:23px;
+    height:23px;
+    display:grid;
+    place-items:center;
+    border-radius:7px 2px 7px 2px;
+    color:#0d341b;
+    background:rgba(8,39,18,.10);
+    font-size:15px;
+    font-weight:1000;
+}
+#shopPage #shopBrawlerGrid .rare-market-buy.owned .rare-market-buy-icon,
+#shopPage #shopBrawlerGrid .rare-market-buy.low-coins .rare-market-buy-icon{
+    color:#f0f6f2;
+    background:rgba(255,255,255,.06);
+}
+
+/* slide direction */
+#shopPage #shopBrawlerGrid .rare-market-card.slide-next .rare-market-image,
+#shopPage #shopBrawlerGrid .rare-market-card.slide-prev .rare-market-image{
+    animation-duration:.24s,3.4s;
+    animation-timing-function:ease-out,ease-in-out;
+    animation-fill-mode:both,both;
+    animation-iteration-count:1,infinite;
+}
+#shopPage #shopBrawlerGrid .rare-market-card.slide-next .rare-market-image{
+    animation-name:rareMarketInRight,rareMarketFloat;
+}
+#shopPage #shopBrawlerGrid .rare-market-card.slide-prev .rare-market-image{
+    animation-name:rareMarketInLeft,rareMarketFloat;
+}
+
+@keyframes rareMarketSweep{
+    0%,58%{left:-36%;opacity:0}
+    66%{opacity:1}
+    88%{left:118%;opacity:.55}
+    100%{left:118%;opacity:0}
+}
+@keyframes rareMarketRotate{
+    to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+@keyframes rareMarketFloat{
+    0%,100%{translate:0 0}
+    50%{translate:0 -4px}
+}
+@keyframes rareMarketInRight{
+    from{opacity:.15;margin-left:30px}
+    to{opacity:1;margin-left:0}
+}
+@keyframes rareMarketInLeft{
+    from{opacity:.15;margin-left:-30px}
+    to{opacity:1;margin-left:0}
+}
+
+@media (max-width:350px){
+    #shopPage #shopBrawlerGrid .rare-market-card{min-height:412px !important;}
+    #shopPage #shopBrawlerGrid .rare-market-stage{height:218px;}
+    #shopPage #shopBrawlerGrid .rare-market-image{height:216px !important;}
+    #shopPage #shopBrawlerGrid .rare-market-name{font-size:33px;}
+    #shopPage #shopBrawlerGrid .rare-market-buyzone{grid-template-columns:minmax(0,1fr) 126px;}
+}
+@media (prefers-reduced-motion:reduce){
+    #shopPage #shopBrawlerGrid .rare-market-card::after,
+    #shopPage #shopBrawlerGrid .rare-market-halo,
+    #shopPage #shopBrawlerGrid .rare-market-image{animation:none !important;}
+}
+</style>
+
+<script id="brawl-rare-market-final-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_RARE_MARKET_FINAL__) return;
+    window.__BRAWL_RARE_MARKET_FINAL__ = true;
+
+    window.selectRareShopBrawler = function(index) {
+        const nextIndex = Number(index);
+        if (!Number.isInteger(nextIndex) || nextIndex < 0 || nextIndex >= shopBrawlers.length) return;
+        shopSlideDirection = nextIndex >= shopBrawlerIndex ? 1 : -1;
+        shopBrawlerIndex = nextIndex;
+        renderShop();
+    };
+
+    renderShop = function renderShopRareMarketFinal() {
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+
+        const grid = document.getElementById("shopBrawlerGrid");
+        const counter = document.getElementById("shopSliderCounter");
+        if (!grid) return;
+
+        if (shopBrawlerIndex < 0 || shopBrawlerIndex >= shopBrawlers.length) shopBrawlerIndex = 0;
+
+        const name = shopBrawlers[shopBrawlerIndex];
+        const brawler = brawlers[name];
+        if (!brawler) return;
+
+        const unlocked = isBrawlerUnlocked(name);
+        const enoughCoins = Number(state?.resources?.coins || 0) >= SHOP_BRAWLER_PRICE;
+        const currentCoins = Number(state?.resources?.coins || 0);
+        const skin = getDefaultSkinImage(name);
+        const slideClass = shopSlideDirection >= 0 ? "slide-next" : "slide-prev";
+        const ownedCount = shopBrawlers.filter(brawlerName => isBrawlerUnlocked(brawlerName)).length;
+
+        const rosterHtml = shopBrawlers.map((brawlerName, index) => {
+            const rosterBrawler = brawlers[brawlerName];
+            const owned = isBrawlerUnlocked(brawlerName);
+            const icon = rosterBrawler?.icon || getDefaultSkinImage(brawlerName);
+            return `
+                <button
+                    class="rare-market-thumb ${index === shopBrawlerIndex ? "active" : ""} ${owned ? "owned" : ""}"
+                    type="button"
+                    aria-label="Afficher ${brawlerName}"
+                    onclick="selectRareShopBrawler(${index})"
+                >
+                    <img src="${icon}" alt="${brawlerName}">
+                    ${owned ? `<span class="rare-market-thumb-check">✓</span>` : ""}
+                </button>
+            `;
+        }).join("");
+
+        const buyButtonClass = unlocked ? "owned" : (!enoughCoins ? "low-coins" : "");
+        const buyButtonContent = unlocked
+            ? `<span class="rare-market-buy-icon">✓</span><span>Débloqué</span>`
+            : enoughCoins
+                ? `<span class="rare-market-buy-icon">＋</span><span>Débloquer</span>`
+                : `<span class="rare-market-buy-icon">!</span><span>Pas assez</span>`;
+
+        grid.innerHTML = `
+            <article class="shop-card rare-market-card ${slideClass} ${unlocked ? "is-owned" : "is-for-sale"}">
+                <div class="rare-market-top">
+                    <div class="rare-market-brand">
+                        <div class="rare-market-mark">R</div>
+                        <div class="rare-market-brand-copy">
+                            <div class="rare-market-kicker">Rare Market</div>
+                            <div class="rare-market-count">${ownedCount}/${shopBrawlers.length} recrutés</div>
+                        </div>
+                    </div>
+                    <div class="rare-market-state ${unlocked ? "owned" : ""}">
+                        ${unlocked ? "✓ Possédé" : "Disponible"}
+                    </div>
+                </div>
+
+                <div class="rare-market-stage">
+                    <div class="rare-market-halo"></div>
+                    <div class="rare-market-floor"></div>
+
+                    <button class="rare-market-nav left" type="button" aria-label="Brawler précédent" onclick="changeShopBrawler(-1)">‹</button>
+                    <button class="rare-market-nav right" type="button" aria-label="Brawler suivant" onclick="changeShopBrawler(1)">›</button>
+
+                    <img class="shop-card-image rare-market-image" src="${skin}" alt="${name}">
+
+                    <div class="rare-market-nameplate">
+                        <div class="rare-market-name">${name}</div>
+                        <div class="rare-market-rarity">${brawler.rarity}</div>
+                    </div>
+                </div>
+
+                <div class="rare-market-roster" aria-label="Sélection des Brawlers rares">
+                    ${rosterHtml}
+                </div>
+
+                <div class="rare-market-buyzone">
+                    <div class="rare-market-pricebox">
+                        <div class="rare-market-price-label">Prix du recrutement</div>
+                        <div class="rare-market-price"><img src="Icon/coin.png" alt="Pièces">${SHOP_BRAWLER_PRICE}</div>
+                        <div class="rare-market-wallet">Solde : <strong>${currentCoins}</strong> pièces</div>
+                    </div>
+                    <button
+                        class="shop-buy-button rare-market-buy ${buyButtonClass}"
+                        type="button"
+                        ${unlocked ? "disabled" : ""}
+                        onclick="buyRareBrawler('${name}')"
+                    >
+                        ${buyButtonContent}
+                    </button>
+                </div>
+            </article>
+        `;
+
+        if (counter) counter.innerHTML = "";
+
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            try { renderShop(); } catch (error) { console.error("Rare Market render error:", error); }
+        }, 0);
+    });
+})();
+</script>
+
+
+<style id="brawl-rare-market-direct-style">
+/* =====================================================
+   BRAWL VS · RARE SHOP DIRECT DISPLAY
+===================================================== */
+#shopPage .shop-carousel{display:block !important;}
+#shopPage .shop-carousel > .shop-arrow{display:none !important;}
+#shopPage .shop-slider-window{padding:0 !important; overflow:visible !important;}
+#shopPage #shopSliderCounter{display:none !important;}
+#shopPage #shopBrawlerGrid{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:12px !important;
+    width:100% !important;
+    overflow:visible !important;
+}
+#shopPage #shopBrawlerGrid .rare-direct-card{
+    position:relative !important;
+    min-height:256px !important;
+    overflow:hidden !important;
+    padding:0 !important;
+    border-radius:24px !important;
+    border:1px solid rgba(103,255,158,.28) !important;
+    background:
+      radial-gradient(circle at 50% 16%, rgba(80,255,135,.16), transparent 26%),
+      linear-gradient(180deg,#123020 0%,#0b1d14 64%,#08120d 100%) !important;
+    box-shadow:0 18px 32px rgba(0,0,0,.34), 0 0 24px rgba(80,255,135,.07), inset 0 1px 0 rgba(255,255,255,.04) !important;
+    isolation:isolate;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+#shopPage #shopBrawlerGrid .rare-direct-card:hover{
+    transform:translateY(-3px) !important;
+    border-color:rgba(103,255,158,.50) !important;
+    box-shadow:0 22px 36px rgba(0,0,0,.38), 0 0 28px rgba(80,255,135,.11), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+#shopPage #shopBrawlerGrid .rare-direct-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(rgba(117,255,166,.055) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(117,255,166,.055) 1px,transparent 1px);
+    background-size:20px 20px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.96), transparent 88%);
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-direct-card.owned{
+    border-color:rgba(173,190,181,.20) !important;
+    filter:saturate(.92);
+}
+#shopPage #shopBrawlerGrid .rare-direct-head{
+    position:relative;
+    z-index:4;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:7px;
+    padding:11px 11px 0;
+}
+#shopPage #shopBrawlerGrid .rare-direct-rarity{
+    min-height:22px;
+    padding:0 9px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    color:#081f10;
+    background:linear-gradient(135deg,#9effbf,#50ff87);
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+    box-shadow:0 6px 13px rgba(80,255,135,.15);
+}
+#shopPage #shopBrawlerGrid .rare-direct-state{
+    min-height:22px;
+    padding:0 8px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    color:#effaf2;
+    background:rgba(8,24,14,.66);
+    border:1px solid rgba(125,255,169,.10);
+    font-size:7px;
+    font-weight:1000;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-direct-state.owned{
+    background:rgba(164,174,169,.16);
+    border-color:rgba(255,255,255,.07);
+}
+#shopPage #shopBrawlerGrid .rare-direct-stage{
+    position:relative;
+    height:138px;
+    margin-top:4px;
+}
+#shopPage #shopBrawlerGrid .rare-direct-halo{
+    position:absolute;
+    left:50%;
+    top:8px;
+    width:150px;
+    height:150px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(80,255,135,.22), rgba(80,255,135,.08) 46%, transparent 72%);
+    filter:blur(5px);
+}
+#shopPage #shopBrawlerGrid .rare-direct-floor{
+    position:absolute;
+    left:50%;
+    bottom:10px;
+    width:132px;
+    height:34px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse, rgba(92,255,146,.34), rgba(44,150,83,.10) 52%, transparent 74%);
+    border-bottom:1px solid rgba(122,255,168,.24);
+}
+#shopPage #shopBrawlerGrid .rare-direct-image{
+    position:absolute !important;
+    z-index:2 !important;
+    left:50% !important;
+    bottom:6px !important;
+    width:100% !important;
+    height:138px !important;
+    margin:0 !important;
+    object-fit:contain !important;
+    transform:translateX(-50%) scale(1.07) !important;
+    filter:drop-shadow(0 14px 12px rgba(0,0,0,.50)) drop-shadow(0 0 10px rgba(80,255,135,.10)) !important;
+}
+#shopPage #shopBrawlerGrid .rare-direct-image[src$="Nita_skin_def.webp"]{transform:translateX(-50%) scale(0.98) !important;}
+#shopPage #shopBrawlerGrid .rare-direct-body{
+    position:relative;
+    z-index:5;
+    margin:0 10px 10px;
+    padding:12px 12px 11px;
+    border-radius:18px;
+    border:1px solid rgba(126,255,170,.10);
+    background:linear-gradient(180deg, rgba(10,24,15,.92), rgba(7,16,11,.98));
+    box-shadow:0 8px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+}
+#shopPage #shopBrawlerGrid .rare-direct-name{
+    color:#fff;
+    text-align:center;
+    font-size:24px;
+    line-height:.92;
+    font-weight:1000;
+    font-style:italic;
+    letter-spacing:-1px;
+    text-transform:uppercase;
+    text-shadow:0 3px 0 rgba(0,0,0,.54), 0 0 12px rgba(80,255,135,.10);
+}
+#shopPage #shopBrawlerGrid .rare-direct-sub{
+    margin-top:5px;
+    text-align:center;
+    color:#88d8a3;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-direct-footer{
+    margin-top:11px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+}
+#shopPage #shopBrawlerGrid .rare-direct-pricebox{
+    min-height:42px;
+    padding:8px 9px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:3px;
+    border-radius:13px;
+    background:rgba(18,35,24,.72);
+    border:1px solid rgba(125,255,169,.10);
+}
+#shopPage #shopBrawlerGrid .rare-direct-price-label{
+    color:#89b69a;
+    font-size:7px;
+    font-weight:1000;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-direct-price{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    color:#fff5bf;
+    font-size:16px;
+    line-height:1;
+    font-weight:1000;
+}
+#shopPage #shopBrawlerGrid .rare-direct-price img{width:18px;height:18px;object-fit:contain;}
+#shopPage #shopBrawlerGrid .rare-direct-wallet{
+    color:#b1c1b8;
+    font-size:8px;
+    font-weight:900;
+}
+#shopPage #shopBrawlerGrid .rare-direct-wallet strong{color:#ffffff;}
+#shopPage #shopBrawlerGrid .rare-direct-buy{
+    width:100% !important;
+    min-height:44px !important;
+    padding:7px 10px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:7px !important;
+    border-radius:14px !important;
+    border:1px solid rgba(97,237,140,.16) !important;
+    color:#08210f !important;
+    background:linear-gradient(135deg,#93ffb9,#50ff87) !important;
+    border-bottom:4px solid #28b355 !important;
+    box-shadow:0 10px 18px rgba(80,255,135,.16) !important;
+    font-size:10px !important;
+    font-weight:1000 !important;
+    letter-spacing:.8px !important;
+}
+#shopPage #shopBrawlerGrid .rare-direct-buy .rare-direct-buy-icon{font-size:15px;line-height:1;}
+#shopPage #shopBrawlerGrid .rare-direct-buy.low-coins{
+    color:#f5fff8 !important;
+    background:linear-gradient(135deg,#5b6f62,#3b4b40) !important;
+    border-color:rgba(210,230,217,.10) !important;
+    border-bottom-color:#223128 !important;
+    box-shadow:none !important;
+}
+#shopPage #shopBrawlerGrid .rare-direct-buy.owned,
+#shopPage #shopBrawlerGrid .rare-direct-buy:disabled{
+    color:#eef4f0 !important;
+    background:linear-gradient(135deg,#68756e,#525e58) !important;
+    border-color:rgba(255,255,255,.08) !important;
+    border-bottom-color:#36413b !important;
+    box-shadow:none !important;
+}
+#shopPage #shopBrawlerGrid .rare-direct-buy:not(.low-coins):not(.owned):not(:disabled):hover{
+    transform:translateY(-2px) !important;
+    box-shadow:0 12px 22px rgba(80,255,135,.22) !important;
+}
+#shopPage #shopBrawlerGrid .rare-direct-summary{
+    grid-column:1 / -1;
+    margin-bottom:2px;
+    padding:14px 14px 13px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:10px;
+    border-radius:22px;
+    border:1px solid rgba(103,255,158,.20);
+    background:
+      radial-gradient(circle at 0% 0%, rgba(80,255,135,.12), transparent 38%),
+      linear-gradient(145deg,#10291b,#0a1711 65%,#08120d);
+    box-shadow:0 18px 32px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04);
+}
+#shopPage #shopBrawlerGrid .rare-direct-summary-left{min-width:0;}
+#shopPage #shopBrawlerGrid .rare-direct-summary-kicker{
+    color:#84dca0;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1.3px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-direct-summary-title{
+    margin-top:4px;
+    color:#fff;
+    font-size:23px;
+    line-height:1;
+    font-weight:1000;
+    font-style:italic;
+    letter-spacing:-.8px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-direct-summary-text{
+    margin-top:6px;
+    color:#a6baaf;
+    font-size:9px;
+    line-height:1.45;
+    font-weight:900;
+    letter-spacing:.15px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-direct-summary-badge{
+    min-width:104px;
+    padding:11px 12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border-radius:18px;
+    border:1px solid rgba(120,255,167,.14);
+    background:rgba(10,23,15,.78);
+}
+#shopPage #shopBrawlerGrid .rare-direct-summary-badge strong{
+    color:#50ff87;
+    font-size:24px;
+    line-height:1;
+    font-weight:1000;
+}
+#shopPage #shopBrawlerGrid .rare-direct-summary-badge span{
+    margin-top:5px;
+    color:#c8d9d0;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+    text-align:center;
+}
+@media (max-width:350px){
+    #shopPage #shopBrawlerGrid{gap:10px !important;}
+    #shopPage #shopBrawlerGrid .rare-direct-card{min-height:242px !important;}
+    #shopPage #shopBrawlerGrid .rare-direct-stage{height:128px;}
+    #shopPage #shopBrawlerGrid .rare-direct-image{height:128px !important;}
+    #shopPage #shopBrawlerGrid .rare-direct-name{font-size:21px;}
+}
+</style>
+
+<script id="brawl-rare-market-direct-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_RARE_MARKET_DIRECT_DISPLAY__) return;
+    window.__BRAWL_RARE_MARKET_DIRECT_DISPLAY__ = true;
+
+    renderShop = function renderShopRareDirectDisplay(){
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+
+        const grid = document.getElementById("shopBrawlerGrid");
+        const counter = document.getElementById("shopSliderCounter");
+        if (!grid) return;
+
+        const currentCoins = Number(state?.resources?.coins || 0);
+        const ownedCount = shopBrawlers.filter(name => isBrawlerUnlocked(name)).length;
+
+        const cardsHtml = shopBrawlers.map(name => {
+            const brawler = brawlers[name];
+            if (!brawler) return "";
+            const unlocked = isBrawlerUnlocked(name);
+            const enoughCoins = currentCoins >= SHOP_BRAWLER_PRICE;
+            const skin = getDefaultSkinImage(name);
+            const buyButtonClass = unlocked ? "owned" : (!enoughCoins ? "low-coins" : "");
+            const buyButtonContent = unlocked
+                ? `<span class="rare-direct-buy-icon">✓</span><span>DÉJÀ OBTENU</span>`
+                : enoughCoins
+                    ? `<span class="rare-direct-buy-icon">＋</span><span>ACHETER</span>`
+                    : `<span class="rare-direct-buy-icon">!</span><span>PAS ASSEZ</span>`;
+
+            return `
+                <article class="shop-card rare-direct-card ${unlocked ? "owned" : ""}">
+                    <div class="rare-direct-head">
+                        <div class="rare-direct-rarity">${brawler.rarity}</div>
+                        <div class="rare-direct-state ${unlocked ? "owned" : ""}">${unlocked ? "✓ Possédé" : "Disponible"}</div>
+                    </div>
+
+                    <div class="rare-direct-stage">
+                        <div class="rare-direct-halo"></div>
+                        <div class="rare-direct-floor"></div>
+                        <img class="shop-card-image rare-direct-image" src="${skin}" alt="${name}">
+                    </div>
+
+                    <div class="rare-direct-body">
+                        <div class="rare-direct-name">${name}</div>
+                        <div class="rare-direct-sub">Brawler rare à recruter</div>
+
+                        <div class="rare-direct-footer">
+                            <div class="rare-direct-pricebox">
+                                <div class="rare-direct-price-label">Prix</div>
+                                <div class="rare-direct-price"><img src="Icon/coin.png" alt="Pièces">${SHOP_BRAWLER_PRICE}</div>
+                                <div class="rare-direct-wallet">Solde : <strong>${currentCoins}</strong></div>
+                            </div>
+                            <button class="shop-buy-button rare-direct-buy ${buyButtonClass}" type="button" ${unlocked ? "disabled" : ""} onclick="buyRareBrawler('${name}')">
+                                ${buyButtonContent}
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }).join("");
+
+        grid.innerHTML = `
+            <div class="rare-direct-summary">
+                <div class="rare-direct-summary-left">
+                    <div class="rare-direct-summary-kicker">Boutique des Brawlers rares</div>
+                    <div class="rare-direct-summary-title">Rare Market</div>
+                    <div class="rare-direct-summary-text">Tous les Brawlers rares sont affichés directement ci-dessous pour une boutique plus claire, plus rapide et plus stylée.</div>
+                </div>
+                <div class="rare-direct-summary-badge">
+                    <strong>${ownedCount}/${shopBrawlers.length}</strong>
+                    <span>Brawlers recrutés</span>
+                </div>
+            </div>
+            ${cardsHtml}
+        `;
+
+        if (counter) counter.innerHTML = "";
+
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            try { renderShop(); } catch (error) { console.error("Rare direct shop render error:", error); }
+        }, 0);
+    });
+})();
+</script>
+
+
+<style id="brawl-rare-market-arrow-optimized-style">
+/* =====================================================
+   BRAWL VS · RARE SHOP ARROW OPTIMIZED
+===================================================== */
+#shopPage .shop-carousel{
+    position:relative !important;
+    display:block !important;
+    width:100% !important;
+    margin-top:4px !important;
+}
+#shopPage .shop-carousel>.shop-arrow{display:none !important;}
+#shopPage .shop-slider-window{padding:0 !important; overflow:visible !important;}
+#shopPage #shopBrawlerGrid{display:block !important; width:100% !important; overflow:visible !important;}
+#shopPage #shopSliderCounter{
+    margin-top:10px !important;
+    display:flex !important;
+    justify-content:center !important;
+    gap:7px !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot{
+    width:8px !important;
+    height:8px !important;
+    border-radius:50% !important;
+    background:rgba(175,202,184,.28) !important;
+    transition:all .18s ease !important;
+}
+#shopPage #shopSliderCounter .shop-slider-dot.active{
+    width:18px !important;
+    border-radius:999px !important;
+    background:#50ff87 !important;
+    box-shadow:0 0 14px rgba(80,255,135,.55) !important;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-card{
+    position:relative !important;
+    width:100% !important;
+    min-height:400px !important;
+    overflow:hidden !important;
+    padding:0 !important;
+    border-radius:28px !important;
+    border:1px solid rgba(100,255,152,.34) !important;
+    background:
+        radial-gradient(circle at 50% 12%, rgba(110,255,165,.16), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(50,122,76,.26), transparent 40%),
+        linear-gradient(180deg,#112d1d 0%, #0a1610 62%, #07100b 100%) !important;
+    box-shadow:0 24px 44px rgba(0,0,0,.44), 0 0 28px rgba(80,255,135,.08), inset 0 1px 0 rgba(255,255,255,.04) !important;
+    isolation:isolate;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+        linear-gradient(rgba(117,255,166,.065) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(117,255,166,.065) 1px, transparent 1px);
+    background-size:22px 22px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.88), transparent 84%);
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-card::after{
+    content:"";
+    position:absolute;
+    left:-40%;
+    top:0;
+    width:34%;
+    height:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+    transform:skewX(-18deg);
+    animation:rareArrowSweep 5.8s ease-in-out infinite;
+    pointer-events:none;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-top{
+    position:relative;
+    z-index:5;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    padding:14px 16px 0;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-mark{
+    width:34px;
+    height:34px;
+    flex:0 0 34px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:11px;
+    color:#092111;
+    background:linear-gradient(135deg,#9bffbf,#50ff87);
+    box-shadow:0 10px 18px rgba(80,255,135,.18);
+    font-size:18px;
+    font-weight:1000;
+    font-style:italic;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-brand-copy{min-width:0;}
+#shopPage #shopBrawlerGrid .rare-arrow-kicker{
+    color:#d8ffe5;
+    font-size:14px;
+    line-height:1;
+    font-weight:1000;
+    letter-spacing:.2px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-sub{
+    margin-top:5px;
+    color:#82d89f;
+    font-size:9px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-state{
+    min-height:28px;
+    padding:0 12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    text-align:center;
+    color:#082111;
+    background:linear-gradient(135deg,#94ffba,#50ff87);
+    box-shadow:0 8px 14px rgba(80,255,135,.15);
+    font-size:9px;
+    font-weight:1000;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    flex:0 0 auto;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-state.owned{
+    color:#eff5f0;
+    background:rgba(123,133,127,.26);
+    box-shadow:none;
+    border:1px solid rgba(255,255,255,.08);
+}
+#shopPage #shopBrawlerGrid .rare-arrow-stage{
+    position:relative;
+    z-index:3;
+    height:228px;
+    margin-top:4px;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-glow{
+    position:absolute;
+    left:50%;
+    top:16px;
+    width:228px;
+    height:228px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(80,255,135,.24), rgba(80,255,135,.08) 46%, transparent 72%);
+    filter:blur(6px);
+    animation:rareArrowPulse 3.2s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-ring{
+    position:absolute;
+    left:50%;
+    bottom:58px;
+    width:186px;
+    height:186px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    border:1px solid rgba(116,255,163,.12);
+    box-shadow:0 0 0 16px rgba(80,255,135,.03), 0 0 0 34px rgba(80,255,135,.02);
+}
+#shopPage #shopBrawlerGrid .rare-arrow-floor{
+    position:absolute;
+    left:50%;
+    bottom:15px;
+    width:224px;
+    height:56px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse, rgba(92,255,146,.32), rgba(44,150,83,.10) 52%, transparent 74%);
+    border-bottom:1px solid rgba(122,255,168,.24);
+}
+#shopPage #shopBrawlerGrid .rare-arrow-nav{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:8;
+    width:42px;
+    height:84px;
+    border:none;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#f4fff7;
+    background:linear-gradient(180deg, rgba(11,30,19,.92), rgba(7,17,12,.96));
+    border:1px solid rgba(90,255,149,.22);
+    box-shadow:0 12px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
+    font-size:28px;
+    font-weight:900;
+    cursor:pointer;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-nav.left{left:12px;}
+#shopPage #shopBrawlerGrid .rare-arrow-nav.right{right:12px;}
+#shopPage #shopBrawlerGrid .rare-arrow-nav:hover{
+    transform:translateY(calc(-50% - 2px)) scale(1.03);
+    border-color:rgba(90,255,149,.42);
+    box-shadow:0 15px 28px rgba(0,0,0,.34), 0 0 14px rgba(80,255,135,.12);
+}
+#shopPage #shopBrawlerGrid .rare-arrow-nav:active{
+    transform:translateY(calc(-50% + 1px)) scale(.98);
+}
+#shopPage #shopBrawlerGrid .rare-arrow-image{
+    position:absolute !important;
+    z-index:4 !important;
+    left:50% !important;
+    bottom:12px !important;
+    width:100% !important;
+    height:216px !important;
+    margin:0 !important;
+    object-fit:contain !important;
+    transform:translateX(-50%) scale(1.10) !important;
+    filter:drop-shadow(0 20px 16px rgba(0,0,0,.56)) drop-shadow(0 0 16px rgba(80,255,135,.12)) !important;
+    animation:rareArrowFloat 3.4s ease-in-out infinite;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-image[src$="Nita_skin_def.webp"]{transform:translateX(-50%) scale(1.02) !important;}
+#shopPage #shopBrawlerGrid .rare-arrow-body{
+    position:relative;
+    z-index:6;
+    margin:0 12px 12px;
+    padding:15px 14px 14px;
+    border-radius:22px;
+    border:1px solid rgba(128,255,170,.10);
+    background:linear-gradient(180deg, rgba(10,24,15,.94), rgba(7,16,11,.98));
+    box-shadow:0 10px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+}
+#shopPage #shopBrawlerGrid .rare-arrow-name{
+    text-align:center;
+    color:#fff;
+    font-size:38px;
+    line-height:.9;
+    font-weight:1000;
+    font-style:italic;
+    letter-spacing:-1.35px;
+    text-transform:uppercase;
+    text-shadow:0 4px 0 rgba(0,0,0,.58), 0 0 12px rgba(80,255,135,.10);
+}
+#shopPage #shopBrawlerGrid .rare-arrow-rarity{
+    margin-top:8px;
+    display:flex;
+    justify-content:center;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-rarity span{
+    min-height:24px;
+    padding:0 12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    color:#092111;
+    background:linear-gradient(135deg,#9effbf,#50ff87);
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-buyzone{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 144px;
+    gap:10px;
+    align-items:stretch;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-pricebox{
+    min-width:0;
+    padding:11px 12px;
+    border-radius:16px;
+    background:rgba(18,35,24,.72);
+    border:1px solid rgba(125,255,169,.10);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:4px;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-price-label{
+    color:#89b69a;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-price{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:#fff5bf;
+    font-size:19px;
+    line-height:1;
+    font-weight:1000;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-price img{width:21px;height:21px;object-fit:contain;}
+#shopPage #shopBrawlerGrid .rare-arrow-wallet{
+    color:#b4c4bb;
+    font-size:9px;
+    line-height:1.25;
+    font-weight:900;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-wallet strong{color:#ffffff;}
+#shopPage #shopBrawlerGrid .rare-arrow-buy{
+    width:100% !important;
+    min-height:72px !important;
+    padding:10px 10px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:4px !important;
+    border-radius:16px !important;
+    border:1px solid rgba(97,237,140,.16) !important;
+    color:#08210f !important;
+    background:linear-gradient(135deg,#93ffb9,#50ff87) !important;
+    border-bottom:4px solid #28b355 !important;
+    box-shadow:0 14px 24px rgba(80,255,135,.18) !important;
+    font-size:10px !important;
+    font-weight:1000 !important;
+    letter-spacing:.9px !important;
+    text-align:center !important;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-buy .rare-arrow-buy-icon{font-size:17px;line-height:1;}
+#shopPage #shopBrawlerGrid .rare-arrow-buy.low-coins{
+    color:#f5fff8 !important;
+    background:linear-gradient(135deg,#596d61,#3c4a41) !important;
+    border-color:rgba(220,235,225,.10) !important;
+    border-bottom-color:#223128 !important;
+    box-shadow:none !important;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-buy.owned,
+#shopPage #shopBrawlerGrid .rare-arrow-buy:disabled{
+    color:#eef4f0 !important;
+    background:linear-gradient(135deg,#68756e,#525e58) !important;
+    border-color:rgba(255,255,255,.08) !important;
+    border-bottom-color:#36413b !important;
+    box-shadow:none !important;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-buy:not(.low-coins):not(.owned):not(:disabled):hover{
+    transform:translateY(-2px) !important;
+    box-shadow:0 16px 28px rgba(80,255,135,.22) !important;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-summary{
+    margin-top:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    color:#c9dbd1;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+    text-align:center;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-summary strong{color:#50ff87;font-size:10px;}
+#shopPage #shopBrawlerGrid .rare-arrow-card.slide-next .rare-arrow-image,
+#shopPage #shopBrawlerGrid .rare-arrow-card.slide-prev .rare-arrow-image{
+    animation-duration:.24s,3.4s;
+    animation-timing-function:ease-out,ease-in-out;
+    animation-fill-mode:both,both;
+    animation-iteration-count:1,infinite;
+}
+#shopPage #shopBrawlerGrid .rare-arrow-card.slide-next .rare-arrow-image{animation-name:rareArrowInRight,rareArrowFloat;}
+#shopPage #shopBrawlerGrid .rare-arrow-card.slide-prev .rare-arrow-image{animation-name:rareArrowInLeft,rareArrowFloat;}
+@keyframes rareArrowSweep{0%,58%{left:-36%;opacity:0}66%{opacity:1}88%{left:118%;opacity:.55}100%{left:118%;opacity:0}}
+@keyframes rareArrowPulse{0%,100%{transform:translateX(-50%) scale(.96)}50%{transform:translateX(-50%) scale(1.03)}}
+@keyframes rareArrowFloat{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@keyframes rareArrowInRight{from{opacity:.15;margin-left:28px}to{opacity:1;margin-left:0}}
+@keyframes rareArrowInLeft{from{opacity:.15;margin-left:-28px}to{opacity:1;margin-left:0}}
+@media (max-width:350px){
+    #shopPage #shopBrawlerGrid .rare-arrow-card{min-height:386px !important;}
+    #shopPage #shopBrawlerGrid .rare-arrow-stage{height:216px;}
+    #shopPage #shopBrawlerGrid .rare-arrow-image{height:206px !important;}
+    #shopPage #shopBrawlerGrid .rare-arrow-name{font-size:34px;}
+    #shopPage #shopBrawlerGrid .rare-arrow-buyzone{grid-template-columns:minmax(0,1fr) 132px;}
+}
+@media (prefers-reduced-motion:reduce){
+    #shopPage #shopBrawlerGrid .rare-arrow-card::after,
+    #shopPage #shopBrawlerGrid .rare-arrow-glow,
+    #shopPage #shopBrawlerGrid .rare-arrow-image{animation:none !important;}
+}
+</style>
+
+<script id="brawl-rare-market-arrow-optimized-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_RARE_MARKET_ARROW_OPTIMIZED__) return;
+    window.__BRAWL_RARE_MARKET_ARROW_OPTIMIZED__ = true;
+
+    renderShop = function renderShopRareArrowOptimized() {
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+
+        const grid = document.getElementById("shopBrawlerGrid");
+        const counter = document.getElementById("shopSliderCounter");
+        if (!grid) return;
+
+        if (shopBrawlerIndex < 0 || shopBrawlerIndex >= shopBrawlers.length) shopBrawlerIndex = 0;
+
+        const name = shopBrawlers[shopBrawlerIndex];
+        const brawler = brawlers[name];
+        if (!brawler) return;
+
+        const unlocked = isBrawlerUnlocked(name);
+        const enoughCoins = Number(state?.resources?.coins || 0) >= SHOP_BRAWLER_PRICE;
+        const currentCoins = Number(state?.resources?.coins || 0);
+        const skin = getDefaultSkinImage(name);
+        const slideClass = shopSlideDirection >= 0 ? "slide-next" : "slide-prev";
+        const ownedCount = shopBrawlers.filter(brawlerName => isBrawlerUnlocked(brawlerName)).length;
+
+        const buyButtonClass = unlocked ? "owned" : (!enoughCoins ? "low-coins" : "");
+        const buyButtonContent = unlocked
+            ? `<span class="rare-arrow-buy-icon">✓</span><span>Débloqué</span>`
+            : enoughCoins
+                ? `<span class="rare-arrow-buy-icon">＋</span><span>Acheter</span>`
+                : `<span class="rare-arrow-buy-icon">!</span><span>Pas assez</span>`;
+
+        grid.innerHTML = `
+            <article class="shop-card rare-arrow-card ${slideClass} ${unlocked ? "is-owned" : "is-for-sale"}">
+                <div class="rare-arrow-top">
+                    <div class="rare-arrow-brand">
+                        <div class="rare-arrow-mark">R</div>
+                        <div class="rare-arrow-brand-copy">
+                            <div class="rare-arrow-kicker">Rare Market</div>
+                            <div class="rare-arrow-sub">Boutique optimisée</div>
+                        </div>
+                    </div>
+                    <div class="rare-arrow-state ${unlocked ? "owned" : ""}">${unlocked ? "✓ Possédé" : "Disponible"}</div>
+                </div>
+
+                <div class="rare-arrow-stage">
+                    <div class="rare-arrow-glow"></div>
+                    <div class="rare-arrow-ring"></div>
+                    <div class="rare-arrow-floor"></div>
+                    <button class="rare-arrow-nav left" type="button" aria-label="Brawler précédent" onclick="changeShopBrawler(-1)">‹</button>
+                    <button class="rare-arrow-nav right" type="button" aria-label="Brawler suivant" onclick="changeShopBrawler(1)">›</button>
+                    <img class="shop-card-image rare-arrow-image" src="${skin}" alt="${name}">
+                </div>
+
+                <div class="rare-arrow-body">
+                    <div class="rare-arrow-name">${name}</div>
+                    <div class="rare-arrow-rarity"><span>${brawler.rarity}</span></div>
+
+                    <div class="rare-arrow-buyzone">
+                        <div class="rare-arrow-pricebox">
+                            <div class="rare-arrow-price-label">Prix du recrutement</div>
+                            <div class="rare-arrow-price"><img src="Icon/coin.png" alt="Pièces">${SHOP_BRAWLER_PRICE}</div>
+                            <div class="rare-arrow-wallet">Solde : <strong>${currentCoins}</strong> pièces</div>
+                        </div>
+                        <button
+                            class="shop-buy-button rare-arrow-buy ${buyButtonClass}"
+                            type="button"
+                            ${unlocked ? "disabled" : ""}
+                            onclick="buyRareBrawler('${name}')"
+                        >
+                            ${buyButtonContent}
+                        </button>
+                    </div>
+
+                    <div class="rare-arrow-summary">
+                        <span><strong>${ownedCount}/${shopBrawlers.length}</strong> Brawlers recrutés</span>
+                        <span>•</span>
+                        <span>Navigation par flèches</span>
+                    </div>
+                </div>
+            </article>
+        `;
+
+        if (counter) {
+            counter.innerHTML = shopBrawlers.map((_, index) => `<span class="shop-slider-dot ${index === shopBrawlerIndex ? "active" : ""}" aria-label="Brawler ${index + 1}"></span>`).join("");
+        }
+
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            try { renderShop(); } catch (error) { console.error("Rare arrow optimized render error:", error); }
+        }, 0);
+    });
+})();
+</script>
+
+
+<script id="brawl-global-rare-brawler-shop-final">
+(() => {
+    "use strict";
+    if (window.__BRAWL_GLOBAL_RARE_BRAWLER_SHOP_FINAL__) return;
+    window.__BRAWL_GLOBAL_RARE_BRAWLER_SHOP_FINAL__ = true;
+
+    window.renderRareBrawlerGlobalShop = function renderRareBrawlerGlobalShop() {
+        const grid = document.getElementById("rareBrawlerGlobalShopGrid");
+        if (!grid) return;
+
+        const coins = Number(state?.resources?.coins || 0);
+        const ownedCount = shopBrawlers.filter(name => isBrawlerUnlocked(name)).length;
+        const wallet = document.getElementById("globalRareMarketCoins");
+        const progress = document.getElementById("globalRareMarketOwned");
+
+        if (wallet) wallet.textContent = coins;
+        if (progress) progress.textContent = `${ownedCount}/${shopBrawlers.length} possédés`;
+
+        grid.innerHTML = shopBrawlers.map(name => {
+            const brawler = brawlers[name];
+            if (!brawler) return "";
+
+            const owned = isBrawlerUnlocked(name);
+            const enoughCoins = coins >= SHOP_BRAWLER_PRICE;
+            const image = getDefaultSkinImage(name);
+
+            return `
+                <article class="global-rare-card ${owned ? "owned" : "available"}">
+                    <div class="global-rare-card-top">
+                        <span class="global-rare-badge">RARE</span>
+                        <span class="global-rare-owned-badge ${owned ? "" : "available"}">${owned ? "✓ POSSÉDÉ" : "DISPONIBLE"}</span>
+                    </div>
+
+                    <div class="global-rare-image-wrap">
+                        <img class="global-rare-image" src="${image}" alt="${name}">
+                    </div>
+
+                    <div class="global-rare-card-body">
+                        <div class="global-rare-name">${name}</div>
+                        <button
+                            class="global-rare-buy ${owned ? "owned" : (!enoughCoins ? "low-coins" : "")}"
+                            type="button"
+                            ${owned ? "disabled" : ""}
+                            onclick="buyRareBrawler('${name}')"
+                        >
+                            ${owned
+                                ? `<span>✓ DÉBLOQUÉ</span>`
+                                : `<img src="Icon/coin.png" alt="Pièces"><span>${SHOP_BRAWLER_PRICE}</span>`}
+                        </button>
+                    </div>
+                </article>
+            `;
+        }).join("");
+    };
+
+    renderShop = function renderShopWithGlobalRareBrawlers() {
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+
+        const counter = document.getElementById("shopSliderCounter");
+        if (counter) counter.innerHTML = "";
+
+        renderRareBrawlerGlobalShop();
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            try { renderShop(); }
+            catch (error) { console.error("Global rare Brawler shop render error:", error); }
+        }, 0);
+    });
+})();
+</script>
+
+
+
+<!-- =====================================================
+     SHOP GLOBAL · BRAWLERS RARES · CARROUSEL COMPACT
+====================================================== -->
+<style id="brawl-global-rare-carousel-v2-style">
+#shopPage .global-rare-market{
+    margin:12px 0 17px !important;
+    padding:10px !important;
+    border-radius:17px !important;
+    border:1px solid rgba(80,255,135,.22) !important;
+    background:
+        radial-gradient(circle at 50% 35%, rgba(80,255,135,.11), transparent 45%),
+        linear-gradient(145deg,#10251b,#08120d 72%) !important;
+}
+#shopPage .global-rare-shop-title{
+    margin:0 0 7px !important;
+    font-size:10.5px !important;
+}
+#shopPage .global-rare-market-head{
+    min-height:29px;
+    gap:7px !important;
+}
+#shopPage .global-rare-market-kicker{
+    font-size:7px !important;
+    letter-spacing:1.45px !important;
+}
+#shopPage .global-rare-market-subtitle{
+    margin-top:1px !important;
+    font-size:7.8px !important;
+    white-space:nowrap;
+}
+#shopPage .global-rare-market-wallet{
+    min-width:64px !important;
+    height:29px !important;
+    padding:0 7px !important;
+    border-radius:9px !important;
+    font-size:10px !important;
+}
+#shopPage .global-rare-market-wallet img{width:17px !important;height:17px !important;}
+#shopPage .global-rare-market-progress{
+    margin-top:6px !important;
+    padding:5px 7px !important;
+    min-height:25px;
+    font-size:7px !important;
+    border-radius:8px !important;
+}
+#shopPage .global-rare-market-progress strong{font-size:7px !important;}
+#shopPage .global-rare-market-progress strong img{width:13px !important;height:13px !important;}
+
+#shopPage #rareBrawlerGlobalShopGrid.global-rare-market-grid{
+    display:block !important;
+    margin-top:7px !important;
+}
+#shopPage .global-rare-carousel-card{
+    position:relative;
+    height:218px;
+    overflow:hidden;
+    border-radius:15px;
+    border:1px solid rgba(80,255,135,.23);
+    background:
+        radial-gradient(circle at 50% 39%, rgba(80,255,135,.18), transparent 42%),
+        linear-gradient(180deg,rgba(19,50,34,.76),rgba(7,18,12,.97));
+    box-shadow:0 10px 20px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04);
+    isolation:isolate;
+}
+#shopPage .global-rare-carousel-card::before{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:29px;
+    width:154px;
+    height:154px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    border:1px solid rgba(80,255,135,.11);
+    box-shadow:0 0 0 13px rgba(80,255,135,.025),0 0 0 27px rgba(80,255,135,.014);
+    z-index:0;
+}
+#shopPage .global-rare-carousel-top{
+    position:absolute;
+    z-index:7;
+    top:8px;
+    left:9px;
+    right:9px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    pointer-events:none;
+}
+#shopPage .global-rare-carousel-badge,
+#shopPage .global-rare-carousel-state{
+    min-height:20px;
+    padding:0 7px;
+    display:inline-flex;
+    align-items:center;
+    border-radius:999px;
+    font-size:6.8px;
+    font-weight:1000;
+    letter-spacing:.65px;
+    text-transform:uppercase;
+}
+#shopPage .global-rare-carousel-badge{
+    color:#06140a;
+    background:#50ff87;
+    box-shadow:0 0 10px rgba(80,255,135,.17);
+}
+#shopPage .global-rare-carousel-state{
+    color:#b8ffd0;
+    background:rgba(5,13,9,.72);
+    border:1px solid rgba(80,255,135,.14);
+}
+#shopPage .global-rare-carousel-state.owned{color:#aeb9b2;border-color:rgba(255,255,255,.08);}
+#shopPage .global-rare-stage{
+    position:relative;
+    height:139px;
+    overflow:hidden;
+}
+#shopPage .global-rare-stage::after{
+    content:"";
+    position:absolute;
+    z-index:1;
+    left:50%;
+    bottom:4px;
+    width:150px;
+    height:30px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(ellipse,rgba(80,255,135,.30),rgba(80,255,135,.07) 51%,transparent 72%);
+}
+#shopPage .global-rare-carousel-image{
+    position:absolute;
+    z-index:4;
+    left:50%;
+    bottom:-2px;
+    width:155px;
+    height:137px;
+    transform:translateX(-50%);
+    object-fit:contain;
+    object-position:center bottom;
+    filter:drop-shadow(0 10px 8px rgba(0,0,0,.52));
+    animation:globalRareCarouselIn .18s ease-out both;
+}
+#shopPage .global-rare-carousel-image.nita{width:148px;}
+#shopPage .global-rare-nav{
+    position:absolute;
+    z-index:8;
+    top:58px;
+    width:37px;
+    height:60px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    border:1px solid rgba(80,255,135,.22);
+    color:#f5fff8;
+    background:linear-gradient(180deg,rgba(15,38,25,.94),rgba(7,18,12,.97));
+    box-shadow:0 8px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);
+    font-size:28px;
+    line-height:1;
+    font-weight:900;
+    cursor:pointer;
+    transition:transform .14s ease,border-color .14s ease;
+}
+#shopPage .global-rare-nav.left{left:8px;}
+#shopPage .global-rare-nav.right{right:8px;}
+#shopPage .global-rare-nav:hover{transform:scale(1.05);border-color:rgba(80,255,135,.48);}
+#shopPage .global-rare-nav:active{transform:scale(.95);}
+#shopPage .global-rare-carousel-bottom{
+    position:relative;
+    z-index:9;
+    height:79px;
+    margin:0 7px 7px;
+    padding:7px 8px 8px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 112px;
+    grid-template-rows:auto auto;
+    column-gap:8px;
+    align-items:center;
+    border-radius:12px;
+    background:rgba(5,14,9,.88);
+    border:1px solid rgba(255,255,255,.045);
+    box-shadow:0 6px 14px rgba(0,0,0,.2);
+}
+#shopPage .global-rare-carousel-info{min-width:0;align-self:center;}
+#shopPage .global-rare-carousel-name{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#fff;
+    font-size:21px;
+    line-height:1;
+    font-weight:1000;
+    font-style:italic;
+    letter-spacing:-.7px;
+    text-transform:uppercase;
+    text-shadow:0 2px 4px rgba(0,0,0,.55);
+}
+#shopPage .global-rare-carousel-position{
+    margin-top:4px;
+    color:#8fa49a;
+    font-size:7px;
+    font-weight:900;
+    letter-spacing:.7px;
+    text-transform:uppercase;
+}
+#shopPage .global-rare-carousel-buy{
+    width:112px;
+    height:43px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    border:0;
+    border-radius:10px;
+    color:#07130a;
+    background:linear-gradient(135deg,#a3ffbf,#50ff87);
+    border-bottom:3px solid #25984b;
+    box-shadow:0 7px 14px rgba(80,255,135,.12);
+    font-size:10px;
+    font-weight:1000;
+    cursor:pointer;
+}
+#shopPage .global-rare-carousel-buy img{width:18px;height:18px;object-fit:contain;}
+#shopPage .global-rare-carousel-buy.low-coins{
+    color:#ffd9df;
+    background:linear-gradient(135deg,#50242c,#35171e);
+    border-bottom-color:#1e0d12;
+    box-shadow:none;
+}
+#shopPage .global-rare-carousel-buy.owned{
+    color:#9aa8a0;
+    background:#18231d;
+    border-bottom-color:#0d1510;
+    box-shadow:none;
+    cursor:not-allowed;
+}
+#shopPage .global-rare-carousel-dots{
+    grid-column:1 / -1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    margin-top:3px;
+}
+#shopPage .global-rare-carousel-dot{
+    width:5px;
+    height:5px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:#365144;
+    cursor:pointer;
+    transition:width .15s ease,background .15s ease,border-radius .15s ease;
+}
+#shopPage .global-rare-carousel-dot.active{
+    width:16px;
+    border-radius:999px;
+    background:#50ff87;
+    box-shadow:0 0 7px rgba(80,255,135,.42);
+}
+@keyframes globalRareCarouselIn{
+    from{opacity:.25;transform:translateX(-50%) scale(.96) translateY(4px)}
+    to{opacity:1;transform:translateX(-50%) scale(1) translateY(0)}
+}
+@media(max-width:350px){
+    #shopPage .global-rare-market-subtitle{display:none;}
+    #shopPage .global-rare-carousel-bottom{grid-template-columns:minmax(0,1fr) 104px;column-gap:6px;}
+    #shopPage .global-rare-carousel-buy{width:104px;}
+    #shopPage .global-rare-carousel-name{font-size:19px;}
+}
+@media(prefers-reduced-motion:reduce){
+    #shopPage .global-rare-carousel-image{animation:none !important;}
+}
+</style>
+
+<script id="brawl-global-rare-carousel-v2-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_GLOBAL_RARE_CAROUSEL_V2__) return;
+    window.__BRAWL_GLOBAL_RARE_CAROUSEL_V2__ = true;
+
+    let globalRareCarouselIndex = 0;
+
+    function normalizeGlobalRareIndex(index) {
+        const total = Array.isArray(shopBrawlers) ? shopBrawlers.length : 0;
+        if (!total) return 0;
+        return (index % total + total) % total;
+    }
+
+    window.changeGlobalRareBrawler = function changeGlobalRareBrawler(delta) {
+        globalRareCarouselIndex = normalizeGlobalRareIndex(globalRareCarouselIndex + Number(delta || 0));
+        renderRareBrawlerGlobalShop();
+    };
+
+    window.goToGlobalRareBrawler = function goToGlobalRareBrawler(index) {
+        globalRareCarouselIndex = normalizeGlobalRareIndex(Number(index || 0));
+        renderRareBrawlerGlobalShop();
+    };
+
+    window.renderRareBrawlerGlobalShop = function renderRareBrawlerGlobalShopCarousel() {
+        const grid = document.getElementById("rareBrawlerGlobalShopGrid");
+        if (!grid || !Array.isArray(shopBrawlers) || !shopBrawlers.length) return;
+
+        globalRareCarouselIndex = normalizeGlobalRareIndex(globalRareCarouselIndex);
+
+        const coins = Number(state?.resources?.coins || 0);
+        const ownedCount = shopBrawlers.filter(name => isBrawlerUnlocked(name)).length;
+        const wallet = document.getElementById("globalRareMarketCoins");
+        const progress = document.getElementById("globalRareMarketOwned");
+        const name = shopBrawlers[globalRareCarouselIndex];
+        const brawler = brawlers[name];
+        if (!brawler) return;
+
+        const owned = isBrawlerUnlocked(name);
+        const enoughCoins = coins >= SHOP_BRAWLER_PRICE;
+        const image = getDefaultSkinImage(name);
+        const imageClass = name === "Nita" ? " nita" : "";
+
+        if (wallet) wallet.textContent = coins;
+        if (progress) progress.textContent = `${ownedCount}/${shopBrawlers.length} possédés`;
+
+        const dots = shopBrawlers.map((_, index) => `
+            <button
+                class="global-rare-carousel-dot ${index === globalRareCarouselIndex ? "active" : ""}"
+                type="button"
+                aria-label="Afficher le Brawler ${index + 1}"
+                onclick="goToGlobalRareBrawler(${index})"
+            ></button>
+        `).join("");
+
+        grid.innerHTML = `
+            <article class="global-rare-carousel-card ${owned ? "owned" : "available"}">
+                <div class="global-rare-carousel-top">
+                    <span class="global-rare-carousel-badge">RARE</span>
+                    <span class="global-rare-carousel-state ${owned ? "owned" : ""}">${owned ? "✓ POSSÉDÉ" : "DISPONIBLE"}</span>
+                </div>
+
+                <div class="global-rare-stage">
+                    <button class="global-rare-nav left" type="button" aria-label="Brawler précédent" onclick="changeGlobalRareBrawler(-1)">‹</button>
+                    <img class="global-rare-carousel-image${imageClass}" src="${image}" alt="${name}">
+                    <button class="global-rare-nav right" type="button" aria-label="Brawler suivant" onclick="changeGlobalRareBrawler(1)">›</button>
+                </div>
+
+                <div class="global-rare-carousel-bottom">
+                    <div class="global-rare-carousel-info">
+                        <div class="global-rare-carousel-name">${name}</div>
+                        <div class="global-rare-carousel-position">${globalRareCarouselIndex + 1} / ${shopBrawlers.length} · recrutement permanent</div>
+                    </div>
+
+                    <button
+                        class="global-rare-carousel-buy ${owned ? "owned" : (!enoughCoins ? "low-coins" : "")}"
+                        type="button"
+                        ${owned ? "disabled" : ""}
+                        onclick="buyRareBrawler('${name}')"
+                    >
+                        ${owned
+                            ? `<span>✓ DÉBLOQUÉ</span>`
+                            : `<img src="Icon/coin.png" alt="Pièces"><span>${SHOP_BRAWLER_PRICE}</span>`}
+                    </button>
+
+                    <div class="global-rare-carousel-dots" aria-label="Navigation des Brawlers rares">${dots}</div>
+                </div>
+            </article>
+        `;
+    };
+
+    // Le shop global reste le point d'entrée unique : les autres sections ne changent pas.
+    renderShop = function renderShopWithCompactRareCarousel() {
+        ensureSeasonShop();
+        renderSeasonShop();
+        renderDailyGift();
+
+        const counter = document.getElementById("shopSliderCounter");
+        if (counter) counter.innerHTML = "";
+
+        renderRareBrawlerGlobalShop();
+        renderProfileIconShop();
+        renderAbilityShop();
+        renderStarPowerShop();
+        updateResources();
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // À la première ouverture, montre en priorité le premier Brawler rare non possédé.
+        const firstLocked = Array.isArray(shopBrawlers)
+            ? shopBrawlers.findIndex(name => !isBrawlerUnlocked(name))
+            : -1;
+        if (firstLocked >= 0) globalRareCarouselIndex = firstLocked;
+        setTimeout(() => {
+            try { renderShop(); }
+            catch (error) { console.error("Compact rare carousel render error:", error); }
+        }, 0);
+    });
+})();
+</script>
 
 </body>
 </html>
