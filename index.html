@@ -50494,39 +50494,79 @@ if ("serviceWorker" in navigator) {
 /* PARALYSIE */
 .battle-vfx-electric{
     position:absolute;
-    inset:13px 16px 12px;
-    border-radius:46%;
+    inset:6px 8px 6px;
+    border-radius:44%;
     opacity:0;
-    filter:drop-shadow(0 0 7px rgba(104,138,255,.8));
+    pointer-events:none;
+    overflow:visible;
+    filter:drop-shadow(0 0 10px rgba(108,146,255,.82)) drop-shadow(0 0 22px rgba(181,95,255,.42));
 }
-.battle-stage.status-paralyzed .battle-vfx-electric{opacity:1;animation:bvElectricField .46s steps(2,end) infinite;}
+.battle-stage.status-paralyzed .battle-vfx-electric{opacity:1;animation:bvElectricField .34s steps(2,end) infinite;}
 .battle-vfx-electric::before,
 .battle-vfx-electric::after{
     content:"";
     position:absolute;
     inset:0;
-    border-radius:48%;
-    border:2px solid rgba(104,151,255,.0);
-    background:
-      linear-gradient(112deg,transparent 0 18%,#8bbcff 19% 21%,transparent 22% 42%,#c182ff 43% 46%,transparent 47% 100%),
-      linear-gradient(72deg,transparent 0 31%,#fff 32% 33%,transparent 34% 64%,#6d8cff 65% 67%,transparent 68% 100%);
-    clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+    border-radius:50%;
     mix-blend-mode:screen;
+    pointer-events:none;
 }
-.battle-vfx-electric::after{transform:scale(.82) rotate(38deg);animation:bvElectricRotate .8s linear infinite reverse;}
-.battle-stage.status-paralyzed{animation:bvParalyzedStage .16s steps(2,end) infinite;}
+.battle-vfx-electric::before{
+    background:
+      radial-gradient(circle at 50% 52%, rgba(122,194,255,.28) 0 28%, rgba(162,99,255,.14) 40%, rgba(73,123,255,.07) 58%, transparent 76%),
+      radial-gradient(circle at 23% 28%, rgba(255,255,255,.95) 0 2%, transparent 8%),
+      radial-gradient(circle at 78% 34%, rgba(184,216,255,.8) 0 1.8%, transparent 7%),
+      radial-gradient(circle at 34% 77%, rgba(194,137,255,.72) 0 1.8%, transparent 8%),
+      radial-gradient(circle at 70% 76%, rgba(255,255,255,.9) 0 1.8%, transparent 8%);
+    animation:bvElectricCoreGlow .68s ease-in-out infinite;
+}
+.battle-vfx-electric::after{
+    inset:-10px;
+    background:conic-gradient(from 0deg, transparent 0 8%, rgba(138,187,255,.7) 9% 12%, transparent 13% 22%, rgba(201,114,255,.7) 23% 26%, transparent 27% 41%, rgba(255,255,255,.95) 42% 43%, transparent 44% 59%, rgba(106,145,255,.72) 60% 63%, transparent 64% 80%, rgba(196,124,255,.7) 81% 84%, transparent 85% 100%);
+    opacity:.72;
+    filter:blur(1px);
+    animation:bvElectricHalo 1.45s linear infinite;
+}
+.battle-vfx-electric-core{
+    position:absolute;
+    left:50%;top:50%;
+    width:66%;height:66%;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.96) 0 8%, rgba(175,222,255,.65) 14%, rgba(152,117,255,.24) 34%, rgba(92,130,255,.08) 54%, transparent 72%);
+    opacity:0;
+}
+.battle-stage.status-paralyzed .battle-vfx-electric-core{opacity:1;animation:bvElectricPulse .44s ease-in-out infinite;}
+.battle-vfx-bolt{
+    position:absolute;
+    width:34px;
+    height:92px;
+    background:linear-gradient(180deg,#ffffff 0%, #b7e8ff 24%, #78a4ff 55%, #d26dff 100%);
+    clip-path:polygon(46% 0, 66% 0, 54% 22%, 78% 22%, 40% 58%, 57% 58%, 33% 100%, 10% 100%, 26% 72%, 0 72%);
+    opacity:0;
+    mix-blend-mode:screen;
+    filter:drop-shadow(0 0 7px rgba(130,185,255,.95)) drop-shadow(0 0 18px rgba(188,94,255,.58));
+    transform-origin:50% 50%;
+}
+.battle-stage.status-paralyzed .battle-vfx-bolt{opacity:1;animation:bvBoltStrike .9s steps(2,end) infinite;}
+.battle-vfx-bolt.b1{left:6%;top:18%;transform:rotate(-24deg) scale(.9);animation-delay:-.08s;}
+.battle-vfx-bolt.b2{left:26%;top:-4%;transform:rotate(12deg) scale(.78);animation-delay:-.31s;}
+.battle-vfx-bolt.b3{right:19%;top:10%;transform:rotate(28deg) scale(.98);animation-delay:-.18s;}
+.battle-vfx-bolt.b4{right:4%;top:26%;transform:rotate(-8deg) scale(.76);animation-delay:-.52s;}
+.battle-vfx-bolt.b5{left:41%;bottom:-2%;transform:rotate(8deg) scale(.88);animation-delay:-.66s;}
+.battle-stage.status-paralyzed{animation:bvParalyzedStage .14s steps(2,end) infinite;}
 .battle-stage.status-paralyzed .battle-fighter-image{
-    filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) drop-shadow(0 0 12px rgba(98,139,255,.72)) saturate(1.12) !important;
+    filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) drop-shadow(0 0 12px rgba(98,139,255,.78)) drop-shadow(0 0 26px rgba(189,107,255,.35)) saturate(1.18) brightness(1.04) !important;
 }
 .battle-vfx-spark{
     position:absolute;
-    width:5px;height:5px;border-radius:50%;
-    background:#e9f3ff;
-    box-shadow:0 0 8px #7aa7ff,0 0 14px #925dff;
+    width:6px;height:6px;border-radius:50%;
+    background:#f6fbff;
+    box-shadow:0 0 10px #8fc0ff,0 0 20px #955dff;
     opacity:0;
 }
-.battle-stage.status-paralyzed .battle-vfx-spark{opacity:1;animation:bvSpark 1s ease-in-out infinite;}
-.battle-vfx-spark.s1{left:15%;top:37%;animation-delay:.05s !important}.battle-vfx-spark.s2{right:13%;top:25%;animation-delay:.28s !important}.battle-vfx-spark.s3{left:30%;bottom:12%;animation-delay:.52s !important}.battle-vfx-spark.s4{right:27%;bottom:20%;animation-delay:.76s !important}
+.battle-stage.status-paralyzed .battle-vfx-spark{opacity:1;animation:bvSpark .86s ease-in-out infinite;}
+.battle-vfx-spark.s1{left:12%;top:33%;animation-delay:.02s !important}.battle-vfx-spark.s2{right:11%;top:21%;animation-delay:.22s !important}.battle-vfx-spark.s3{left:24%;bottom:10%;animation-delay:.49s !important}.battle-vfx-spark.s4{right:23%;bottom:18%;animation-delay:.72s !important}
 
 /* ASSOMMEMENT */
 .battle-vfx-stun-orbit{
@@ -50585,10 +50625,13 @@ if ("serviceWorker" in navigator) {
     filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) drop-shadow(0 0 13px rgba(255,75,25,.48)) saturate(1.18) !important;
 }
 
-@keyframes bvElectricField{0%,100%{transform:scale(.98) rotate(-2deg);filter:hue-rotate(0deg)}50%{transform:scale(1.03) rotate(2deg);filter:hue-rotate(22deg)}}
-@keyframes bvElectricRotate{to{transform:scale(.82) rotate(398deg)}}
-@keyframes bvParalyzedStage{0%{transform:translate(-2px,0) rotate(-.35deg)}50%{transform:translate(2px,-1px) rotate(.35deg)}100%{transform:translate(-1px,1px) rotate(-.25deg)}}
-@keyframes bvSpark{0%,100%{transform:scale(.3);opacity:.1}35%{transform:scale(1.6);opacity:1}60%{transform:scale(.7);opacity:.3}}
+@keyframes bvElectricField{0%,100%{transform:scale(.985) rotate(-1.4deg)}30%{transform:scale(1.03) rotate(1.6deg)}60%{transform:scale(1.01) rotate(-2.1deg);filter:brightness(1.08)}80%{transform:scale(1.04) rotate(1deg)}}
+@keyframes bvElectricCoreGlow{0%,100%{transform:scale(.92);opacity:.48}45%{transform:scale(1.07);opacity:.94}65%{transform:scale(.98);opacity:.68}}
+@keyframes bvElectricPulse{0%,100%{transform:translate(-50%,-50%) scale(.72);opacity:.28}45%{transform:translate(-50%,-50%) scale(1.06);opacity:.88}70%{transform:translate(-50%,-50%) scale(.9);opacity:.55}}
+@keyframes bvElectricHalo{0%{transform:rotate(0deg) scale(.92);opacity:.42}50%{transform:rotate(180deg) scale(1.06);opacity:.88}100%{transform:rotate(360deg) scale(.92);opacity:.42}}
+@keyframes bvBoltStrike{0%,100%{opacity:.08;filter:drop-shadow(0 0 3px rgba(130,185,255,.6)) drop-shadow(0 0 7px rgba(188,94,255,.35));}8%{opacity:1;filter:drop-shadow(0 0 12px rgba(255,255,255,.95)) drop-shadow(0 0 26px rgba(139,194,255,.95)) drop-shadow(0 0 36px rgba(196,103,255,.72));}16%{opacity:.15;}30%{opacity:.85;}38%{opacity:.08;}60%{opacity:.62;}68%{opacity:.12;}82%{opacity:.92;}}
+@keyframes bvParalyzedStage{0%{transform:translate(-2px,0) rotate(-.55deg)}25%{transform:translate(2px,-1px) rotate(.45deg)}50%{transform:translate(-1px,1px) rotate(-.28deg)}75%{transform:translate(2px,0) rotate(.35deg)}100%{transform:translate(-1px,1px) rotate(-.35deg)}}
+@keyframes bvSpark{0%,100%{transform:scale(.25);opacity:.04}25%{transform:scale(1.9);opacity:1}55%{transform:scale(.65);opacity:.32}80%{transform:scale(1.15);opacity:.8}}
 @keyframes bvStunOrbit{to{transform:translateX(-50%) rotateY(360deg)}}
 @keyframes bvStunRing{0%,100%{transform:translateX(-50%) scale(.84);opacity:.28}50%{transform:translateX(-50%) scale(1.04);opacity:.8}}
 @keyframes bvStunnedStage{0%,100%{transform:rotate(-1.3deg) translateY(0)}50%{transform:rotate(1.3deg) translateY(1px)}}
@@ -50815,7 +50858,7 @@ if ("serviceWorker" in navigator) {
             <div class="status-tag paralyze">⚡ PARALYSÉ</div>
             <div class="status-tag stun">★ ASSOMMÉ</div>
             <div class="status-tag burn">🔥 BRÛLÉ</div>
-            <div class="battle-vfx-electric"></div>
+            <div class="battle-vfx-electric"><i class="battle-vfx-electric-core"></i><i class="battle-vfx-bolt b1"></i><i class="battle-vfx-bolt b2"></i><i class="battle-vfx-bolt b3"></i><i class="battle-vfx-bolt b4"></i><i class="battle-vfx-bolt b5"></i></div>
             <i class="battle-vfx-spark s1"></i><i class="battle-vfx-spark s2"></i><i class="battle-vfx-spark s3"></i><i class="battle-vfx-spark s4"></i>
             <div class="battle-vfx-stun-ring"></div>
             <div class="battle-vfx-stun-orbit"><i class="battle-vfx-star a">★</i><i class="battle-vfx-star b">★</i><i class="battle-vfx-star c">★</i></div>
