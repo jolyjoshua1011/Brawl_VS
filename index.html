@@ -4497,7 +4497,7 @@ const brawlers = {
     "Colt": {
         category: "Tireur d’élite",
         categoryIcon: "🎯",
-        description: "Colt mise sur ses rafales et sa longue portée pour infliger de lourds dégâts. Son tir étroit demande de bien choisir sa distance ; de très près, toutes ses balles atteignent leur cible.",
+        description: "Colt mise sur ses rafales et sa longue portée pour infliger de lourds dégâts. Son tir étroit demande de bien choisir sa distance ; de très près, l'adversaire ne peut pas esquiver mais le nombre de balles touchées reste aléatoire.",
         icon: "Brawlers_icon/Colt_icon.png",
         image: "Brawlers_skin/Colt_skin_def.webp",
         rarity: "RARE",
@@ -4973,7 +4973,7 @@ const BRAWLER_STAR_POWER_CATALOG = {
     "Colt": {
         id: "colt-star-seven-bullets",
         name: "SEPTIÈME BALLE",
-        description: "Le chargeur de Colt contient désormais 7 balles au lieu de 6. Ses attaques principales touchent donc entre 1 et 7 balles, et 7/7 à distance 1.",
+        description: "Le chargeur de Colt contient désormais 7 balles au lieu de 6. Ses attaques principales touchent donc entre 1 et 7 balles, y compris à distance 1.",
         requiredPower: 10,
         effect: {
             type: "extra_basic_bullet",
@@ -5452,7 +5452,7 @@ const BRAWLER_ATTACK_DESCRIPTIONS = {
         base: {
             title: "Six coups",
             text:
-                "Colt passe d'abord par le test d'esquive. S'il touche, entre 1 et 6 balles atteignent la cible. À distance 1, aucune esquive n'est possible et les 6 balles touchent automatiquement."
+                "Colt passe d'abord par le test d'esquive. S'il touche, entre 1 et 6 balles atteignent la cible. À distance 1, aucune esquive n'est possible, mais entre 1 et 6 balles touchent quand même au hasard."
         },
         super: {
             title: "Super : Douze balles",
@@ -20969,18 +20969,12 @@ function rollColtBulletHits(
             )
         );
     /*
-       À distance 1, aucune esquive n'est possible :
-       toutes les balles du chargeur touchent.
-    */
-    if (
-        battleState.currentDistance ===
-        1
-    ) {
-        return safeMaxBullets;
-    }
-    /*
-       Aux autres distances :
-       entre 1 et le nombre maximum de balles touchent.
+       Une attaque de Colt qui a passé le test d'esquive
+       touche toujours au moins 1 balle, puis tire au hasard
+       entre 1 et la capacité du chargeur :
+       1 à 6 normalement, 1 à 7 avec le pouvoir star.
+       À distance 1, l'adversaire ne peut pas esquiver,
+       mais Colt ne touche plus automatiquement tout le chargeur.
     */
     return Math.floor(
         Math.random() *
@@ -50491,82 +50485,93 @@ if ("serviceWorker" in navigator) {
 .status-tag.stun{color:#2b1b00;background:linear-gradient(135deg,#fff2a6,#ffc94e);box-shadow:0 0 16px rgba(255,202,75,.44);}
 .status-tag.burn{background:linear-gradient(135deg,#ff9f2d,#ff3f25);box-shadow:0 0 17px rgba(255,83,35,.46);}
 
-/* PARALYSIE */
+/* PARALYSIE — version légère */
 .battle-vfx-electric{
     position:absolute;
-    inset:6px 8px 6px;
-    border-radius:44%;
+    inset:18px 24px 16px;
+    border-radius:50%;
     opacity:0;
     pointer-events:none;
     overflow:visible;
-    filter:drop-shadow(0 0 10px rgba(108,146,255,.82)) drop-shadow(0 0 22px rgba(181,95,255,.42));
+    filter:drop-shadow(0 0 5px rgba(112,174,255,.55));
 }
-.battle-stage.status-paralyzed .battle-vfx-electric{opacity:1;animation:bvElectricField .34s steps(2,end) infinite;}
-.battle-vfx-electric::before,
+.battle-stage.status-paralyzed .battle-vfx-electric{
+    opacity:1;
+}
+.battle-vfx-electric::before{
+    content:"";
+    position:absolute;
+    inset:12% 8%;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(135,198,255,.14) 0 30%,rgba(133,105,255,.08) 48%,transparent 70%);
+    box-shadow:0 0 14px rgba(95,165,255,.20),0 0 25px rgba(153,91,255,.10);
+    animation:bvElectricSoftGlow 1.15s ease-in-out infinite;
+}
 .battle-vfx-electric::after{
     content:"";
     position:absolute;
-    inset:0;
+    left:50%;top:50%;
+    width:72%;height:72%;
+    transform:translate(-50%,-50%);
     border-radius:50%;
-    mix-blend-mode:screen;
-    pointer-events:none;
-}
-.battle-vfx-electric::before{
-    background:
-      radial-gradient(circle at 50% 52%, rgba(122,194,255,.28) 0 28%, rgba(162,99,255,.14) 40%, rgba(73,123,255,.07) 58%, transparent 76%),
-      radial-gradient(circle at 23% 28%, rgba(255,255,255,.95) 0 2%, transparent 8%),
-      radial-gradient(circle at 78% 34%, rgba(184,216,255,.8) 0 1.8%, transparent 7%),
-      radial-gradient(circle at 34% 77%, rgba(194,137,255,.72) 0 1.8%, transparent 8%),
-      radial-gradient(circle at 70% 76%, rgba(255,255,255,.9) 0 1.8%, transparent 8%);
-    animation:bvElectricCoreGlow .68s ease-in-out infinite;
-}
-.battle-vfx-electric::after{
-    inset:-10px;
-    background:conic-gradient(from 0deg, transparent 0 8%, rgba(138,187,255,.7) 9% 12%, transparent 13% 22%, rgba(201,114,255,.7) 23% 26%, transparent 27% 41%, rgba(255,255,255,.95) 42% 43%, transparent 44% 59%, rgba(106,145,255,.72) 60% 63%, transparent 64% 80%, rgba(196,124,255,.7) 81% 84%, transparent 85% 100%);
-    opacity:.72;
-    filter:blur(1px);
-    animation:bvElectricHalo 1.45s linear infinite;
+    border:1px solid rgba(133,192,255,.13);
+    box-shadow:0 0 10px rgba(110,171,255,.10);
+    animation:bvElectricSoftRing 1.4s ease-in-out infinite;
 }
 .battle-vfx-electric-core{
     position:absolute;
     left:50%;top:50%;
-    width:66%;height:66%;
+    width:58%;height:58%;
     transform:translate(-50%,-50%);
     border-radius:50%;
-    background:radial-gradient(circle, rgba(255,255,255,.96) 0 8%, rgba(175,222,255,.65) 14%, rgba(152,117,255,.24) 34%, rgba(92,130,255,.08) 54%, transparent 72%);
+    background:radial-gradient(circle,rgba(188,226,255,.15),rgba(124,136,255,.06) 45%,transparent 72%);
     opacity:0;
 }
-.battle-stage.status-paralyzed .battle-vfx-electric-core{opacity:1;animation:bvElectricPulse .44s ease-in-out infinite;}
+.battle-stage.status-paralyzed .battle-vfx-electric-core{
+    opacity:1;
+    animation:bvElectricSoftCore 1s ease-in-out infinite;
+}
 .battle-vfx-bolt{
     position:absolute;
-    width:34px;
-    height:92px;
-    background:linear-gradient(180deg,#ffffff 0%, #b7e8ff 24%, #78a4ff 55%, #d26dff 100%);
-    clip-path:polygon(46% 0, 66% 0, 54% 22%, 78% 22%, 40% 58%, 57% 58%, 33% 100%, 10% 100%, 26% 72%, 0 72%);
+    width:8px;
+    height:23px;
+    background:linear-gradient(180deg,#f8fdff 0%,#9bd8ff 46%,#967dff 100%);
+    clip-path:polygon(45% 0,68% 0,54% 35%,78% 35%,34% 100%,45% 57%,17% 57%);
     opacity:0;
     mix-blend-mode:screen;
-    filter:drop-shadow(0 0 7px rgba(130,185,255,.95)) drop-shadow(0 0 18px rgba(188,94,255,.58));
+    filter:drop-shadow(0 0 3px rgba(132,195,255,.9));
     transform-origin:50% 50%;
 }
-.battle-stage.status-paralyzed .battle-vfx-bolt{opacity:1;animation:bvBoltStrike .9s steps(2,end) infinite;}
-.battle-vfx-bolt.b1{left:6%;top:18%;transform:rotate(-24deg) scale(.9);animation-delay:-.08s;}
-.battle-vfx-bolt.b2{left:26%;top:-4%;transform:rotate(12deg) scale(.78);animation-delay:-.31s;}
-.battle-vfx-bolt.b3{right:19%;top:10%;transform:rotate(28deg) scale(.98);animation-delay:-.18s;}
-.battle-vfx-bolt.b4{right:4%;top:26%;transform:rotate(-8deg) scale(.76);animation-delay:-.52s;}
-.battle-vfx-bolt.b5{left:41%;bottom:-2%;transform:rotate(8deg) scale(.88);animation-delay:-.66s;}
-.battle-stage.status-paralyzed{animation:bvParalyzedStage .14s steps(2,end) infinite;}
+.battle-stage.status-paralyzed .battle-vfx-bolt{
+    animation:bvTinyBolt 1.15s steps(2,end) infinite;
+}
+.battle-vfx-bolt.b1{left:13%;top:31%;transform:rotate(-24deg);animation-delay:-.04s!important;}
+.battle-vfx-bolt.b2{left:32%;top:7%;transform:rotate(10deg) scale(.82);animation-delay:-.36s!important;}
+.battle-vfx-bolt.b3{right:23%;top:14%;transform:rotate(26deg) scale(.9);animation-delay:-.17s!important;}
+.battle-vfx-bolt.b4{right:11%;top:46%;transform:rotate(-8deg) scale(.76);animation-delay:-.61s!important;}
+.battle-vfx-bolt.b5{left:46%;bottom:4%;transform:rotate(5deg) scale(.8);animation-delay:-.78s!important;}
+
+/* Le personnage, et seulement lui, tremble en continu pendant la paralysie. */
+.battle-stage.status-paralyzed{
+    animation:none!important;
+}
 .battle-stage.status-paralyzed .battle-fighter-image{
-    filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) drop-shadow(0 0 12px rgba(98,139,255,.78)) drop-shadow(0 0 26px rgba(189,107,255,.35)) saturate(1.18) brightness(1.04) !important;
+    animation:bvParalyzedFighterShake .13s linear infinite!important;
+    filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) drop-shadow(0 0 7px rgba(103,165,255,.48)) saturate(1.08) brightness(1.02)!important;
+    will-change:transform;
 }
 .battle-vfx-spark{
     position:absolute;
-    width:6px;height:6px;border-radius:50%;
-    background:#f6fbff;
-    box-shadow:0 0 10px #8fc0ff,0 0 20px #955dff;
+    width:4px;height:4px;border-radius:50%;
+    background:#edf8ff;
+    box-shadow:0 0 5px #8fc7ff,0 0 8px rgba(144,105,255,.65);
     opacity:0;
 }
-.battle-stage.status-paralyzed .battle-vfx-spark{opacity:1;animation:bvSpark .86s ease-in-out infinite;}
-.battle-vfx-spark.s1{left:12%;top:33%;animation-delay:.02s !important}.battle-vfx-spark.s2{right:11%;top:21%;animation-delay:.22s !important}.battle-vfx-spark.s3{left:24%;bottom:10%;animation-delay:.49s !important}.battle-vfx-spark.s4{right:23%;bottom:18%;animation-delay:.72s !important}
+.battle-stage.status-paralyzed .battle-vfx-spark{
+    opacity:1;
+    animation:bvSoftSpark 1.3s ease-in-out infinite;
+}
+.battle-vfx-spark.s1{left:18%;top:39%;animation-delay:.05s!important}.battle-vfx-spark.s2{right:16%;top:30%;animation-delay:.33s!important}.battle-vfx-spark.s3{left:31%;bottom:16%;animation-delay:.62s!important}.battle-vfx-spark.s4{right:30%;bottom:22%;animation-delay:.89s!important}
 
 /* ASSOMMEMENT */
 .battle-vfx-stun-orbit{
@@ -50625,13 +50630,12 @@ if ("serviceWorker" in navigator) {
     filter:drop-shadow(0 12px 10px rgba(0,0,0,.5)) drop-shadow(0 0 13px rgba(255,75,25,.48)) saturate(1.18) !important;
 }
 
-@keyframes bvElectricField{0%,100%{transform:scale(.985) rotate(-1.4deg)}30%{transform:scale(1.03) rotate(1.6deg)}60%{transform:scale(1.01) rotate(-2.1deg);filter:brightness(1.08)}80%{transform:scale(1.04) rotate(1deg)}}
-@keyframes bvElectricCoreGlow{0%,100%{transform:scale(.92);opacity:.48}45%{transform:scale(1.07);opacity:.94}65%{transform:scale(.98);opacity:.68}}
-@keyframes bvElectricPulse{0%,100%{transform:translate(-50%,-50%) scale(.72);opacity:.28}45%{transform:translate(-50%,-50%) scale(1.06);opacity:.88}70%{transform:translate(-50%,-50%) scale(.9);opacity:.55}}
-@keyframes bvElectricHalo{0%{transform:rotate(0deg) scale(.92);opacity:.42}50%{transform:rotate(180deg) scale(1.06);opacity:.88}100%{transform:rotate(360deg) scale(.92);opacity:.42}}
-@keyframes bvBoltStrike{0%,100%{opacity:.08;filter:drop-shadow(0 0 3px rgba(130,185,255,.6)) drop-shadow(0 0 7px rgba(188,94,255,.35));}8%{opacity:1;filter:drop-shadow(0 0 12px rgba(255,255,255,.95)) drop-shadow(0 0 26px rgba(139,194,255,.95)) drop-shadow(0 0 36px rgba(196,103,255,.72));}16%{opacity:.15;}30%{opacity:.85;}38%{opacity:.08;}60%{opacity:.62;}68%{opacity:.12;}82%{opacity:.92;}}
-@keyframes bvParalyzedStage{0%{transform:translate(-2px,0) rotate(-.55deg)}25%{transform:translate(2px,-1px) rotate(.45deg)}50%{transform:translate(-1px,1px) rotate(-.28deg)}75%{transform:translate(2px,0) rotate(.35deg)}100%{transform:translate(-1px,1px) rotate(-.35deg)}}
-@keyframes bvSpark{0%,100%{transform:scale(.25);opacity:.04}25%{transform:scale(1.9);opacity:1}55%{transform:scale(.65);opacity:.32}80%{transform:scale(1.15);opacity:.8}}
+@keyframes bvElectricSoftGlow{0%,100%{transform:scale(.96);opacity:.45}50%{transform:scale(1.04);opacity:.85}}
+@keyframes bvElectricSoftRing{0%,100%{transform:translate(-50%,-50%) scale(.94);opacity:.18}50%{transform:translate(-50%,-50%) scale(1.03);opacity:.42}}
+@keyframes bvElectricSoftCore{0%,100%{transform:translate(-50%,-50%) scale(.92);opacity:.45}50%{transform:translate(-50%,-50%) scale(1.04);opacity:.72}}
+@keyframes bvTinyBolt{0%,100%{opacity:0}10%{opacity:.88}17%{opacity:.08}38%{opacity:.55}44%{opacity:0}72%{opacity:.7}79%{opacity:.05}}
+@keyframes bvParalyzedFighterShake{0%{transform:translateX(-1px) rotate(-.15deg)}25%{transform:translate(1px,-.5px) rotate(.12deg)}50%{transform:translateX(-.7px) rotate(-.08deg)}75%{transform:translate(1px,.5px) rotate(.13deg)}100%{transform:translateX(-1px) rotate(-.15deg)}}
+@keyframes bvSoftSpark{0%,100%{transform:scale(.35);opacity:.08}35%{transform:scale(1.25);opacity:.72}60%{transform:scale(.6);opacity:.18}}
 @keyframes bvStunOrbit{to{transform:translateX(-50%) rotateY(360deg)}}
 @keyframes bvStunRing{0%,100%{transform:translateX(-50%) scale(.84);opacity:.28}50%{transform:translateX(-50%) scale(1.04);opacity:.8}}
 @keyframes bvStunnedStage{0%,100%{transform:rotate(-1.3deg) translateY(0)}50%{transform:rotate(1.3deg) translateY(1px)}}
