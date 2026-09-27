@@ -53298,5 +53298,438 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+<!-- =========================================================
+     BRAWL VS ONLINE V15 · PROFILS + STATUTS TEMPS RÉEL
+     - Republie le profil public automatiquement.
+     - Actualise EN LIGNE / EN COMBAT sans recharger la page.
+     - Actualise aussi un profil ami déjà ouvert.
+========================================================= -->
+<script id="brawl-v15-live-social-refresh">
+(() => {
+    "use strict";
+
+    if (window.__BRAWL_V15_LIVE_SOCIAL_REFRESH__) return;
+    window.__BRAWL_V15_LIVE_SOCIAL_REFRESH__ = true;
+
+    const PRESENCE_REFRESH_MS_V15 = 2500;
+    const UI_REFRESH_MS_V15 = 900;
+
+    let presenceRefreshBusyV15 = false;
+    let activeProfilePlayerIdV15 = "";
+    let activeFriendKeyV15 = "";
+    let lastRemoteFingerprintV15 = "";
+
+    function normV15(value) {
+        try {
+            if (typeof normalizeFriendName === "function") {
+                return normalizeFriendName(value || "");
+            }
+        } catch (_) {}
+        return String(value || "").trim().toLowerCase();
+    }
+
+    function safeV15(value) {
+        try {
+            if (typeof escapeOnlineHtml === "function") {
+                return escapeOnlineHtml(value ?? "");
+            }
+        } catch (_) {}
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function friendByKeyV15(key) {
+        const raw = String(key || "");
+        const wanted = normV15(raw);
+        return (Array.isArray(state?.friends) ? state.friends : []).find(friend =>
+            String(friend?.user_id || "") === raw ||
+            String(friend?.id || "") === raw ||
+            normV15(friend?.name) === wanted
+        ) || null;
+    }
+
+    function presenceByNameV15(name) {
+        if (!(onlineLobbyPlayers instanceof Map)) return null;
+        const wanted = normV15(name);
+        if (!wanted) return null;
+        return [...onlineLobbyPlayers.values()].find(player =>
+            normV15(player?.username) === wanted
+        ) || null;
+    }
+
+    function presenceForFriendV15(friend) {
+        if (!friend || !(onlineLobbyPlayers instanceof Map)) return null;
+        const id = String(friend.user_id || "");
+        if (id && onlineLobbyPlayers.has(id)) return onlineLobbyPlayers.get(id);
+        return presenceByNameV15(friend.name);
+    }
+
+    function profileFingerprintV15(player) {
+        const profile = player?.profile || {};
+        const list = Array.isArray(profile.brawlers) ? profile.brawlers : [];
+        return {
+            id: String(player?.user_id || ""),
+            username: String(player?.username || ""),
+            brawler: String(profile.selected_brawler || player?.brawler || ""),
+            busy: Boolean(player?.in_battle),
+            icon: String(profile.profile_icon || player?.profile_icon || ""),
+            trophies: Number(profile.trophies || 0),
+            brawlers: list.map(item => [
+                item?.name || "",
+                Number(item?.power || 1),
+                Number(item?.trophies || 0),
+                item?.icon || "",
+                Boolean(item?.star_power),
+                Array.isArray(item?.ability_ids) ? item.ability_ids.join(",") : ""
+            ])
+        };
+    }
+
+    function remoteFingerprintV15() {
+        if (!(onlineLobbyPlayers instanceof Map)) return "[]";
+        const data = [...onlineLobbyPlayers.values()]
+            .map(profileFingerprintV15)
+            .sort((a, b) => a.id.localeCompare(b.id));
+        try { return JSON.stringify(data); }
+        catch (_) { return String(Date.now()); }
+    }
+
+    function updateFriendCardsV15() {
+        const friends = Array.isArray(state?.friends) ? state.friends : [];
+        const cards = [...document.querySelectorAll("#friendsList .friend-card")];
+
+        cards.forEach((card, index) => {
+            const displayedName = card.querySelector(".friend-name")?.textContent?.trim() || "";
+            const friend = friends.find(item => normV15(item?.name) === normV15(displayedName)) || friends[index];
+            if (!friend) return;
+
+            const presence = presenceForFriendV15(friend);
+            const online = Boolean(presence);
+            const busy = Boolean(presence?.in_battle);
+            const stateEl = card.querySelector(".friend-state");
+            const dot = card.querySelector(".friend-status-dot");
+            const invite = card.querySelector(".friend-action.invite");
+            const avatar = card.querySelector(".friend-avatar");
+            const icon = presence?.profile?.profile_icon || presence?.profile_icon || "";
+
+            friend.online = online;
+            card.classList.toggle("is-in-battle-v13", busy);
+
+            if (stateEl) {
+                stateEl.textContent = busy ? "EN COMBAT" : (online ? "EN LIGNE" : "HORS LIGNE");
+                stateEl.classList.toggle("online", online);
+            }
+
+            if (dot) {
+                dot.classList.toggle("online", online);
+            }
+
+            if (avatar && online && icon) {
+                const current = avatar.querySelector("img");
+                if (!current || current.getAttribute("src") !== icon) {
+                    avatar.classList.add("has-online-profile");
+                    avatar.innerHTML = `<img src="${safeV15(icon)}" alt=""><span class="friend-status-dot online"></span>`;
+                }
+            }
+
+            if (invite) {
+                invite.disabled = !online || busy;
+                if (busy) {
+                    invite.textContent = "EN COMBAT";
+                    invite.dataset.busyV15 = "1";
+                } else if (!online) {
+                    invite.textContent = "HORS LIGNE";
+                    invite.dataset.offlineV15 = "1";
+                } else {
+                    if (invite.dataset.busyV15 === "1" || invite.dataset.offlineV15 === "1") {
+                        invite.textContent = "INVITER";
+                    }
+                    delete invite.dataset.busyV15;
+                    delete invite.dataset.offlineV15;
+                }
+            }
+        });
+    }
+
+    function profileBrawlerCardsV15(profile) {
+        const list = Array.isArray(profile?.brawlers) ? profile.brawlers : [];
+        if (!list.length) {
+            return `<div class="online-player-empty">Aucun Brawler public.</div>`;
+        }
+
+        return list.map(item => {
+            const name = safeV15(item?.name || "Brawler");
+            const image = safeV15(
+                item?.icon ||
+                brawlers?.[item?.name]?.icon ||
+                item?.image ||
+                brawlers?.[item?.name]?.image ||
+                ""
+            );
+            return `<article class="online-profile-brawler">
+                <img src="${image}" alt="${name}">
+                <div class="online-profile-brawler-info">
+                    <div>
+                        <strong>${name}</strong>
+                        <small>🏆 ${Number(item?.trophies || 0)}</small>
+                    </div>
+                    <strong class="online-profile-power">P${Number(item?.power || 1)}</strong>
+                </div>
+            </article>`;
+        }).join("");
+    }
+
+    function currentProfilePresenceV15() {
+        if (activeProfilePlayerIdV15 && onlineLobbyPlayers instanceof Map) {
+            const direct = onlineLobbyPlayers.get(String(activeProfilePlayerIdV15));
+            if (direct) return direct;
+        }
+
+        const friend = friendByKeyV15(activeFriendKeyV15);
+        if (friend) {
+            const presence = presenceForFriendV15(friend);
+            if (presence) {
+                activeProfilePlayerIdV15 = String(presence.user_id || friend.user_id || "");
+                return presence;
+            }
+        }
+
+        const dialogName = document.querySelector("#onlineFriendProfileDialog .online-profile-name")?.textContent?.trim();
+        return dialogName ? presenceByNameV15(dialogName) : null;
+    }
+
+    function updateOpenFriendProfileV15() {
+        const dialog = document.getElementById("onlineFriendProfileDialog");
+        if (!dialog) return;
+
+        const status = dialog.querySelector(".online-profile-online");
+        const duel = dialog.querySelector(".online-profile-duel");
+        const player = currentProfilePresenceV15();
+
+        if (!player) {
+            if (status) {
+                status.textContent = "HORS LIGNE";
+                status.classList.add("offline");
+                status.classList.remove("is-in-battle-v13");
+            }
+            if (duel) {
+                duel.disabled = true;
+                duel.textContent = "HORS LIGNE";
+                duel.classList.remove("is-in-battle-v13");
+                duel.removeAttribute("onclick");
+            }
+            return;
+        }
+
+        const profile = player.profile || {};
+        const list = Array.isArray(profile.brawlers) ? profile.brawlers : [];
+        const busy = Boolean(player.in_battle);
+        const playerId = String(player.user_id || "").replace(/[^a-fA-F0-9-]/g, "");
+        const icon = profile.profile_icon || player.profile_icon || (typeof DEFAULT_PROFILE_ICON !== "undefined" ? DEFAULT_PROFILE_ICON : "");
+
+        activeProfilePlayerIdV15 = String(player.user_id || activeProfilePlayerIdV15 || "");
+
+        if (status) {
+            status.textContent = busy ? "EN COMBAT" : "EN LIGNE";
+            status.classList.remove("offline");
+            status.classList.toggle("is-in-battle-v13", busy);
+        }
+
+        const nameEl = dialog.querySelector(".online-profile-name");
+        if (nameEl) nameEl.textContent = player.username || "JOUEUR";
+
+        const codeEl = dialog.querySelector(".online-profile-code");
+        if (codeEl) {
+            codeEl.textContent = player.friend_code || (player.user_id ? getPersonalFriendCode(player.user_id) : "");
+        }
+
+        const avatarImg = dialog.querySelector(".online-profile-avatar img");
+        if (avatarImg && icon && avatarImg.getAttribute("src") !== icon) {
+            avatarImg.src = icon;
+        }
+
+        const statValues = dialog.querySelectorAll(".online-profile-stat strong");
+        if (statValues[0]) statValues[0].textContent = `🏆 ${Number(profile.trophies || 0)}`;
+        if (statValues[1]) statValues[1].textContent = `${list.length} / ${Object.keys(brawlers || {}).length}`;
+
+        const sectionCount = dialog.querySelector(".online-profile-section-head span:last-child");
+        if (sectionCount) sectionCount.textContent = String(list.length);
+
+        const collection = dialog.querySelector(".online-profile-brawlers");
+        if (collection) {
+            const scrollTop = collection.scrollTop;
+            const nextHtml = profileBrawlerCardsV15(profile);
+            if (collection.dataset.liveHtmlV15 !== nextHtml) {
+                collection.innerHTML = nextHtml;
+                collection.dataset.liveHtmlV15 = nextHtml;
+                collection.scrollTop = scrollTop;
+            }
+        }
+
+        if (duel) {
+            duel.classList.toggle("is-in-battle-v13", busy);
+            duel.disabled = busy || !playerId;
+            duel.textContent = busy ? "⚔ EN COMBAT" : "⚔ INVITER EN DUEL";
+            if (!busy && playerId) {
+                duel.setAttribute(
+                    "onclick",
+                    `document.getElementById('onlineFriendProfileDialog')?.close(); inviteOnlinePlayerById('${playerId}')`
+                );
+            } else {
+                duel.removeAttribute("onclick");
+            }
+        }
+    }
+
+    function refreshSocialUiV15(forceFriendsRender = false) {
+        const fingerprint = remoteFingerprintV15();
+        if (forceFriendsRender || fingerprint !== lastRemoteFingerprintV15) {
+            lastRemoteFingerprintV15 = fingerprint;
+            try {
+                if (typeof renderFriends === "function") renderFriends();
+            } catch (error) {
+                console.warn("Actualisation live des amis impossible :", error);
+            }
+        }
+
+        updateFriendCardsV15();
+        updateOpenFriendProfileV15();
+
+        try {
+            const dialog = document.getElementById("onlineDuelPickerDialog");
+            if (dialog && typeof openOnlineDuelPicker === "function") {
+                // Les correctifs V13 actualisent le statut combat sur les cartes déjà présentes.
+                document.querySelectorAll(".online-duel-friend").forEach(card => {
+                    const name = card.querySelector(".online-duel-friend-main strong")?.textContent?.trim() || "";
+                    const presence = presenceByNameV15(name);
+                    const busy = Boolean(presence?.in_battle);
+                    const online = Boolean(presence);
+                    const status = card.querySelector(".online-duel-friend-main small");
+                    const invite = card.querySelector(".online-duel-invite-btn");
+                    card.classList.toggle("is-in-battle-v13", busy);
+                    card.classList.toggle("offline", !online);
+                    if (status) {
+                        status.textContent = busy ? "EN COMBAT" : (online ? `EN LIGNE · ${presence?.profile?.selected_brawler || presence?.brawler || "DISPONIBLE"}` : "HORS LIGNE");
+                        status.classList.toggle("online", online);
+                    }
+                    if (invite) {
+                        invite.disabled = !online || busy;
+                        invite.textContent = busy ? "EN COMBAT" : (online ? "INVITER" : "OFFLINE");
+                    }
+                });
+            }
+        } catch (_) {}
+    }
+
+    async function publishPresenceV15() {
+        if (presenceRefreshBusyV15) return;
+        presenceRefreshBusyV15 = true;
+
+        try {
+            const client = typeof getBrawlCloudClient === "function" ? getBrawlCloudClient() : null;
+            if (!client) return;
+
+            if (!brawlCloudSession?.user) {
+                const { data } = await client.auth.getSession();
+                if (data?.session?.user) brawlCloudSession = data.session;
+            }
+
+            if (!brawlCloudSession?.user) {
+                refreshSocialUiV15(true);
+                return;
+            }
+
+            if (!onlinePresenceChannel) {
+                await startOnlineLobbyPresence();
+                await new Promise(resolve => setTimeout(resolve, 120));
+            }
+
+            if (onlinePresenceChannel) {
+                await onlinePresenceChannel.track(getOnlinePresencePayload(brawlCloudSession));
+                try { refreshOnlinePresenceFromChannel(); } catch (_) {}
+            }
+
+            refreshSocialUiV15(false);
+        } catch (error) {
+            console.warn("Heartbeat social BRAWL VS impossible :", error);
+        } finally {
+            presenceRefreshBusyV15 = false;
+        }
+    }
+
+    /* Mémorise quel profil est affiché pour pouvoir le mettre à jour en direct. */
+    if (typeof window.openOnlinePlayerProfile === "function") {
+        const openOnlineProfileBeforeV15 = window.openOnlinePlayerProfile;
+        window.openOnlinePlayerProfile = function(playerId) {
+            activeProfilePlayerIdV15 = String(playerId || "");
+            activeFriendKeyV15 = activeProfilePlayerIdV15;
+            const result = openOnlineProfileBeforeV15(playerId);
+            setTimeout(updateOpenFriendProfileV15, 0);
+            setTimeout(updateOpenFriendProfileV15, 120);
+            return result;
+        };
+    }
+
+    if (typeof window.openFriendProfileFromList === "function") {
+        const openFriendProfileBeforeV15 = window.openFriendProfileFromList;
+        window.openFriendProfileFromList = async function(friendKey) {
+            activeFriendKeyV15 = String(friendKey || "");
+            const friend = friendByKeyV15(activeFriendKeyV15);
+            const presence = presenceForFriendV15(friend);
+            activeProfilePlayerIdV15 = String(presence?.user_id || friend?.user_id || "");
+            const result = await openFriendProfileBeforeV15(friendKey);
+            setTimeout(updateOpenFriendProfileV15, 0);
+            setTimeout(updateOpenFriendProfileV15, 120);
+            return result;
+        };
+    }
+
+    /* Si un match change, le statut EN COMBAT est envoyé tout de suite. */
+    if (typeof onOnlineMatchUpdated === "function") {
+        const matchUpdateBeforeV15 = onOnlineMatchUpdated;
+        onOnlineMatchUpdated = function(match) {
+            const result = matchUpdateBeforeV15(match);
+            setTimeout(publishPresenceV15, 0);
+            setTimeout(() => refreshSocialUiV15(true), 80);
+            return result;
+        };
+    }
+
+    /* Même chose lorsqu'un profil local est sauvegardé / modifié. */
+    const publishAfterInteractionV15 = () => {
+        setTimeout(publishPresenceV15, 80);
+    };
+
+    ["focus", "online", "pageshow"].forEach(eventName => {
+        window.addEventListener(eventName, publishAfterInteractionV15, { passive: true });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) publishPresenceV15();
+    });
+
+    document.addEventListener("click", event => {
+        if (event.target?.closest?.(
+            "#profilePopup, #profileIconPopup, #brawlersPage, #brawlerDetailPage, #shopPage, #battlePage"
+        )) {
+            publishAfterInteractionV15();
+        }
+    }, { passive: true });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => publishPresenceV15(), 350);
+        setTimeout(() => refreshSocialUiV15(true), 500);
+    });
+
+    setInterval(publishPresenceV15, PRESENCE_REFRESH_MS_V15);
+    setInterval(() => refreshSocialUiV15(false), UI_REFRESH_MS_V15);
+})();
+</script>
+
 </body>
 </html>
