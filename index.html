@@ -4122,7 +4122,7 @@ body{
                     >
                         <img
                             id="profilePreviewIcon"
-                            src="Profil/default.webp"
+                            src="Profil/default.png"
                             alt="Icône de profil sélectionnée"
                         >
                         <span class="profile-v3-avatar-edit" aria-hidden="true">✎</span>
@@ -8336,19 +8336,19 @@ const COLT_CHALLENGER_ICON = "Profil/colt_challenger.png";
 const PROFILE_ICON_CHOICES = [
     {
         name: "Default",
-        icon: "Profil/default.webp"
+        icon: "Profil/default.png"
     },
     {
         name: "Robot",
-        icon: "Profil/robot.webp"
+        icon: "Profil/robot.png"
     },
     {
         name: "Bandana",
-        icon: "Profil/bandana.webp"
+        icon: "Profil/bandana.png"
     },
     {
         name: "Little Spike",
-        icon: "Profil/little_spike.webp"
+        icon: "Profil/little_spike.png"
     },
     {
         name: "500 TR",
@@ -8427,7 +8427,7 @@ const PROFILE_ICON_CHOICES = [
     { name: "Colt Challenger", icon: COLT_CHALLENGER_ICON }
 ];
 const DEFAULT_PROFILE_ICON =
-    "Profil/default.webp";
+    "Profil/default.png";
 const DEFAULT_UNLOCKED_PROFILE_ICONS = [
     DEFAULT_PROFILE_ICON
 ];
@@ -28129,15 +28129,15 @@ const STAR_POWER_SHOP_PRICE =
 const PROFILE_ICON_SHOP_ITEMS = [
     {
         name: "Robot",
-        icon: "Profil/robot.webp"
+        icon: "Profil/robot.png"
     },
     {
         name: "Bandana",
-        icon: "Profil/bandana.webp"
+        icon: "Profil/bandana.png"
     },
     {
         name: "Little Spike",
-        icon: "Profil/little_spike.webp"
+        icon: "Profil/little_spike.png"
     }
 ];
 const shopBrawlers = [
@@ -44670,14 +44670,42 @@ if ("serviceWorker" in navigator) {
        Chaque snapshot serveur réinitialise proprement le verrou.
     ----------------------------------------------------- */
     const previousOnlineMatchUpdatedV6 = onOnlineMatchUpdated;
+
+    function resetV6RoundLocks() {
+        /*
+           Le même match Supabase est réutilisé pour une revanche.
+           On doit donc vider les verrous V6 dès le retour au lobby,
+           même si l'ID du match ne change pas.
+        */
+        V6.activeMatchId = null;
+        V6.actionInFlight = false;
+        V6.choiceInFlight = false;
+        V6.transitionBusy = false;
+        V6.actionStartSeq = -1;
+        V6.transitionSeq = -1;
+        V6.actionStartedAt = 0;
+        document
+            .getElementById("battlePage")
+            ?.classList.remove("v6-action-pending", "online-action-locked");
+    }
+
     onOnlineMatchUpdated = function(match) {
         const result = previousOnlineMatchUpdatedV6(match);
+
+        /*
+           FIN / RETOUR LOBBY : une revanche garde le même match.id.
+           Sans ce reset, actionInFlight ou choiceInFlight peuvent rester
+           bloqués après le K.O. précédent et empêcher la 2e partie.
+        */
+        if (match?.status === "waiting" || match?.status === "finished" || match?.status === "cancelled") {
+            resetV6RoundLocks();
+        }
 
         if (match?.status === "playing") {
             const matchId = String(match.id || "");
             const seq = Number(match.game_state?.battle?.seq || 0);
 
-            /* Nouveau duel = aucun ancien verrou ne doit survivre. */
+            /* Nouveau duel / revanche = aucun ancien verrou ne doit survivre. */
             if (V6.activeMatchId !== matchId) {
                 V6.activeMatchId = matchId;
                 V6.actionInFlight = false;
@@ -44688,7 +44716,7 @@ if ("serviceWorker" in navigator) {
                 V6.actionStartedAt = 0;
                 document
                     .getElementById("battlePage")
-                    ?.classList.remove("v6-action-pending");
+                    ?.classList.remove("v6-action-pending", "online-action-locked");
             }
 
             if (seq > V6.actionStartSeq) {
@@ -56084,4 +56112,164 @@ if ("serviceWorker" in navigator) {
     window.addEventListener("online", () => setTimeout(battleWatchdogV20, 100), { passive: true });
 })();
 
+</script>
+
+
+<!-- =========================================================
+     BRAWL VS ONLINE V22 · REVANCHE MÊME LOBBY FIABLE
+     - Répare les Realtime ratés dans le lobby.
+     - L'hôte relance automatiquement dès que les deux sont prêts.
+     - Nettoie les timers / verrous visuels entre deux manches.
+========================================================= -->
+<script id="brawl-v22-rematch-same-lobby-fix">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V22_REMATCH_SAME_LOBBY_FIX__) return;
+    window.__BRAWL_V22_REMATCH_SAME_LOBBY_FIX__ = true;
+
+    const POLL_MS_V22 = 850;
+    const START_COOLDOWN_MS_V22 = 1100;
+    let pollBusyV22 = false;
+    let lastStartAttemptV22 = 0;
+    let lastStatusV22 = null;
+
+    function clearRoundUiV22() {
+        try {
+            if (battleEnemyAttackTimer) {
+                clearTimeout(battleEnemyAttackTimer);
+                battleEnemyAttackTimer = null;
+            }
+        } catch (_) {}
+
+        document.getElementById("battlePage")?.classList.remove(
+            "online-action-locked",
+            "v6-action-pending"
+        );
+
+        [
+            "battleVictoryRecap",
+            "battleLossToast",
+            "postBattleRewardsOverlay",
+            "battleStartTransition"
+        ].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove("active", "starter-mode");
+        });
+    }
+
+    function lobbyReadyV22(match) {
+        const lobby = match?.game_state?.lobby || {};
+        return Boolean(lobby.p1?.ready && lobby.p2?.ready);
+    }
+
+    function sameLobbySnapshotV22(a, b) {
+        const al = a?.game_state?.lobby || {};
+        const bl = b?.game_state?.lobby || {};
+        return (
+            String(a?.status || "") === String(b?.status || "") &&
+            Boolean(al.p1?.ready) === Boolean(bl.p1?.ready) &&
+            Boolean(al.p2?.ready) === Boolean(bl.p2?.ready) &&
+            String(al.p1?.brawler || "") === String(bl.p1?.brawler || "") &&
+            String(al.p2?.brawler || "") === String(bl.p2?.brawler || "") &&
+            String(a?.updated_at || "") === String(b?.updated_at || "")
+        );
+    }
+
+    async function fetchLobbyMatchV22(matchId) {
+        const client = getBrawlCloudClient?.();
+        if (!client || !matchId) return null;
+        const { data, error } = await client
+            .from("matches")
+            .select("*")
+            .eq("id", matchId)
+            .single();
+        if (error) throw error;
+        return data || null;
+    }
+
+    function dispatchFreshLobbyV22(fresh) {
+        if (!fresh) return;
+        currentOnlineMatch = fresh;
+        try {
+            onOnlineMatchUpdated(fresh);
+        } catch (error) {
+            console.warn("Actualisation lobby V22 :", error);
+        }
+    }
+
+    async function lobbyWatchdogV22() {
+        if (pollBusyV22 || document.hidden) return;
+
+        const local = currentOnlineMatch;
+        if (!local?.id || local.status !== "waiting") return;
+
+        pollBusyV22 = true;
+        try {
+            const fresh = await fetchLobbyMatchV22(local.id);
+            if (!fresh) return;
+
+            /* Le serveur a déjà lancé la revanche : l'appliquer immédiatement. */
+            if (fresh.status !== "waiting") {
+                dispatchFreshLobbyV22(fresh);
+                return;
+            }
+
+            if (!sameLobbySnapshotV22(local, fresh)) {
+                dispatchFreshLobbyV22(fresh);
+            } else {
+                currentOnlineMatch = fresh;
+                try { renderOnlineHomeLobby(); } catch (_) {}
+            }
+
+            /*
+               Si l'événement Realtime du 2e joueur prêt a été raté par l'hôte,
+               ce contrôle force l'hôte à relire le salon et à lancer la partie.
+            */
+            const me = brawlCloudSession?.user?.id;
+            if (
+                lobbyReadyV22(fresh) &&
+                String(me || "") === String(fresh.player1_id || "") &&
+                Date.now() - lastStartAttemptV22 >= START_COOLDOWN_MS_V22
+            ) {
+                lastStartAttemptV22 = Date.now();
+                dispatchFreshLobbyV22(fresh);
+            }
+        } catch (error) {
+            console.warn("Watchdog lobby revanche V22 :", error);
+        } finally {
+            pollBusyV22 = false;
+        }
+    }
+
+    /* Dernier filet de sécurité pour le retour au même lobby. */
+    const onlineUpdateBeforeV22 = onOnlineMatchUpdated;
+    onOnlineMatchUpdated = function(match) {
+        const status = String(match?.status || "");
+
+        if (status === "waiting") {
+            clearRoundUiV22();
+            if (window.BRAWLVS_ONLINE_V3) {
+                window.BRAWLVS_ONLINE_V3.launchedMatchId = null;
+                window.BRAWLVS_ONLINE_V3.finishing = false;
+            }
+        }
+
+        /* Nettoyage UNE SEULE FOIS au passage lobby -> combat. */
+        if (status === "playing" && lastStatusV22 !== "playing") {
+            clearRoundUiV22();
+        }
+
+        lastStatusV22 = status;
+        return onlineUpdateBeforeV22(match);
+    };
+
+    setInterval(lobbyWatchdogV22, POLL_MS_V22);
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) setTimeout(lobbyWatchdogV22, 80);
+    });
+    window.addEventListener("focus", () => setTimeout(lobbyWatchdogV22, 80), { passive: true });
+    window.addEventListener("online", () => setTimeout(lobbyWatchdogV22, 100), { passive: true });
+})();
 </script>
