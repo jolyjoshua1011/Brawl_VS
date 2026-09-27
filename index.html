@@ -54342,3 +54342,370 @@ if ("serviceWorker" in navigator) {
     }, CHECK_MS_V17);
 })();
 </script>
+
+<!-- =========================================================
+     BRAWL VS ONLINE V18 · STATUT AMIS STABLE + COMBAT PRIORITAIRE
+     - Supprime le clignotement HORS LIGNE -> INVITER.
+     - Agrège toutes les présences d'un même compte/appareil.
+     - EN COMBAT gagne toujours sur EN LIGNE.
+     - INVITER est réellement désactivé pendant un combat.
+========================================================= -->
+<style id="brawl-v18-friend-status-lock-style">
+#friendsList .friend-card.is-in-battle-v18 .friend-state,
+#friendsList .friend-card.is-in-battle-v18 .friend-action.invite {
+    color:#ff8aa0!important;
+}
+#friendsList .friend-card.is-in-battle-v18 .friend-status-dot {
+    background:#ff3d5d!important;
+    box-shadow:0 0 10px rgba(255,61,93,.82)!important;
+}
+#friendsList .friend-action.invite:disabled,
+.online-duel-invite-btn:disabled,
+.online-profile-duel:disabled {
+    pointer-events:none!important;
+    cursor:not-allowed!important;
+}
+#friendsList .friend-action.invite.is-in-battle-v18 {
+    color:#ff9aac!important;
+    background:rgba(255,61,93,.10)!important;
+    border-color:rgba(255,61,93,.30)!important;
+    opacity:.78!important;
+}
+#friendsList .friend-action.invite.is-offline-v18 {
+    color:#8290a3!important;
+    background:#182231!important;
+    border-color:rgba(255,255,255,.08)!important;
+    opacity:.66!important;
+}
+</style>
+<script id="brawl-v18-friend-status-lock-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V18_FRIEND_STATUS_LOCK__) return;
+    window.__BRAWL_V18_FRIEND_STATUS_LOCK__ = true;
+
+    let patchingV18 = false;
+    let observerQueuedV18 = false;
+
+    function normV18(value) {
+        try { return normalizeFriendName(value || ""); }
+        catch (_) { return String(value || "").trim().toLowerCase(); }
+    }
+
+    function truthyBattleV18(value) {
+        return value === true || value === 1 || String(value || "").toLowerCase() === "true";
+    }
+
+    function rawPresenceGroupsV18() {
+        const groups = new Map();
+        try {
+            if (!onlinePresenceChannel?.presenceState) return groups;
+            const raw = onlinePresenceChannel.presenceState() || {};
+            Object.values(raw).flat().forEach(presence => {
+                const id = String(presence?.user_id || "");
+                if (!id) return;
+                if (!groups.has(id)) groups.set(id, []);
+                groups.get(id).push(presence);
+            });
+        } catch (_) {}
+        return groups;
+    }
+
+    function presenceStampV18(presence) {
+        const stamp = Date.parse(
+            presence?.presence_ping_at ||
+            presence?.online_at ||
+            ""
+        );
+        return Number.isFinite(stamp) ? stamp : 0;
+    }
+
+    function aggregatePresenceV18() {
+        const groups = rawPresenceGroupsV18();
+        const result = new Map();
+
+        groups.forEach((metas, userId) => {
+            if (!Array.isArray(metas) || !metas.length) return;
+
+            const sorted = [...metas].sort((a, b) => presenceStampV18(b) - presenceStampV18(a));
+            const newest = sorted[0] || {};
+            const profileMeta = sorted.find(item => item?.profile) || newest;
+            const busyMeta = sorted.find(item => truthyBattleV18(item?.in_battle));
+
+            result.set(userId, {
+                ...newest,
+                user_id: userId,
+                username: newest.username || profileMeta.username || "JOUEUR",
+                brawler: newest.brawler || profileMeta?.profile?.selected_brawler || "Shelly",
+                friend_code: newest.friend_code || profileMeta.friend_code || "",
+                profile: profileMeta.profile || newest.profile || null,
+                profile_icon: profileMeta.profile_icon || newest.profile_icon || "",
+                online_at: newest.online_at || profileMeta.online_at || "",
+                presence_ping_at: newest.presence_ping_at || profileMeta.presence_ping_at || "",
+                in_battle: Boolean(busyMeta),
+                presence_devices: metas.length
+            });
+        });
+
+        return result;
+    }
+
+    function reconcileLobbyMapV18() {
+        const aggregate = aggregatePresenceV18();
+        if (!aggregate.size && !onlinePresenceChannel) return aggregate;
+
+        const me = String(brawlCloudSession?.user?.id || "");
+        const next = new Map();
+        aggregate.forEach((player, id) => {
+            if (id && id !== me) next.set(id, player);
+        });
+
+        // La Map globale devient la version agrégée : aucun appareil "idle"
+        // ne peut plus écraser le in_battle:true d'un autre appareil du même compte.
+        onlineLobbyPlayers = next;
+        return aggregate;
+    }
+
+    function friendFromCardV18(card) {
+        const name = card?.querySelector(".friend-name")?.textContent?.trim() || "";
+        const wanted = normV18(name);
+        return (Array.isArray(state?.friends) ? state.friends : []).find(friend =>
+            normV18(friend?.name) === wanted
+        ) || null;
+    }
+
+    function statusForFriendV18(friend, aggregate = null) {
+        if (!friend) return { online:false, busy:false, player:null };
+        const all = aggregate || aggregatePresenceV18();
+        const id = String(friend?.user_id || friend?.cloud_user_id || "");
+        let player = id ? all.get(id) : null;
+
+        if (!player) {
+            const wanted = normV18(friend?.name);
+            player = [...all.values()].find(item => normV18(item?.username) === wanted) || null;
+        }
+
+        return {
+            online: Boolean(player),
+            busy: Boolean(player?.in_battle),
+            player
+        };
+    }
+
+    function setInviteButtonV18(button, online, busy) {
+        if (!button) return;
+        const disabled = !online || busy;
+        button.disabled = disabled;
+        button.setAttribute("aria-disabled", disabled ? "true" : "false");
+        button.classList.toggle("is-in-battle-v18", busy);
+        button.classList.toggle("is-offline-v18", !online);
+        button.textContent = busy ? "EN COMBAT" : (!online ? "HORS LIGNE" : "INVITER");
+    }
+
+    function patchFriendsV18() {
+        if (patchingV18) return;
+        patchingV18 = true;
+        try {
+            const aggregate = reconcileLobbyMapV18();
+
+            document.querySelectorAll("#friendsList .friend-card").forEach(card => {
+                const friend = friendFromCardV18(card);
+                if (!friend) return;
+
+                const { online, busy, player } = statusForFriendV18(friend, aggregate);
+                friend.online = online;
+
+                const stateEl = card.querySelector(".friend-state");
+                const dot = card.querySelector(".friend-status-dot");
+                const invite = card.querySelector(".friend-action.invite");
+                const avatar = card.querySelector(".friend-avatar");
+
+                card.classList.toggle("is-in-battle-v18", busy);
+                card.dataset.friendOnlineV18 = online ? "1" : "0";
+                card.dataset.friendBattleV18 = busy ? "1" : "0";
+
+                if (stateEl) {
+                    stateEl.textContent = busy ? "EN COMBAT" : (online ? "EN LIGNE" : "HORS LIGNE");
+                    stateEl.classList.toggle("online", online && !busy);
+                    stateEl.classList.toggle("is-in-battle-v16", busy);
+                }
+
+                if (dot) {
+                    dot.classList.toggle("online", online && !busy);
+                    dot.classList.toggle("is-in-battle-v16", busy);
+                    dot.classList.toggle("is-in-battle-v18", busy);
+                }
+
+                const icon = player?.profile?.profile_icon || player?.profile_icon || "";
+                if (avatar && online && icon) {
+                    const current = avatar.querySelector("img");
+                    if (!current || current.getAttribute("src") !== icon) {
+                        const esc = typeof escapeOnlineHtml === "function" ? escapeOnlineHtml(icon) : icon;
+                        avatar.classList.add("has-online-profile");
+                        avatar.innerHTML = `<img src="${esc}" alt=""><span class="friend-status-dot ${online && !busy ? "online" : ""} ${busy ? "is-in-battle-v18" : ""}"></span>`;
+                    }
+                }
+
+                setInviteButtonV18(invite, online, busy);
+            });
+        } finally {
+            patchingV18 = false;
+        }
+    }
+
+    function patchDuelPickerV18() {
+        const aggregate = aggregatePresenceV18();
+        document.querySelectorAll(".online-duel-friend").forEach(card => {
+            const name = card.querySelector(".online-duel-friend-main strong")?.textContent?.trim() || "";
+            const wanted = normV18(name);
+            const player = [...aggregate.values()].find(item => normV18(item?.username) === wanted) || null;
+            const online = Boolean(player);
+            const busy = Boolean(player?.in_battle);
+            const status = card.querySelector(".online-duel-friend-main small");
+            const invite = card.querySelector(".online-duel-invite-btn");
+
+            card.classList.toggle("offline", !online);
+            if (status) {
+                status.textContent = busy ? "EN COMBAT" : (online ? "EN LIGNE · DISPONIBLE" : "HORS LIGNE");
+                status.classList.toggle("online", online && !busy);
+                status.classList.toggle("is-in-battle-v16", busy);
+            }
+            if (invite) {
+                invite.disabled = !online || busy;
+                invite.setAttribute("aria-disabled", (!online || busy) ? "true" : "false");
+                invite.classList.toggle("is-in-battle-v16", busy);
+                invite.textContent = busy ? "EN COMBAT" : (!online ? "HORS LIGNE" : "INVITER");
+            }
+        });
+    }
+
+    function patchOpenProfileV18() {
+        const dialog = document.getElementById("onlineFriendProfileDialog");
+        if (!dialog) return;
+        const name = dialog.querySelector(".online-profile-name")?.textContent?.trim() || "";
+        if (!name) return;
+
+        const aggregate = aggregatePresenceV18();
+        const wanted = normV18(name);
+        const player = [...aggregate.values()].find(item => normV18(item?.username) === wanted) || null;
+        const online = Boolean(player);
+        const busy = Boolean(player?.in_battle);
+        const status = dialog.querySelector(".online-profile-online");
+        const duel = dialog.querySelector(".online-profile-duel");
+
+        if (status) {
+            status.textContent = busy ? "EN COMBAT" : (online ? "EN LIGNE" : "HORS LIGNE");
+            status.classList.toggle("offline", !online);
+            status.classList.toggle("is-in-battle-v16", busy);
+        }
+        if (duel) {
+            duel.disabled = !online || busy;
+            duel.setAttribute("aria-disabled", (!online || busy) ? "true" : "false");
+            duel.classList.toggle("is-in-battle-v16", busy);
+            duel.textContent = busy ? "⚔ EN COMBAT" : (!online ? "HORS LIGNE" : "⚔ INVITER EN DUEL");
+            if (!online || busy) duel.removeAttribute("onclick");
+        }
+    }
+
+    function patchAllV18() {
+        patchFriendsV18();
+        patchDuelPickerV18();
+        patchOpenProfileV18();
+    }
+
+    // Le statut envoyé par CE joueur reste EN COMBAT tant qu'un duel réseau est réellement playing,
+    // même si l'affichage de la page combat change pendant une transition.
+    if (typeof getOnlinePresencePayload === "function") {
+        const payloadBeforeV18 = getOnlinePresencePayload;
+        getOnlinePresencePayload = function(session) {
+            const base = payloadBeforeV18(session);
+            const battle = Boolean(
+                base?.in_battle ||
+                currentOnlineMatch?.status === "playing" ||
+                document.getElementById("battlePage")?.classList.contains("online-network-battle")
+            );
+            return { ...base, in_battle: battle };
+        };
+    }
+
+    // Le refresh Realtime est corrigé à la fin de toute la chaîne d'anciens correctifs.
+    if (typeof refreshOnlinePresenceFromChannel === "function") {
+        const refreshBeforeV18 = refreshOnlinePresenceFromChannel;
+        refreshOnlinePresenceFromChannel = function(...args) {
+            const result = refreshBeforeV18(...args);
+            reconcileLobbyMapV18();
+            patchAllV18();
+            return result;
+        };
+    }
+
+    // Si renderFriends recrée les boutons, on les remet dans le BON état dans le même tick.
+    if (typeof renderFriends === "function") {
+        const renderFriendsBeforeV18 = renderFriends;
+        renderFriends = function(...args) {
+            const result = renderFriendsBeforeV18(...args);
+            patchFriendsV18();
+            return result;
+        };
+    }
+
+    // Verrou du bouton principal de la liste d'amis avant même d'entrer dans la logique d'envoi.
+    if (typeof inviteFriend === "function") {
+        const inviteFriendBeforeV18 = inviteFriend;
+        inviteFriend = async function(friendId) {
+            const friend = (Array.isArray(state?.friends) ? state.friends : []).find(item =>
+                String(item?.id || "") === String(friendId || "")
+            );
+            if (friend) {
+                const status = statusForFriendV18(friend);
+                if (status.busy) {
+                    patchAllV18();
+                    setFriendFeedback(friend.name + " est EN COMBAT. Invitation bloquée.", "error");
+                    return false;
+                }
+                if (!status.online) {
+                    patchAllV18();
+                    setFriendFeedback(friend.name + " est HORS LIGNE.", "error");
+                    return false;
+                }
+            }
+            return inviteFriendBeforeV18(friendId);
+        };
+    }
+
+    // Dernier verrou commun à tous les chemins d'invitation.
+    if (typeof sendOnlineDuelInviteToPlayer === "function") {
+        const sendBeforeV18 = sendOnlineDuelInviteToPlayer;
+        sendOnlineDuelInviteToPlayer = async function(opponent) {
+            const id = String(opponent?.id || "");
+            const player = id ? aggregatePresenceV18().get(id) : null;
+            if (player?.in_battle) {
+                patchAllV18();
+                setFriendFeedback((opponent?.username || player?.username || "Ce joueur") + " est EN COMBAT. Invitation bloquée.", "error");
+                return false;
+            }
+            return sendBeforeV18(opponent);
+        };
+    }
+
+    // Les rerenders classiques passent déjà par renderFriends ; un contrôle léger
+    // ci-dessous maintient également les fenêtres Duel / profil synchronisées.
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(patchAllV18, 120);
+        setTimeout(patchAllV18, 600);
+        setTimeout(() => { try { syncOnlinePresence(); } catch (_) {} }, 700);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            setTimeout(() => {
+                try { syncOnlinePresence(); } catch (_) {}
+                patchAllV18();
+            }, 80);
+        }
+    });
+
+    setInterval(patchAllV18, 500);
+})();
+</script>
