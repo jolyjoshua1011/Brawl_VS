@@ -7809,6 +7809,16 @@ function applyBattleParalysis(
     }
     return true;
 }
+function isBattleSideParalyzed(
+    side
+) {
+    const turns = Number(
+        side === "enemy"
+        ? battleState.enemyParalyzedTurns
+        : battleState.playerParalyzedTurns
+    ) || 0;
+    return turns > 0;
+}
 function healPocoTeam(
     side,
     amount
@@ -7883,6 +7893,10 @@ function applyPocoHealingMelodyTick(
         key
     ] =
         turns - 1;
+    /* Paralysé = le tick est consommé, mais aucun soin n'est reçu. */
+    if (isBattleSideParalyzed(side)) {
+        return 0;
+    }
     return healPocoTeam(
         side,
         10
@@ -15315,7 +15329,8 @@ function canUseBattleAbility(
         !battleState.enemyTurn &&
         battleState.distanceChosen &&
         battleState.playerHealth > 0 &&
-        battleState.enemyHealth > 0;
+        battleState.enemyHealth > 0 &&
+        !isBattleSideParalyzed("player");
     if (!canAct) {
         return false;
     }
@@ -15406,6 +15421,7 @@ function canUseBattleAbility(
 function useBattleAbility(
     slotNumber
 ) {
+    if (isBattleSideParalyzed("player")) { syncBattleActionAvailability(); return; }
     const slot =
         Number(
             slotNumber
@@ -16652,11 +16668,13 @@ function updateBattleAbilitySlots() {
     );
 }
 function passBattleTurn() {
+    if (isBattleSideParalyzed("player")) { syncBattleActionAvailability(); return; }
     const canAct =
         !battleState.enemyTurn &&
         battleState.distanceChosen &&
         battleState.playerHealth > 0 &&
-        battleState.enemyHealth > 0;
+        battleState.enemyHealth > 0 &&
+        !isBattleSideParalyzed("player");
     if (!canAct) {
         return;
     }
@@ -16743,7 +16761,8 @@ function syncBattleActionAvailability() {
         !battleState.enemyTurn &&
         battleState.distanceChosen &&
         battleState.playerHealth > 0 &&
-        battleState.enemyHealth > 0;
+        battleState.enemyHealth > 0 &&
+        !isBattleSideParalyzed("player");
     if (attackButton) {
         attackButton.disabled =
             !canAct;
@@ -16782,6 +16801,40 @@ function startDistanceRound(
         battleState.playerHealth <= 0 ||
         battleState.enemyHealth <= 0
     ) {
+        return;
+    }
+    /*
+       Si le joueur devait choisir la distance mais est paralysé,
+       il ne joue absolument pas : son tour est consommé et le BOT
+       devient immédiatement le prochain chooser.
+    */
+    if (
+        chooser === "player" &&
+        isBattleSideParalyzed("player") &&
+        !(typeof isOnlineBattleActive === "function" && isOnlineBattleActive())
+    ) {
+        beginBattleActionTracking("player");
+        battleState.battleActionParalyzedActor = "player";
+        battleState.playerParalyzedTurns = Math.max(
+            0,
+            Number(battleState.playerParalyzedTurns || 0) - 1
+        );
+        markBattleActionSkipped();
+        finalizeBattleActionRegen("player");
+        battleState.enemyTurn = true;
+        battleState.distanceChosen = false;
+        battleState.distanceChoices = [];
+        updateBattleDistanceUI();
+        updateBattleSuperUI();
+        syncBattleActionAvailability();
+        const paralysisMessage = document.getElementById("battleActionMessage");
+        if (paralysisMessage) {
+            paralysisMessage.innerText = "TU ES PARALYSÉ · TON TOUR EST PASSÉ !";
+        }
+        battleEnemyAttackTimer = setTimeout(() => {
+            battleEnemyAttackTimer = null;
+            startDistanceRound("bot");
+        }, 1450);
         return;
     }
     battleState.distanceRoundChooser =
@@ -16906,6 +16959,10 @@ function startDistanceRound(
 function chooseBattleDistance(
     distance
 ) {
+    if (isBattleSideParalyzed("player")) {
+        syncBattleActionAvailability();
+        return;
+    }
     if (
         battleState.enemyTurn ||
         battleState.distanceChosen ||
@@ -16997,6 +17054,33 @@ function beginPlayerActionSameDistance() {
         battleState.playerHealth <= 0 ||
         battleState.enemyHealth <= 0
     ) {
+        return;
+    }
+    if (
+        isBattleSideParalyzed("player") &&
+        !(typeof isOnlineBattleActive === "function" && isOnlineBattleActive())
+    ) {
+        beginBattleActionTracking("player");
+        battleState.battleActionParalyzedActor = "player";
+        battleState.playerParalyzedTurns = Math.max(
+            0,
+            Number(battleState.playerParalyzedTurns || 0) - 1
+        );
+        markBattleActionSkipped();
+        battleState.enemyTurn = true;
+        battleState.distanceChosen = true;
+        battleState.distanceChoices = [];
+        updateBattleDistanceUI();
+        updateBattleSuperUI();
+        syncBattleActionAvailability();
+        const paralysisMessage = document.getElementById("battleActionMessage");
+        if (paralysisMessage) {
+            paralysisMessage.innerText = "TU ES PARALYSÉ · TON TOUR EST PASSÉ !";
+        }
+        battleEnemyAttackTimer = setTimeout(() => {
+            battleEnemyAttackTimer = null;
+            advanceDistanceRoundAfterAttack("player");
+        }, 1450);
         return;
     }
     /*
@@ -19635,6 +19719,8 @@ function beginBattleActionTracking(
         false;
     battleState.battleActionSkipped =
         false;
+    battleState.battleActionParalyzedActor =
+        null;
 }
 function markBattleBrawlerHit(
     side,
@@ -19729,10 +19815,23 @@ function finalizeBattleActionRegen(
     }
     battleState.battleActionTrackingActive =
         false;
+    battleState.battleActionParalyzedActor =
+        null;
 }
 function healBattleDodger(
     side
 ) {
+    /*
+       PARALYSIE : aucune régénération passive.
+       Le verrou d'action reste actif jusqu'à la fin du tour
+       même si le compteur vient d'être décrémenté à 0.
+    */
+    if (
+        isBattleSideParalyzed(side) ||
+        battleState.battleActionParalyzedActor === side
+    ) {
+        return 0;
+    }
     const HEAL =
         5;
     /*
@@ -19812,7 +19911,8 @@ function showBattleDodgeMessage(
     side,
     label = "ESQUIVE"
 ) {
-    if (window.brawlSfx) {
+    const isRealDodge = String(label || "ESQUIVE").toUpperCase() !== "HORS DE PORTÉE";
+    if (window.brawlSfx && isRealDodge) {
         window.brawlSfx.play('dodge');
     }
     const wrapper =
@@ -21278,6 +21378,13 @@ function battleAttackHitsWithShotField(
     shotField,
     defenderSide = null
 ) {
+    if (
+        (defenderSide === "player" || defenderSide === "enemy") &&
+        isBattleSideParalyzed(defenderSide)
+    ) {
+        consumeBattleSlowTurn(defenderSide);
+        return true;
+    }
     /*
        Distance 1 :
        aucune esquive possible.
@@ -21359,6 +21466,15 @@ function battleAttackHits(
     useSuper = false,
     defenderSide = null
 ) {
+    /* Paralysé = impossible d'esquiver : le tir touche automatiquement. */
+    if (
+        (defenderSide === "player" || defenderSide === "enemy") &&
+        isBattleSideParalyzed(defenderSide)
+    ) {
+        consumeBattleSlowTurn(defenderSide);
+        console.log("[ESQUIVE] cible paralysée -> esquive impossible -> TOUCHÉ");
+        return true;
+    }
     const attacker =
         brawlers[
             attackerName
@@ -23305,7 +23421,9 @@ function enemyAttack() {
     */
     if (
         battleState.playerCowboyRollDodges >
-        0
+        0 &&
+        !isBattleSideParalyzed("player") &&
+        !isBattleSideParalyzed("enemy")
     ) {
         battleState.playerCowboyRollDodges -=
             1;
@@ -23357,6 +23475,8 @@ function enemyAttack() {
         battleState.enemyParalyzedTurns >
         0
     ) {
+        battleState.battleActionParalyzedActor =
+            "enemy";
         battleState.enemyParalyzedTurns -=
             1;
         markBattleActionSkipped();
@@ -23765,6 +23885,7 @@ function playBattleSquashStretch(side, intensity = "attack") {
     return;
 }
 function attackEnemy() {
+    if (isBattleSideParalyzed("player")) { syncBattleActionAvailability(); return; }
     if (
         battleState.enemyHealth <= 0 ||
         battleState.playerHealth <= 0 ||
@@ -23797,7 +23918,8 @@ function attackEnemy() {
     */
     if (
         battleState.enemyCowboyRollDodges >
-        0
+        0 &&
+        !isBattleSideParalyzed("enemy")
     ) {
         battleState.enemyCowboyRollDodges -=
             1;
@@ -24135,6 +24257,7 @@ function attackEnemy() {
         );
 }
 function useBattleSuper() {
+    if (isBattleSideParalyzed("player")) { syncBattleActionAvailability(); return; }
     if (
         battleState.enemyHealth <= 0 ||
         battleState.playerHealth <= 0 ||
@@ -24373,7 +24496,8 @@ function useBattleSuper() {
     */
     if (
         battleState.enemyCowboyRollDodges >
-        0
+        0 &&
+        !isBattleSideParalyzed("enemy")
     ) {
         battleState.enemyCowboyRollDodges -=
             1;
@@ -54448,6 +54572,60 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+<!-- V26 · PARALYSIE COMPLÈTE : pas d'action, pas de régénération, pas d'esquive. -->
+
+
+<!-- =====================================================
+     V26 · ZONE HORS DE PORTÉE PLUS LARGE
+     Le message d'esquive reste compact, mais les messages
+     "HORS DE PORTÉE" disposent d'une vraie zone adaptée.
+===================================================== -->
+<style id="brawl-v26-out-of-range-message-style">
+#battleDodgeMessage.battle-dodge-message.bv-out-of-range{
+    width:max-content !important;
+    min-width:235px !important;
+    max-width:calc(100% - 22px) !important;
+    padding:10px 18px !important;
+    border-radius:11px !important;
+    box-sizing:border-box !important;
+}
+#battleDodgeMessage.battle-dodge-message.bv-out-of-range #battleDodgeText{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+    text-align:center !important;
+    line-height:1.18 !important;
+}
+</style>
+<script id="brawl-v26-out-of-range-message-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V26_OUT_OF_RANGE_MESSAGE__) return;
+    window.__BRAWL_V26_OUT_OF_RANGE_MESSAGE__ = true;
+
+    if (typeof showBattleDodgeMessage !== "function") return;
+    const showBeforeV26 = showBattleDodgeMessage;
+
+    showBattleDodgeMessage = function(text, side, label = "ESQUIVE") {
+        const wrapper = document.getElementById("battleDodgeMessage");
+        const isOutOfRange = String(label || "")
+            .toUpperCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .includes("HORS DE PORTEE");
+
+        if (wrapper) {
+            wrapper.classList.toggle("bv-out-of-range", isOutOfRange);
+        }
+
+        return showBeforeV26(text, side, label);
+    };
+})();
+</script>
+
 </body>
 </html>
 <!-- =========================================================
@@ -55953,7 +56131,7 @@ if ("serviceWorker" in navigator) {
             match.status !== "playing" ||
             match.turn_user_id !== meta.me ||
             battle.turn_user_id !== meta.me ||
-            battle.phase !== "action" ||
+            !["action", "choose_distance"].includes(battle.phase) ||
             controlTurns <= 0
         ) {
             return false;
@@ -55992,7 +56170,7 @@ if ("serviceWorker" in navigator) {
                 fresh.status !== "playing" ||
                 fresh.turn_user_id !== freshMeta.me ||
                 freshBattle.turn_user_id !== freshMeta.me ||
-                freshBattle.phase !== "action" ||
+                !["action", "choose_distance"].includes(freshBattle.phase) ||
                 Number(freshMine?.paralyzedTurns || 0) <= 0
             ) {
                 if (fresh) {
@@ -56014,8 +56192,18 @@ if ("serviceWorker" in navigator) {
             nextBattle[freshMeta.myKey] = nextMine;
             nextBattle.seq = Number(nextBattle.seq || 0) + 1;
 
+            const controlledPhase = freshBattle.phase;
             const actionIndex = Number(nextBattle.distance_round_attack_index || 0);
-            if (actionIndex === 0) {
+            if (controlledPhase === "choose_distance") {
+                /* Paralysé avant même le choix : aucun choix, aucune action. */
+                nextBattle.phase = "choose_distance";
+                nextBattle.turn_user_id = freshMeta.opponent;
+                nextBattle.chooser_id = freshMeta.opponent;
+                nextBattle.next_actor_id = freshMeta.opponent;
+                nextBattle.current_distance = null;
+                nextBattle.distance_choices = fallbackChoicesV20();
+                nextBattle.distance_round_attack_index = 0;
+            } else if (actionIndex === 0) {
                 /* Premier tour de cette distance sauté : l'autre joueur joue. */
                 nextBattle.phase = "action";
                 nextBattle.turn_user_id = freshMeta.opponent;
@@ -56063,8 +56251,10 @@ if ("serviceWorker" in navigator) {
                 onOnlineMatchUpdated(resolved);
             }
 
-            battleState.playerParalyzedTurns = 0;
-            battleState.playerControlEffectType = null;
+            battleState.playerParalyzedTurns = remaining;
+            battleState.playerControlEffectType = remaining > 0
+                ? (nextMine.controlEffectType || "paralyzed")
+                : null;
             try { window.syncBattleStatusVfx?.(); } catch (_) {}
             return true;
         } catch (error) {
@@ -56428,13 +56618,15 @@ if ("serviceWorker" in navigator) {
         const originalShowBattleDodgeMessageV21 = showBattleDodgeMessage;
         showBattleDodgeMessage = function(text, side, label = 'ESQUIVE') {
             const result = originalShowBattleDodgeMessageV21(text, side, label);
+            const isRealDodge = String(label || 'ESQUIVE').toUpperCase() !== 'HORS DE PORTÉE';
             try {
-                if (typeof window.triggerBattleDodgeAnimation === 'function') {
+                if (isRealDodge && typeof window.triggerBattleDodgeAnimation === 'function') {
                     window.triggerBattleDodgeAnimation(side);
                 }
             } catch (_) {}
             try {
                 if (
+                    isRealDodge &&
                     !V21.replaying &&
                     currentOnlineMatch?.status === 'playing' &&
                     currentOnlineMatch?.game_state?.battle &&
