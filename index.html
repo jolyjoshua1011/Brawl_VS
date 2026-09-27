@@ -54942,3 +54942,522 @@ if ("serviceWorker" in navigator) {
     });
 })();
 </script>
+
+<!-- =========================================================
+     BRAWL VS ONLINE V20 · DISTANCE + PARALYSIE FIABLES
+     - Resynchronise le choix de distance avec Supabase.
+     - Répare les cartes de distance si l'UI locale est en retard.
+     - Un joueur paralysé saute exactement son prochain tour online.
+     - Le VFX de paralysie disparaît dès que ce tour a été consommé.
+========================================================= -->
+<script id="brawl-v20-distance-paralysis-fix">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V20_DISTANCE_PARALYSIS_FIX__) return;
+    window.__BRAWL_V20_DISTANCE_PARALYSIS_FIX__ = true;
+
+    const WATCH_MS_V20 = 1300;
+    const PARALYSIS_NOTICE_MS_V20 = 850;
+    let pollBusyV20 = false;
+    let normalizeBusyV20 = false;
+    let paralysisBusyV20 = false;
+    let lastAutoSkippedSeqV20 = -1;
+
+    function cloneV20(value) {
+        try {
+            return structuredClone(value);
+        } catch (_) {
+            return JSON.parse(JSON.stringify(value || {}));
+        }
+    }
+
+    function metaV20(match = currentOnlineMatch) {
+        const me = brawlCloudSession?.user?.id;
+        if (!match || !me) return null;
+        const amP1 = match.player1_id === me;
+        return {
+            me,
+            opponent: amP1 ? match.player2_id : match.player1_id,
+            myKey: amP1 ? "p1" : "p2",
+            opponentKey: amP1 ? "p2" : "p1"
+        };
+    }
+
+    function onlineBattleV20() {
+        return Boolean(
+            currentOnlineMatch?.id &&
+            currentOnlineMatch?.status === "playing" &&
+            currentOnlineMatch?.game_state?.battle &&
+            document.getElementById("battlePage")?.classList.contains("online-network-battle")
+        );
+    }
+
+    function cleanChoicesV20(list) {
+        const seen = new Set();
+        const result = [];
+        (Array.isArray(list) ? list : []).forEach(raw => {
+            const value = Number(raw);
+            if (!Number.isInteger(value) || value < 1 || value > 7 || seen.has(value)) return;
+            seen.add(value);
+            result.push(value);
+        });
+        return result.slice(0, 2);
+    }
+
+    function fallbackChoicesV20(preferred = []) {
+        let values = cleanChoicesV20(preferred);
+        if (values.length >= 2) return values;
+        try {
+            values = cleanChoicesV20(getBattleDistanceChoices());
+        } catch (_) {}
+        while (values.length < 2) {
+            const candidate = Math.floor(Math.random() * 7) + 1;
+            if (!values.includes(candidate)) values.push(candidate);
+        }
+        return values.slice(0, 2);
+    }
+
+    function paintDistancePickerV20(match = currentOnlineMatch) {
+        if (!match || !onlineBattleV20()) return false;
+        const meta = metaV20(match);
+        const battle = match.game_state?.battle;
+        if (!meta || !battle) return false;
+
+        const mine =
+            match.status === "playing" &&
+            battle.phase === "choose_distance" &&
+            battle.turn_user_id === meta.me &&
+            match.turn_user_id === meta.me;
+
+        const panel = document.getElementById("battleDistancePanel");
+        if (!mine) {
+            return false;
+        }
+
+        let choices = cleanChoicesV20(battle.distance_choices);
+        if (choices.length < 2) return false;
+
+        battleState.enemyTurn = false;
+        battleState.distanceChosen = false;
+        battleState.distanceRoundChooser = "player";
+        battleState.currentDistance = null;
+        battleState.distanceChoices = [...choices];
+
+        panel?.classList.add("active");
+        panel?.classList.remove("waiting");
+
+        const cards = [
+            document.getElementById("battleDistanceCard1"),
+            document.getElementById("battleDistanceCard2")
+        ];
+
+        cards.forEach((card, index) => {
+            if (!card) return;
+            const value = choices[index];
+            card.dataset.distance = String(value);
+            card.disabled = false;
+            card.removeAttribute("disabled");
+            card.style.pointerEvents = "auto";
+            card.style.opacity = "1";
+            const strong = card.querySelector("strong");
+            if (strong) strong.textContent = String(value);
+        });
+
+        const title = document.getElementById("battleDistanceTitle");
+        if (title) title.textContent = "CHOISIS LA DISTANCE";
+
+        const message = document.getElementById("battleActionMessage");
+        if (message && !paralysisBusyV20) {
+            message.textContent = "À TOI · choisis une distance.";
+        }
+
+        try { syncBattleActionAvailability(); } catch (_) {}
+        return true;
+    }
+
+    async function fetchMatchV20(matchId = currentOnlineMatch?.id) {
+        const client = getBrawlCloudClient?.();
+        if (!client || !matchId) return null;
+        const { data, error } = await client
+            .from("matches")
+            .select("*")
+            .eq("id", matchId)
+            .single();
+        if (error) throw error;
+        return data || null;
+    }
+
+    async function normalizeDistanceChoicesV20(fresh, preferred = []) {
+        if (normalizeBusyV20 || !fresh) return fresh;
+        const client = getBrawlCloudClient?.();
+        const meta = metaV20(fresh);
+        const battle = fresh.game_state?.battle;
+        if (!client || !meta || !battle) return fresh;
+        if (
+            fresh.status !== "playing" ||
+            fresh.turn_user_id !== meta.me ||
+            battle.turn_user_id !== meta.me ||
+            battle.phase !== "choose_distance"
+        ) {
+            return fresh;
+        }
+
+        const serverChoices = cleanChoicesV20(battle.distance_choices);
+        const preferredChoices = cleanChoicesV20(preferred);
+        let choices = serverChoices;
+
+        if (serverChoices.length < 2) {
+            choices = fallbackChoicesV20(preferredChoices);
+        } else if (
+            preferredChoices.length >= 2 &&
+            preferredChoices.some(v => !serverChoices.includes(v))
+        ) {
+            /*
+               Le joueur a réellement ces cartes sous les yeux :
+               on remet le serveur sur la même paire au lieu de refuser son clic.
+            */
+            choices = preferredChoices;
+        }
+
+        if (
+            serverChoices.length === 2 &&
+            choices.length === 2 &&
+            serverChoices[0] === choices[0] &&
+            serverChoices[1] === choices[1]
+        ) {
+            return fresh;
+        }
+
+        normalizeBusyV20 = true;
+        try {
+            const gameState = cloneV20(fresh.game_state || {});
+            const nextBattle = cloneV20(gameState.battle || {});
+            nextBattle.distance_choices = choices;
+            nextBattle.seq = Number(nextBattle.seq || 0) + 1;
+            nextBattle.last_action = "Choix de distance synchronisé.";
+            gameState.battle = nextBattle;
+
+            const { data: updated, error } = await client
+                .from("matches")
+                .update({
+                    game_state: gameState,
+                    turn_user_id: meta.me,
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", fresh.id)
+                .eq("status", "playing")
+                .eq("turn_user_id", meta.me)
+                .select()
+                .maybeSingle();
+
+            if (error) throw error;
+            return updated || fresh;
+        } finally {
+            normalizeBusyV20 = false;
+        }
+    }
+
+    /*
+       Le wrapper V6 refusait un clic si les cartes locales et les
+       distance_choices du serveur étaient désynchronisées.
+       On remet d'abord les deux côtés d'accord, puis on laisse V6
+       effectuer son compare-and-swap normal.
+    */
+    const chooseBeforeV20 = chooseBattleDistance;
+    chooseBattleDistance = async function(distance) {
+        if (!onlineBattleV20()) return chooseBeforeV20(distance);
+
+        const wanted = Number(distance);
+        if (!Number.isInteger(wanted) || wanted < 1 || wanted > 7) return false;
+
+        try {
+            let fresh = await fetchMatchV20();
+            const meta = metaV20(fresh);
+            const battle = fresh?.game_state?.battle;
+            if (!fresh || !meta || !battle) return false;
+
+            if (
+                fresh.status !== "playing" ||
+                fresh.turn_user_id !== meta.me ||
+                battle.turn_user_id !== meta.me ||
+                battle.phase !== "choose_distance"
+            ) {
+                currentOnlineMatch = fresh;
+                onOnlineMatchUpdated(fresh);
+                return false;
+            }
+
+            let localChoices = cleanChoicesV20(battleState.distanceChoices);
+            if (!localChoices.includes(wanted)) {
+                localChoices = cleanChoicesV20(battle.distance_choices);
+            }
+            if (!localChoices.includes(wanted)) {
+                localChoices = fallbackChoicesV20([wanted]);
+            }
+
+            fresh = await normalizeDistanceChoicesV20(fresh, localChoices);
+            currentOnlineMatch = fresh;
+            onOnlineMatchUpdated(fresh);
+            paintDistancePickerV20(fresh);
+
+            return await chooseBeforeV20(wanted);
+        } catch (error) {
+            console.warn("Réparation du choix de distance V20 impossible :", error);
+            try {
+                const fresh = await fetchMatchV20();
+                if (fresh) {
+                    currentOnlineMatch = fresh;
+                    onOnlineMatchUpdated(fresh);
+                    paintDistancePickerV20(fresh);
+                }
+            } catch (_) {}
+            return false;
+        }
+    };
+
+    function disableActionsForControlV20() {
+        if (!onlineBattleV20()) return;
+        if (Number(battleState.playerParalyzedTurns || 0) <= 0) return;
+        [
+            "battleAttackButton",
+            "battleSuperButton",
+            "battlePassTurnButton",
+            "battleAbilitySlot1",
+            "battleAbilitySlot2"
+        ].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = true;
+        });
+    }
+
+    const syncAvailabilityBeforeV20 = syncBattleActionAvailability;
+    syncBattleActionAvailability = function(...args) {
+        const result = syncAvailabilityBeforeV20(...args);
+        disableActionsForControlV20();
+        return result;
+    };
+
+    async function autoSkipControlledTurnV20(match = currentOnlineMatch) {
+        if (paralysisBusyV20 || !onlineBattleV20() || !match) return false;
+
+        const meta = metaV20(match);
+        const battle = match.game_state?.battle;
+        const mySide = meta && battle ? battle[meta.myKey] : null;
+        const controlTurns = Math.max(0, Number(mySide?.paralyzedTurns || 0));
+
+        if (
+            !meta ||
+            !battle ||
+            match.status !== "playing" ||
+            match.turn_user_id !== meta.me ||
+            battle.turn_user_id !== meta.me ||
+            battle.phase !== "action" ||
+            controlTurns <= 0
+        ) {
+            return false;
+        }
+
+        const sourceSeq = Number(battle.seq || 0);
+        if (sourceSeq === lastAutoSkippedSeqV20) return false;
+        lastAutoSkippedSeqV20 = sourceSeq;
+        paralysisBusyV20 = true;
+
+        try {
+            battleState.playerParalyzedTurns = controlTurns;
+            battleState.playerControlEffectType = mySide?.controlEffectType || "paralyzed";
+            disableActionsForControlV20();
+            try { window.syncBattleStatusVfx?.(); } catch (_) {}
+
+            const message = document.getElementById("battleActionMessage");
+            const isStun = battleState.playerControlEffectType === "stunned";
+            if (message) {
+                message.textContent = isStun
+                    ? "TU ES ASSOMMÉ · TON TOUR EST PASSÉ !"
+                    : "TU ES PARALYSÉ · TON TOUR EST PASSÉ !";
+            }
+
+            await new Promise(resolve => setTimeout(resolve, PARALYSIS_NOTICE_MS_V20));
+
+            const fresh = await fetchMatchV20(match.id);
+            const freshMeta = metaV20(fresh);
+            const freshBattle = fresh?.game_state?.battle;
+            const freshMine = freshMeta && freshBattle ? freshBattle[freshMeta.myKey] : null;
+
+            if (
+                !fresh ||
+                !freshMeta ||
+                !freshBattle ||
+                fresh.status !== "playing" ||
+                fresh.turn_user_id !== freshMeta.me ||
+                freshBattle.turn_user_id !== freshMeta.me ||
+                freshBattle.phase !== "action" ||
+                Number(freshMine?.paralyzedTurns || 0) <= 0
+            ) {
+                if (fresh) {
+                    currentOnlineMatch = fresh;
+                    onOnlineMatchUpdated(fresh);
+                }
+                return false;
+            }
+
+            const client = getBrawlCloudClient?.();
+            if (!client) return false;
+
+            const gameState = cloneV20(fresh.game_state || {});
+            const nextBattle = cloneV20(gameState.battle || {});
+            const nextMine = cloneV20(nextBattle[freshMeta.myKey] || {});
+            const remaining = Math.max(0, Number(nextMine.paralyzedTurns || 0) - 1);
+            nextMine.paralyzedTurns = remaining;
+            if (remaining === 0) nextMine.controlEffectType = null;
+            nextBattle[freshMeta.myKey] = nextMine;
+            nextBattle.seq = Number(nextBattle.seq || 0) + 1;
+
+            const actionIndex = Number(nextBattle.distance_round_attack_index || 0);
+            if (actionIndex === 0) {
+                /* Premier tour de cette distance sauté : l'autre joueur joue. */
+                nextBattle.phase = "action";
+                nextBattle.turn_user_id = freshMeta.opponent;
+                nextBattle.next_actor_id = freshMeta.opponent;
+                nextBattle.distance_round_attack_index = 1;
+                nextBattle.distance_choices = [];
+            } else {
+                /* Deuxième tour sauté : la manche est terminée, nouveau chooser. */
+                const previousChooser = nextBattle.chooser_id || freshMeta.me;
+                const nextChooser = previousChooser === freshMeta.me
+                    ? freshMeta.opponent
+                    : freshMeta.me;
+                nextBattle.phase = "choose_distance";
+                nextBattle.turn_user_id = nextChooser;
+                nextBattle.chooser_id = nextChooser;
+                nextBattle.next_actor_id = nextChooser;
+                nextBattle.current_distance = null;
+                nextBattle.distance_choices = fallbackChoicesV20();
+                nextBattle.distance_round_attack_index = 0;
+            }
+
+            nextBattle.last_action = isStun
+                ? "Tour sauté : joueur assommé."
+                : "Tour sauté : joueur paralysé.";
+            gameState.battle = nextBattle;
+
+            const { data: updated, error } = await client
+                .from("matches")
+                .update({
+                    game_state: gameState,
+                    turn_user_id: nextBattle.turn_user_id,
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", fresh.id)
+                .eq("status", "playing")
+                .eq("turn_user_id", freshMeta.me)
+                .select()
+                .maybeSingle();
+
+            if (error) throw error;
+
+            const resolved = updated || await fetchMatchV20(fresh.id);
+            if (resolved) {
+                currentOnlineMatch = resolved;
+                onOnlineMatchUpdated(resolved);
+            }
+
+            battleState.playerParalyzedTurns = 0;
+            battleState.playerControlEffectType = null;
+            try { window.syncBattleStatusVfx?.(); } catch (_) {}
+            return true;
+        } catch (error) {
+            console.error("Impossible de consommer la paralysie online V20 :", error);
+            lastAutoSkippedSeqV20 = -1;
+            return false;
+        } finally {
+            paralysisBusyV20 = false;
+            try { syncBattleActionAvailability(); } catch (_) {}
+            try { window.syncBattleStatusVfx?.(); } catch (_) {}
+        }
+    }
+
+    async function repairDistanceStateV20(fresh) {
+        const meta = metaV20(fresh);
+        const battle = fresh?.game_state?.battle;
+        if (!meta || !battle) return fresh;
+        if (
+            fresh.status !== "playing" ||
+            fresh.turn_user_id !== meta.me ||
+            battle.turn_user_id !== meta.me ||
+            battle.phase !== "choose_distance"
+        ) {
+            return fresh;
+        }
+
+        let normalized = fresh;
+        if (cleanChoicesV20(battle.distance_choices).length < 2) {
+            normalized = await normalizeDistanceChoicesV20(
+                fresh,
+                cleanChoicesV20(battleState.distanceChoices)
+            );
+        }
+        currentOnlineMatch = normalized;
+        paintDistancePickerV20(normalized);
+        return normalized;
+    }
+
+    /* Dernier wrapper : chaque événement Realtime répare immédiatement l'UI. */
+    const onlineUpdateBeforeV20 = onOnlineMatchUpdated;
+    onOnlineMatchUpdated = function(match) {
+        const result = onlineUpdateBeforeV20(match);
+        if (match?.status === "playing") {
+            setTimeout(() => {
+                repairDistanceStateV20(match).catch(() => {});
+                autoSkipControlledTurnV20(match).catch(() => {});
+            }, 0);
+        }
+        return result;
+    };
+
+    /*
+       Filet de sécurité contre un événement Realtime raté :
+       seulement pendant un Duel visible, donc aucune boucle sociale en plus.
+    */
+    async function battleWatchdogV20() {
+        if (
+            pollBusyV20 ||
+            document.hidden ||
+            !onlineBattleV20()
+        ) return;
+
+        pollBusyV20 = true;
+        try {
+            let fresh = await fetchMatchV20();
+            if (!fresh) return;
+
+            const oldBattle = currentOnlineMatch?.game_state?.battle;
+            const newBattle = fresh.game_state?.battle;
+            const changed =
+                String(fresh.updated_at || "") !== String(currentOnlineMatch?.updated_at || "") ||
+                Number(newBattle?.seq || 0) !== Number(oldBattle?.seq || 0) ||
+                newBattle?.phase !== oldBattle?.phase ||
+                newBattle?.turn_user_id !== oldBattle?.turn_user_id;
+
+            if (changed) {
+                currentOnlineMatch = fresh;
+                onOnlineMatchUpdated(fresh);
+            } else {
+                fresh = await repairDistanceStateV20(fresh);
+                await autoSkipControlledTurnV20(fresh);
+            }
+        } catch (error) {
+            console.warn("Watchdog Duel V20 :", error);
+        } finally {
+            pollBusyV20 = false;
+        }
+    }
+
+    setInterval(battleWatchdogV20, WATCH_MS_V20);
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) setTimeout(battleWatchdogV20, 80);
+    });
+    window.addEventListener("focus", () => setTimeout(battleWatchdogV20, 80), { passive: true });
+    window.addEventListener("online", () => setTimeout(battleWatchdogV20, 100), { passive: true });
+})();
+</script>
