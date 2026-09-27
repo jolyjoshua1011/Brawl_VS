@@ -3590,13 +3590,25 @@ body{
                 AMIS
             </div>
         </div>
-        <div class="friends-total">
-            <span id="friendsCount">
-                0
-            </span>
-            <span class="friends-total-label">
-                AMIS
-            </span>
+        <div class="friends-header-actions">
+            <button
+                id="friendsRefreshButton"
+                class="friends-refresh-button"
+                type="button"
+                onclick="refreshFriendsNow()"
+                aria-label="Actualiser les amis et leurs statuts"
+            >
+                <span class="friends-refresh-icon" aria-hidden="true">↻</span>
+                <span class="friends-refresh-label">ACTUALISER</span>
+            </button>
+            <div class="friends-total">
+                <span id="friendsCount">
+                    0
+                </span>
+                <span class="friends-total-label">
+                    AMIS
+                </span>
+            </div>
         </div>
     </div>
     <div class="friends-tabs">
@@ -43464,9 +43476,12 @@ function updateBattleActionHitChanceUI() {
     /* La présence peut changer sans modifier friend_requests. */
     const previousRefreshPresenceV5 = refreshOnlinePresenceFromChannel;
     refreshOnlinePresenceFromChannel = function(...args) {
-        const result = previousRefreshPresenceV5(...args);
-        setTimeout(loadCloudFriends, 60);
-        return result;
+        /*
+           V19 : un changement de présence ne recharge plus friend_requests.
+           Les relations d'amis ont déjà leur propre abonnement Postgres Realtime.
+           Cela évite les rerendus concurrents HORS LIGNE / INVITER.
+        */
+        return previousRefreshPresenceV5(...args);
     };
 
     /* -----------------------------------------------------
@@ -53726,8 +53741,8 @@ if ("serviceWorker" in navigator) {
         setTimeout(() => refreshSocialUiV15(true), 500);
     });
 
-    setInterval(publishPresenceV15, PRESENCE_REFRESH_MS_V15);
-    setInterval(() => refreshSocialUiV15(false), UI_REFRESH_MS_V15);
+    /* V19 : boucles périodiques V15 désactivées.
+       V17 maintient le canal Presence ; les événements Realtime + V19 mettent à jour l'UI. */
 })();
 </script>
 
@@ -54026,7 +54041,7 @@ if ("serviceWorker" in navigator) {
     setInterval(() => {
         patchBusyInviteUiV16();
         if (selfInBattleV16()) cancelPendingInvitesWhileBusyV16();
-    }, 700);
+    }, 3000);
 
     document.addEventListener("DOMContentLoaded", () => {
         setTimeout(patchBusyInviteUiV16, 250);
@@ -54706,6 +54721,224 @@ if ("serviceWorker" in navigator) {
         }
     });
 
-    setInterval(patchAllV18, 500);
+    setInterval(patchAllV18, 2500);
+})();
+</script>
+
+
+<!-- =========================================================
+     BRAWL VS ONLINE V19 · ACTUALISATION AMIS STABLE
+     - Un seul heartbeat réseau principal : V17.
+     - Plus de rechargement friend_requests à chaque ping Presence.
+     - Mise à jour événementielle + fallback visuel léger.
+     - Bouton ACTUALISER manuel dans la page AMIS.
+========================================================= -->
+<style id="brawl-v19-friends-refresh-style">
+#friendsPage .friends-header-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:7px;
+    flex-shrink:0;
+}
+#friendsPage .friends-refresh-button{
+    height:42px;
+    min-width:42px;
+    padding:0 9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    border:1px solid rgba(53,191,255,.38);
+    border-radius:11px 4px 11px 4px;
+    color:#dff8ff;
+    background:linear-gradient(145deg,rgba(32,82,116,.92),rgba(10,31,52,.96));
+    box-shadow:0 5px 14px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.06);
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:.55px;
+    cursor:pointer;
+    transition:transform .15s ease,border-color .15s ease,opacity .15s ease;
+}
+#friendsPage .friends-refresh-button:hover{
+    border-color:rgba(168,237,255,.9);
+    transform:translateY(-1px);
+}
+#friendsPage .friends-refresh-button:active{transform:translateY(1px)}
+#friendsPage .friends-refresh-button:disabled{
+    opacity:.62;
+    cursor:wait;
+    transform:none;
+}
+#friendsPage .friends-refresh-icon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:18px;
+    height:18px;
+    font-size:19px;
+    line-height:1;
+    transform-origin:center;
+}
+#friendsPage .friends-refresh-button.is-refreshing .friends-refresh-icon{
+    animation:brawlFriendsRefreshSpinV19 .72s linear infinite;
+}
+#friendsPage .friends-refresh-button.is-ok{
+    border-color:rgba(80,255,135,.55);
+}
+#friendsPage .friends-refresh-button.is-error{
+    border-color:rgba(255,61,93,.55);
+}
+@keyframes brawlFriendsRefreshSpinV19{to{transform:rotate(360deg)}}
+@media(max-width:360px){
+    #friendsPage .friends-refresh-label{display:none}
+    #friendsPage .friends-refresh-button{padding:0;min-width:40px;width:40px}
+    #friendsPage .friends-header-actions{gap:5px}
+}
+</style>
+<script id="brawl-v19-friends-refresh-script">
+(() => {
+    "use strict";
+    if (window.__BRAWL_V19_FRIENDS_REFRESH__) return;
+    window.__BRAWL_V19_FRIENDS_REFRESH__ = true;
+
+    const AUTO_UI_REFRESH_MS_V19 = 2500;
+    let refreshPromiseV19 = null;
+    let lastAutoRefreshV19 = 0;
+
+    function buttonV19(){
+        return document.getElementById("friendsRefreshButton");
+    }
+
+    function setButtonStateV19(state){
+        const button = buttonV19();
+        if (!button) return;
+        button.classList.toggle("is-refreshing", state === "loading");
+        button.classList.toggle("is-ok", state === "ok");
+        button.classList.toggle("is-error", state === "error");
+        button.disabled = state === "loading";
+        const label = button.querySelector(".friends-refresh-label");
+        if (label) {
+            label.textContent = state === "loading" ? "ACTUALISATION" : "ACTUALISER";
+        }
+        if (state === "ok" || state === "error") {
+            setTimeout(() => {
+                const current = buttonV19();
+                current?.classList.remove("is-ok", "is-error");
+            }, 900);
+        }
+    }
+
+    function repaintPresenceV19(){
+        try {
+            if (typeof refreshOnlinePresenceFromChannel === "function") {
+                refreshOnlinePresenceFromChannel();
+            }
+        } catch (error) {
+            console.warn("Rafraîchissement visuel Presence V19 impossible :", error);
+        }
+    }
+
+    async function ensureRealtimeV19(force = false){
+        if (navigator.onLine === false) return false;
+        try {
+            if (force && typeof startOnlineLobbyPresence === "function") {
+                return Boolean(await startOnlineLobbyPresence());
+            }
+            if (typeof syncOnlinePresence === "function") {
+                return Boolean(await syncOnlinePresence());
+            }
+        } catch (error) {
+            console.warn("Synchronisation Presence V19 impossible :", error);
+        }
+        return false;
+    }
+
+    window.refreshFriendsNow = async function(options = {}){
+        const silent = Boolean(options?.silent);
+        const reloadRelations = options?.reloadRelations !== false;
+
+        if (refreshPromiseV19) return refreshPromiseV19;
+
+        refreshPromiseV19 = (async () => {
+            if (!silent) setButtonStateV19("loading");
+            try {
+                if (navigator.onLine === false) {
+                    throw new Error("offline");
+                }
+
+                /* 1) Répare / republie le canal Presence. */
+                const presenceOk = await ensureRealtimeV19(false);
+                if (!presenceOk) {
+                    await ensureRealtimeV19(true);
+                }
+
+                /* 2) Relit immédiatement tous les statuts présents sur le canal. */
+                repaintPresenceV19();
+
+                /* 3) Un clic manuel recharge aussi la vraie liste d'amis Supabase. */
+                if (reloadRelations && typeof window.loadCloudFriends === "function") {
+                    await window.loadCloudFriends();
+                    repaintPresenceV19();
+                }
+
+                if (!silent) {
+                    setButtonStateV19("ok");
+                    try { setFriendFeedback("Statuts actualisés.", "success"); } catch (_) {}
+                }
+                return true;
+            } catch (error) {
+                console.warn("Actualisation des amis V19 impossible :", error);
+                repaintPresenceV19();
+                if (!silent) {
+                    setButtonStateV19("error");
+                    try {
+                        setFriendFeedback(
+                            navigator.onLine === false
+                                ? "Pas de connexion Internet."
+                                : "Impossible d'actualiser les statuts.",
+                            "error"
+                        );
+                    } catch (_) {}
+                }
+                return false;
+            } finally {
+                refreshPromiseV19 = null;
+            }
+        })();
+
+        return refreshPromiseV19;
+    };
+
+    /*
+       Fallback léger : ne requête PAS friend_requests.
+       Il relit simplement l'état Presence déjà reçu par Realtime.
+       Le heartbeat réseau/réconnexion reste géré par V17.
+    */
+    function autoRefreshV19(){
+        if (document.hidden) return;
+        const now = Date.now();
+        if (now - lastAutoRefreshV19 < AUTO_UI_REFRESH_MS_V19 - 150) return;
+        lastAutoRefreshV19 = now;
+        repaintPresenceV19();
+    }
+
+    setInterval(autoRefreshV19, AUTO_UI_REFRESH_MS_V19);
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            setTimeout(() => window.refreshFriendsNow({silent:true,reloadRelations:false}), 80);
+        }
+    });
+    window.addEventListener("focus", () => {
+        setTimeout(() => window.refreshFriendsNow({silent:true,reloadRelations:false}), 80);
+    }, {passive:true});
+    window.addEventListener("online", () => {
+        setTimeout(() => window.refreshFriendsNow({silent:true,reloadRelations:false}), 100);
+    }, {passive:true});
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => window.refreshFriendsNow({silent:true,reloadRelations:false}), 850);
+    });
 })();
 </script>
