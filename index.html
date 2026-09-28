@@ -40500,13 +40500,18 @@ function updateBattleActionHitChanceUI() {
         hero.appendChild(skinColumn);
         hero.appendChild(banner);
 
+        const back = top.querySelector(".brawler-back-button");
+        if (back) {
+            back.classList.add("detail-back-standalone");
+            shell.appendChild(back);
+        }
         shell.appendChild(hero);
+        shell.appendChild(choose);
         shell.appendChild(intro);
         shell.appendChild(rightColumn);
         shell.appendChild(picker);
-        shell.appendChild(choose);
 
-        top.insertAdjacentElement("afterend",shell);
+        top.replaceWith(shell);
         compact.remove();
     }
 
@@ -40909,7 +40914,7 @@ function updateBattleActionHitChanceUI() {
 <style id="brawler-detail-redesign-v13">
 #brawlerDetailPage{
     --detail-rgb: 53,191,255;
-    padding:0 12px 92px !important;
+    padding:0 12px 24px !important;
     overflow-x:hidden !important;
     overflow-y:auto !important;
     background:
@@ -40922,19 +40927,19 @@ function updateBattleActionHitChanceUI() {
 
 /* TOP BAR */
 #brawlerDetailPage .brawler-detail-top{
-    position:sticky !important;
-    top:0 !important;
-    z-index:80 !important;
+    position:relative !important;
+    top:auto !important;
+    z-index:auto !important;
     min-height:56px !important;
     margin:0 -12px 10px !important;
     padding:10px 12px !important;
     display:flex !important;
     align-items:center !important;
     justify-content:space-between !important;
-    background:linear-gradient(180deg,rgba(6,11,19,.98),rgba(6,11,19,.90)) !important;
-    border-bottom:1px solid rgba(255,255,255,.055) !important;
-    backdrop-filter:blur(16px) !important;
-    box-shadow:0 8px 20px rgba(0,0,0,.16) !important;
+    background:transparent !important;
+    border:0 !important;
+    backdrop-filter:none !important;
+    box-shadow:none !important;
 }
 #brawlerDetailPage .brawler-detail-label{
     color:#eef8ff !important;
@@ -41483,9 +41488,9 @@ function updateBattleActionHitChanceUI() {
 
 /* CTA PRINCIPAL */
 #brawlerDetailPage .detail-choose-under-description{
-    position:sticky !important;
-    bottom:7px !important;
-    z-index:70 !important;
+    position:static !important;
+    inset:auto !important;
+    z-index:auto !important;
     width:100% !important;
     min-height:54px !important;
     margin:1px 0 0 !important;
@@ -54693,6 +54698,34 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+<style id="brawler-detail-no-header">
+/* Aucun espace réservé au header dans la fiche. */
+.phone > #brawlerDetailPage.page {
+    top:0 !important;
+    padding-top:env(safe-area-inset-top, 0px) !important;
+}
+.phone:has(> #brawlerDetailPage.active) > header {
+    display:none !important;
+}
+
+#brawlerDetailPage .brawler-detail-top { display:none !important; }
+#brawlerDetailPage .detail-back-standalone {
+    align-self:flex-start !important;
+    margin:8px 0 0 !important;
+    min-width:0 !important;
+    height:28px !important;
+    padding:0 4px !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+}
+#brawlerDetailPage .detail-choose-under-description {
+    position:static !important;
+    inset:auto !important;
+    margin:2px 0 4px !important;
+}
+</style>
 </body>
 </html>
 <!-- =========================================================
