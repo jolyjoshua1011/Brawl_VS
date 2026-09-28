@@ -1467,6 +1467,19 @@ body{
 }
 </style>
 
+
+<style>
+#brawlerDetailPage .brawler-trophy-record {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    width: fit-content; max-width: 100%; margin-top: 7px;
+    padding: 6px 9px; border: 1px solid rgba(255,200,87,.25);
+    border-radius: 9px; background: rgba(255,200,87,.07); color: #ffc857;
+    line-height: 1.2;
+}
+#brawlerDetailPage .brawler-trophy-record img { width: 17px; height: 17px; object-fit: contain; }
+#brawlerDetailPage .brawler-trophy-record span { font-size: 9px; font-weight: 800; letter-spacing: .6px; }
+#brawlerDetailPage .brawler-trophy-record strong { font-size: 14px; font-weight: 900; overflow-wrap: anywhere; }
+</style>
 </head>
 <body>
 <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none;overflow:hidden">
@@ -2953,6 +2966,11 @@ body{
                 TROPHÉES
             </span>
         </button>
+        <div class="brawler-trophy-record" aria-label="Record de trophées de ce Brawler">
+            <img src="Icon/trophy.png" alt="">
+            <span>RECORD</span>
+            <strong id="detailBrawlerTrophyRecord">0</strong>
+        </div>
     </section>
     <section class="brawler-introduction" aria-label="Présentation du Brawler">
         <div id="detailBrawlerCategory" class="brawler-category-badge"></div>
@@ -10561,10 +10579,20 @@ function loadSave() {
     );
     return save;
 }
+function normalizeBrawlerTrophyRecords(save) {
+    const clean = value => Number.isFinite(Number(value))
+        ? Math.max(0, Math.floor(Number(value))) : 0;
+    const previous = save.brawlerTrophyRecords || {};
+    return Object.fromEntries(Object.keys(brawlers).map(name => [
+        name, Math.max(clean(previous[name]), clean(save.brawlerTrophies?.[name]))
+    ]));
+}
 function saveGame(
     save = state
 ) {
+    save.brawlerTrophyRecords = normalizeBrawlerTrophyRecords(save);
     const data = {
+        brawlerTrophyRecords: { ...save.brawlerTrophyRecords },
         dailyGift: normalizeDailyGift(save.dailyGift),
         seasonOne: normalizeSeasonOne(save.seasonOne),
         championSkins: normalizeChampionSkins(save.championSkins),
@@ -10837,6 +10865,7 @@ const state = {
     ownedBrawlers: [
         ...loadedSave.ownedBrawlers
     ],
+    brawlerTrophyRecords: normalizeBrawlerTrophyRecords(loadedSave),
     brawlerTrophies:
         Object.fromEntries(
             Object.keys(
@@ -19353,9 +19382,13 @@ function applyBattleTrophyDelta(
             0,
             before + requestedDelta
         );
+    state.brawlerTrophyRecords = normalizeBrawlerTrophyRecords(state);
     state.brawlerTrophies[
         brawlerName
     ] = after;
+    state.brawlerTrophyRecords[brawlerName] = Math.max(
+        state.brawlerTrophyRecords[brawlerName] || 0, before, after
+    );
     /*
        Retourne le changement réellement appliqué.
        Cela évite d'afficher une perte impossible
@@ -25776,6 +25809,12 @@ function showBrawlerDetail(name) {
             getBrawlerTrophies(
                 name
             );
+    }
+    const record = document.getElementById("detailBrawlerTrophyRecord");
+    if (record) {
+        record.textContent = Math.max(
+            state.brawlerTrophyRecords?.[name] || 0, getBrawlerTrophies(name)
+        ).toLocaleString("fr-FR");
     }
     updateBrawlerTrophyRoadEntryState();
     const detailSkin =
