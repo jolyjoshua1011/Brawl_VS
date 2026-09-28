@@ -4122,7 +4122,7 @@ body{
                     >
                         <img
                             id="profilePreviewIcon"
-                            src="Profil/default.webp"
+                            src="Profil/default.png"
                             alt="Icône de profil sélectionnée"
                         >
                         <span class="profile-v3-avatar-edit" aria-hidden="true">✎</span>
@@ -8349,14 +8349,20 @@ const SEASON_ONE_GLOBAL_ICON = "Profil/Saison_1.png";
 const COLT_CHALLENGER_ICON = "Profil/colt_challenger.png";
 const LEGACY_BANDANA_ICON = "Profil/bandana.webp";
 const BANDANA_ICON = "Profil/bandana.png";
+const LEGACY_DEFAULT_PROFILE_ICON = "Profil/default.webp";
+const LEGACY_ROBOT_PROFILE_ICON = "Profil/robot.webp";
+const LEGACY_LITTLE_SPIKE_PROFILE_ICON = "Profil/little_spike.webp";
+const DEFAULT_PROFILE_ICON_PATH = "Profil/default.png";
+const ROBOT_PROFILE_ICON = "Profil/robot.png";
+const LITTLE_SPIKE_PROFILE_ICON = "Profil/little_spike.png";
 const PROFILE_ICON_CHOICES = [
     {
         name: "Default",
-        icon: "Profil/default.webp"
+        icon: DEFAULT_PROFILE_ICON_PATH
     },
     {
         name: "Robot",
-        icon: "Profil/robot.webp"
+        icon: ROBOT_PROFILE_ICON
     },
     {
         name: "Bandana",
@@ -8364,7 +8370,7 @@ const PROFILE_ICON_CHOICES = [
     },
     {
         name: "Little Spike",
-        icon: "Profil/little_spike.webp"
+        icon: LITTLE_SPIKE_PROFILE_ICON
     },
     {
         name: "500 TR",
@@ -8443,7 +8449,7 @@ const PROFILE_ICON_CHOICES = [
     { name: "Colt Challenger", icon: COLT_CHALLENGER_ICON }
 ];
 const DEFAULT_PROFILE_ICON =
-    "Profil/default.webp";
+    DEFAULT_PROFILE_ICON_PATH;
 const DEFAULT_UNLOCKED_PROFILE_ICONS = [
     DEFAULT_PROFILE_ICON
 ];
@@ -8453,13 +8459,26 @@ function getAllowedProfileIconPaths() {
             choice.icon
     );
 }
+function migrateLegacyProfileIconPath(value) {
+    if (value === LEGACY_BANDANA_ICON) {
+        return BANDANA_ICON;
+    }
+    if (value === LEGACY_DEFAULT_PROFILE_ICON) {
+        return DEFAULT_PROFILE_ICON_PATH;
+    }
+    if (value === LEGACY_ROBOT_PROFILE_ICON) {
+        return ROBOT_PROFILE_ICON;
+    }
+    if (value === LEGACY_LITTLE_SPIKE_PROFILE_ICON) {
+        return LITTLE_SPIKE_PROFILE_ICON;
+    }
+    return value;
+}
 function normalizeProfileIcon(
     value
 ) {
     const normalizedValue =
-        value === LEGACY_BANDANA_ICON
-        ? BANDANA_ICON
-        : value;
+        migrateLegacyProfileIconPath(value);
     return getAllowedProfileIconPaths().includes(
         normalizedValue
     )
@@ -8469,7 +8488,7 @@ function normalizeProfileIcon(
     DEFAULT_PROFILE_ICON;
 }
 const SAVE_KEY = "brawlvs_save";
-const CURRENT_SAVE_VERSION = 23;
+const CURRENT_SAVE_VERSION = 24;
 
 /* =====================================================
    BRAWL VS CLOUD · SUPABASE
@@ -10106,18 +10125,21 @@ function migrateSave(save) {
         };
     }
     /*
-       VERSION 23 : Bandana est passée de .webp à .png.
-       On migre l'ancien chemin AVANT le filtrage pour ne jamais
-       retirer l'icône à un joueur qui la possédait déjà.
+       VERSION 24 : les icônes Default, Robot et Little Spike
+       sont passées de .webp à .png. Bandana conserve aussi
+       sa migration historique. On convertit les anciens chemins
+       AVANT le filtrage pour ne retirer aucune icône possédée.
     */
-    if (save.profile?.icon === LEGACY_BANDANA_ICON) {
-        save.profile.icon = BANDANA_ICON;
+    if (save.profile?.icon) {
+        save.profile.icon = migrateLegacyProfileIconPath(
+            save.profile.icon
+        );
     }
     if (Array.isArray(save.profileIconsUnlocked)) {
         save.profileIconsUnlocked = [
             ...new Set(
-                save.profileIconsUnlocked.map(icon =>
-                    icon === LEGACY_BANDANA_ICON ? BANDANA_ICON : icon
+                save.profileIconsUnlocked.map(
+                    migrateLegacyProfileIconPath
                 )
             )
         ];
@@ -10464,14 +10486,20 @@ function loadSave() {
     }
     // Conserve les achats et les icônes de la Saison 1 entre les mises à jour.
     if (save && typeof save === "object") {
-        // Compatibilité Bandana : ancien fichier .webp -> nouveau fichier .png.
-        if (save.profile?.icon === LEGACY_BANDANA_ICON) {
-            save.profile.icon = BANDANA_ICON;
+        // Compatibilité anciennes icônes : anciens fichiers .webp -> nouveaux fichiers .png.
+        if (save.profile?.icon) {
+            save.profile.icon = migrateLegacyProfileIconPath(
+                save.profile.icon
+            );
         }
         if (Array.isArray(save.profileIconsUnlocked)) {
-            save.profileIconsUnlocked = save.profileIconsUnlocked.map(
-                icon => icon === LEGACY_BANDANA_ICON ? BANDANA_ICON : icon
-            );
+            save.profileIconsUnlocked = [
+                ...new Set(
+                    save.profileIconsUnlocked.map(
+                        migrateLegacyProfileIconPath
+                    )
+                )
+            ];
         }
         // Conserve la sélection et la possession de l'ancienne icône Ohlala.
         if (save.profile?.icon === LEGACY_SEASON_ONE_GLOBAL_ICON) {
@@ -28285,7 +28313,7 @@ const STAR_POWER_SHOP_PRICE =
 const PROFILE_ICON_SHOP_ITEMS = [
     {
         name: "Robot",
-        icon: "Profil/robot.webp"
+        icon: ROBOT_PROFILE_ICON
     },
     {
         name: "Bandana",
@@ -28293,7 +28321,7 @@ const PROFILE_ICON_SHOP_ITEMS = [
     },
     {
         name: "Little Spike",
-        icon: "Profil/little_spike.webp"
+        icon: LITTLE_SPIKE_PROFILE_ICON
     }
 ];
 const shopBrawlers = [
