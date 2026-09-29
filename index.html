@@ -4990,7 +4990,7 @@ const BRAWLER_STAR_POWER_CATALOG = {
     },
     "Colt": {
         id: "colt-star-seven-bullets",
-        name: "SECOND SOUFFLE",
+        name: "INSTINCT DE SURVIE",
         description: "Tant que Colt possède moins de 50 % de ses PV maximum, sa vitesse augmente de 1. Le bonus disparaît dès qu’il retrouve au moins 50 % de ses PV.",
         requiredPower: 10,
         effect: {
@@ -54468,7 +54468,7 @@ if ("serviceWorker" in navigator) {
             label: "MISE À JOUR",
             date: "27 SEPT. 2026",
             icon: null,
-            body: "Colt a été nerf : à distance 1, il ne touche plus systématiquement ses 6 balles. Il touche désormais aléatoirement de 1 à 6 balles. Au moins une balle touche toujours. Son Pouvoir Star SECOND SOUFFLE lui donne +1 en vitesse tant que ses PV sont sous 50 %."
+            body: "Colt a été nerf : à distance 1, il ne touche plus systématiquement ses 6 balles. Il touche désormais aléatoirement de 1 à 6 balles. Au moins une balle touche toujours. Son Pouvoir Star INSTINCT DE SURVIE lui donne +1 en vitesse tant que ses PV sont sous 50 %."
         });
         return messages;
     }
@@ -54551,7 +54551,7 @@ if ("serviceWorker" in navigator) {
                     : `<div class="brawl-inbox-reward"><img src="Icon/Mega_Box.webp" alt="Mégaboîte"><span><small>CADEAU</small><b>1 MÉGABOÎTE</b></span></div><button type="button" class="brawl-inbox-claim" data-inbox-claim="mega">RÉCUPÉRER</button>`;
             }
             const body = message.kind === "patch"
-                ? `Colt a été nerf : à distance 1, il <strong class="nerf-highlight">ne touche plus systématiquement ses 6 balles</strong>. Il touche désormais aléatoirement de 1 à 6 balles. Au moins une balle touche toujours. Son Pouvoir Star SECOND SOUFFLE lui donne +1 en vitesse tant que ses PV sont sous 50 %.`
+                ? `Colt a été nerf : à distance 1, il <strong class="nerf-highlight">ne touche plus systématiquement ses 6 balles</strong>. Il touche désormais aléatoirement de 1 à 6 balles. Au moins une balle touche toujours. Son Pouvoir Star INSTINCT DE SURVIE lui donne +1 en vitesse tant que ses PV sont sous 50 %.`
                 : message.body;
             return `
                 <article class="brawl-inbox-message ${message.kind} ${unread ? "unread" : ""}" data-message-id="${message.id}">
