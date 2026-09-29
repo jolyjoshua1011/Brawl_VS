@@ -4990,12 +4990,13 @@ const BRAWLER_STAR_POWER_CATALOG = {
     },
     "Colt": {
         id: "colt-star-seven-bullets",
-        name: "SEPTIÈME BALLE",
-        description: "Le chargeur de Colt contient désormais 7 balles au lieu de 6. Ses attaques principales touchent donc entre 1 et 7 balles, y compris à distance 1.",
+        name: "SECOND SOUFFLE",
+        description: "Tant que Colt possède moins de 50 % de ses PV maximum, sa vitesse augmente de 1. Le bonus disparaît dès qu’il retrouve au moins 50 % de ses PV.",
         requiredPower: 10,
         effect: {
-            type: "extra_basic_bullet",
-            bullets: 7
+            type: "low_health_speed",
+            healthThreshold: 0.50,
+            speedBonus: 1
         }
     },
     "Poco": {
@@ -7661,7 +7662,7 @@ function getBattleEffectiveSpeed(
     }
     return Math.max(
         1,
-        baseSpeed -
+        baseSpeed + getColtLowHealthSpeedBonus(side, brawlerName) -
         getBattleSlowAmount(
             side
         )
@@ -16150,6 +16151,7 @@ function useBattleAbility(
         ability.id ===
         "el-primo-ability-a"
     ) {
+        battleState.enemyTurn = true;
         markBattleAbilityUsed( ability.id );
         updateBattleAbilitySlots();
         updateBattleSuperUI();
@@ -16194,14 +16196,17 @@ function useBattleAbility(
         }
         battleState.distanceChosen = true;
         battleState.distanceChoices = [];
-        battleState.distanceRoundAttackIndex = 0;
         battleEnemyAttackTimer = setTimeout(
             () => {
                 battleEnemyAttackTimer = null;
                 finalizeBattleActionRegen(
                     "player"
                 );
-                beginPlayerActionSameDistance();
+                if (typeof isOnlineBattleActive === "function" && isOnlineBattleActive()) {
+                    void window.completeOnlineSuplexReplay();
+                } else {
+                    beginPlayerActionSameDistance();
+                }
             },
             2400
         );
@@ -18566,29 +18571,15 @@ function isPlayerStarPowerBattleActive(
         brawlerName
     );
 }
-function getColtBasicBulletCapacity(
-    side = "player",
-    brawlerName = "Colt"
-) {
-    if (
-        brawlerName === "Colt" &&
-        isBattleStarPowerActive(
-            side,
-            "Colt"
-        )
-    ) {
-        const starPower =
-            getBrawlerStarPower(
-                "Colt"
-            );
-        return Math.max(
-            6,
-            Number(
-                starPower?.effect?.bullets
-            ) || 7
-        );
-    }
+function getColtBasicBulletCapacity(side = "player", brawlerName = "Colt") {
     return 6;
+}
+function getColtLowHealthSpeedBonus(side, brawlerName) {
+    if (brawlerName !== "Colt" || !isBattleStarPowerActive(side, "Colt")) return 0;
+    const prefix = side === "enemy" ? "enemy" : "player";
+    const health = Number(battleState[prefix + "Health"]);
+    const maxHealth = Number(battleState[prefix + "MaxHealth"]);
+    return health > 0 && maxHealth > 0 && health < maxHealth * 0.50 ? 1 : 0;
 }
 function isBullRageActive(
     side = "player"
@@ -44597,7 +44588,7 @@ if ("serviceWorker" in navigator) {
        -> le choix alterne A/B/A/B
        -> le chooser attaque toujours en premier
     ----------------------------------------------------- */
-    async function completeOnlineActionV6() {
+    async function completeOnlineActionV6(replay = false) {
         if (V6.transitionBusy) return;
         V6.transitionBusy = true;
 
@@ -44653,7 +44644,17 @@ if ("serviceWorker" in navigator) {
 
             let nextBattle;
 
-            if (actionIndex === 0) {
+            if (replay) {
+                nextBattle = buildBattleSnapshotV6(serverBattle, meta, {
+                    phase: "action",
+                    turn_user_id: meta.me,
+                    next_actor_id: meta.me,
+                    chooser_id: serverBattle.chooser_id,
+                    current_distance: serverBattle.current_distance,
+                    distance_choices: [],
+                    distance_round_attack_index: actionIndex
+                });
+            } else if (actionIndex === 0) {
                 /*
                    Première action avec cette distance.
                    L'autre joueur obtient STRICTEMENT l'action suivante.
@@ -44758,6 +44759,8 @@ if ("serviceWorker" in navigator) {
             setV6ActionLock(false);
         }
     }
+
+    window.completeOnlineSuplexReplay = () => completeOnlineActionV6(true);
 
     const previousAdvanceV6 = advanceDistanceRoundAfterAttack;
     advanceDistanceRoundAfterAttack = function(actor) {
@@ -54465,7 +54468,7 @@ if ("serviceWorker" in navigator) {
             label: "MISE À JOUR",
             date: "27 SEPT. 2026",
             icon: null,
-            body: "Colt a été nerf : à distance 1, il ne touche plus systématiquement ses 6 balles. Il touche désormais aléatoirement de 1 à 6 balles, ou de 1 à 7 avec son Pouvoir Star. Au moins une balle touche toujours."
+            body: "Colt a été nerf : à distance 1, il ne touche plus systématiquement ses 6 balles. Il touche désormais aléatoirement de 1 à 6 balles. Au moins une balle touche toujours. Son Pouvoir Star SECOND SOUFFLE lui donne +1 en vitesse tant que ses PV sont sous 50 %."
         });
         return messages;
     }
@@ -54548,7 +54551,7 @@ if ("serviceWorker" in navigator) {
                     : `<div class="brawl-inbox-reward"><img src="Icon/Mega_Box.webp" alt="Mégaboîte"><span><small>CADEAU</small><b>1 MÉGABOÎTE</b></span></div><button type="button" class="brawl-inbox-claim" data-inbox-claim="mega">RÉCUPÉRER</button>`;
             }
             const body = message.kind === "patch"
-                ? `Colt a été nerf : à distance 1, il <strong class="nerf-highlight">ne touche plus systématiquement ses 6 balles</strong>. Il touche désormais aléatoirement de 1 à 6 balles, ou de 1 à 7 avec son Pouvoir Star. Au moins une balle touche toujours.`
+                ? `Colt a été nerf : à distance 1, il <strong class="nerf-highlight">ne touche plus systématiquement ses 6 balles</strong>. Il touche désormais aléatoirement de 1 à 6 balles. Au moins une balle touche toujours. Son Pouvoir Star SECOND SOUFFLE lui donne +1 en vitesse tant que ses PV sont sous 50 %.`
                 : message.body;
             return `
                 <article class="brawl-inbox-message ${message.kind} ${unread ? "unread" : ""}" data-message-id="${message.id}">
